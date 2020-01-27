@@ -17,8 +17,8 @@ from tensorflow_serving.apis import predict_pb2, prediction_service_pb2_grpc
 
 from typing import Iterable, Optional, Union
 
-import __constants__ as C  # For constants
-from __utils__ import normalize_intensities, indices_to_one_hot  # For ion mass computation
+from . import __constants__ as C  # For constants
+from .__utils__ import normalize_intensities, indices_to_one_hot  # For ion mass computation
 
 class PredictPROSIT:
 

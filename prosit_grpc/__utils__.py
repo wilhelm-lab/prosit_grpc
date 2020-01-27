@@ -1,4 +1,4 @@
-import __constants__ as C
+from . import __constants__ as C
 import numpy as np
 
 import itertools
