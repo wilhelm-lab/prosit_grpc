@@ -1,4 +1,4 @@
-import prosit_grpc_client.__constants__ as C
+import __constants__ as C
 import numpy as np
 
 import itertools
