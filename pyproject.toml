@@ -13,6 +13,7 @@ tensorflow-serving-api = "^1.15.0"
 grpcio = "^1.26.0"
 
 [tool.poetry.dev-dependencies]
+pytest = "^5.3.4"
 
 [build-system]
 requires = ["poetry>=0.12"]
