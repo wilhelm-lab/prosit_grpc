@@ -1,5 +1,5 @@
 
-from predictPROSIT_2 import PredictPROSIT
+from prosit_grpc.predictPROSIT_2 import PredictPROSIT
 
 predictor = PredictPROSIT(server="131.159.152.7:8500",
                           sequences_list=["AAAAAKAK","AAAAAA"],

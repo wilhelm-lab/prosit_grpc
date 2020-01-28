@@ -7,21 +7,16 @@ __author__ = "Daniela Andrade Salazar"
 __email__ = "daniela.andrade@tum.de"
 """
 import numpy as np
-import time
-
 import threading
-
 import grpc
 import tensorflow as tf
 from tensorflow_serving.apis import predict_pb2, prediction_service_pb2_grpc
-
 from typing import Iterable, Optional, Union
 
 from . import __constants__ as C  # For constants
 from .__utils__ import normalize_intensities, indices_to_one_hot  # For ion mass computation
 
 class PredictPROSIT:
-
     def __init__(self,
                  server: str,
                  model_name: str,
@@ -39,31 +34,33 @@ class PredictPROSIT:
                              the y1,y2,y3 and b1,b2,b3 fragments of every sequence
         :param collision_energies_list: List of Lists.
                                         Every List containing one collision energy value for every sequence between 0.2 and 0.4
-        :param scanNums: List of Lists
-                         Every list contains the scan numbers of the sequences, optional
-        :param normalize: Flag for indicating whether to normalize the output or not
         """
 
-        # Test if inputs are None
-        # if any(x is None for x in (sequences_list, charges_list, collision_energies_list)):
-        #     raise ValueError("[ERROR] Define sequences, charges and collision energies first!")
-
-        # Test types and shapes of inputs
-        # if not len({len(i) for i in (sequences_list, charges_list, collision_energies_list)}) == 1:
-        #     raise ValueError("[ERROR] Unequal lengths of inputs")
-
-        self.sequences_list = sequences_list
-        self.charges_list = charges_list
-        self.collision_energies_list = collision_energies_list
-
+        # server settings
         self.server = server
         self.model_name = model_name
-
         self.num_batches = len(sequences_list)
         self.concurrency = 1
         self._condition = threading.Condition()
         self._done = 0
         self._active = 0
+
+
+        # prediction input instructions
+        self.sequences_list = sequences_list
+        self.charges_list = charges_list
+        self.collision_energies_list = collision_energies_list
+        self.num_seq = len(sequences_list)
+
+        # prepared/encoded input instructions
+        # set with seperate function
+        self.sequences_list_numeric = []
+        self.charges_list_one_hot = []
+
+        # prediction variables in array form for calling tensorflow
+        self.sequences_array_int32 = None
+        self.charges_array_float32 = None
+        self.collision_energies_array_float32 = None
 
         if model_name == "intensity":
             self.normalize = True
@@ -104,8 +101,8 @@ class PredictPROSIT:
             assume output array from prosit (one dimensional)
             set array to dimensions (num_seq, 174)
             """
-            #shape_output = 2 * 3 * (C.SEQ_LEN - 1)  # 2 type of ions, 3 charges for each ion, 29 possibe frags --> 174
-            #self.predictions = self.predictions.reshape(self.num_seq, shape_output)  # -1 stands for num_seq
+            # shape_output = 2 * 3 * (C.SEQ_LEN - 1)  # 2 type of ions, 3 charges for each ion, 29 possibe frags --> 174
+            # self.predictions = self.predictions.reshape(self.num_seq, shape_output)  # -1 stands for num_seq
 
         def normalize_output(self):
             """
@@ -214,20 +211,20 @@ class PredictPROSIT:
             self._condition.notify()
             print("DONE with BATCH", dataset_index)
 
-    def set_collision_energies(ce):
-        self.collision_energies_list = ce
-
-    def set_charges(c):
-        self.charges_list = c
-
-    def set_sequences(s):
-        self.sequences_list = s
+    # def set_collision_energies(ce):
+    #     self.collision_energies_list = ce
+    #
+    # def set_charges(c):
+    #     self.charges_list = c
+    #
+    # def set_sequences(s):
+    #     self.sequences_list = s
 
 
     def prosit_callback(self, result_future, sequences, charges, collision_energies,
                         scan_nums=None, ids=None, labels=None, verbose=False):
         """
-        Wraper for callback funtion needed to add parameters
+        Wrapper for callback function needed to add parameters
         returns the callback function
         """
 
@@ -244,6 +241,47 @@ class PredictPROSIT:
         return _callback
 
 
+    def set_sequence_list_numeric(self):
+        """
+        Function that converts the sequences saved in self.sequence_list to a numerical encoding
+        saves the encoded sequence in self.sequence_list_numeric
+        """
+        for sequence in self.sequences_list:
+            sequence_temp = self.sequence_alpha_to_numbers(sequence)
+            while len(sequence_temp)<30:
+                sequence_temp.append(0)
+            self.sequences_list_numeric.append(sequence_temp)
+
+    def set_charges_list_one_hot(self):
+        """
+        convert charges to one hot encoding
+        One hot encoding of every charge value --> 6 possible charges for every sequence for PROSIT
+        """
+        self.charges_list_one_hot = [indices_to_one_hot(x, C.MAX_CHARGE) for x in self.charges_list]
+
+    def set_charges_array_float32(self):
+        self.charges_array_float32 = np.array(self.charges_list_one_hot).astype(np.float32)
+
+    def set_collision_energies_array_float32(self):
+        self.collision_energies_array_float32 = np.array(self.collision_energies_list).astype(np.float32)
+
+    def set_sequences_array_int32(self):
+        self.sequences_array = np.array(self.sequences_list_numeric).astype(np.int32)
+
+    def set_sequences_array_float32(self):
+        self.sequences_array = np.array(self.sequences_list_numeric).astype(np.float32)
+
+    def reshape_callback_output(self, callback_output):
+        if self.model_name == "intensity":
+            outputs_tensor_proto = callback_output.outputs["out/Reshape:0"]
+            shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
+            self.raw_predictions = np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+
+        elif self.model_name == "proteotypicity":
+            outputs_tensor_proto = callback_output.outputs["pep_dense4/BiasAdd:0"]
+            shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
+            outputs = np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+            self.raw_predictions = outputs.flatten()
 
     def get_predictions(self, verbose=False):
         """
@@ -252,87 +290,66 @@ class PredictPROSIT:
         :return: The classification error rate.
         :raises IOError: An error occurred processing test data set.
         """
-        # Start with predictions
-        start = time.time()
-        #for i in range(self.num_batches):
 
+        self.set_sequence_list_numeric()
 
-        # sequences = self.sequences_list[i]
-
-        # convert sequences to numerical encoding
-        sequences = []
-        for sequence in self.sequences_list:
-            sequence_temp = self.sequence_alpha_to_numbers(sequence)
-            while len(sequence_temp)<30:
-                sequence_temp.append(0)
-            sequences.append(sequence_temp)
-
-        # Compute number of sequences, assume every sequence has length 30
-        num_seq = len(sequences)
-
-
-
-
-
-
-        # convert collision energy charges and sequences to numpy arrays
         if self.model_name == "intensity":
-            # convert charges to one hot encoding
-            # One hot encoding of every charge value --> 6 possible charges for every sequence for PROSIT
-            charges = [indices_to_one_hot(x, C.MAX_CHARGE) for x in self.charges_list]
+            # set charges to one hot
+            self.set_charges_list_one_hot()
 
-            collision_energies = self.collision_energies_list
-            charges = np.array(charges).astype(np.float32)
-            collision_energies = np.array(collision_energies).astype(np.float32)
-            sequences = np.array(sequences).astype(np.int32)
-
+            # set numpy arrays
+            self.set_charges_array_float32()
+            self.set_collision_energies_array_float32()
+            self.set_sequences_array_int32()
 
         elif self.model_name == "proteotypicity":
-            sequences = np.array(sequences).astype(np.float32)
+            self.set_sequences_array_float32()
 
         # Create request
         request = self._create_request(model_name=self.model_name)
 
+        # set tensors
         if self.model_name == "intensity":
             # Parse inputs to request
             request.inputs['peptides_in:0'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(sequences, shape=[num_seq, C.SEQ_LEN]))
+                tf.contrib.util.make_tensor_proto(self.sequences_array, shape=[self.num_seq, C.SEQ_LEN]))
             request.inputs['collision_energy_in:0'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(collision_energies, shape=[num_seq, 1]))
+                tf.contrib.util.make_tensor_proto(self.collision_energies_array_float32, shape=[self.num_seq, 1]))
             request.inputs['precursor_charge_in:0'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(charges, shape=[num_seq, 6]))
+                tf.contrib.util.make_tensor_proto(self.charges_array_float32, shape=[self.num_seq, 6]))
 
-            # print("[INFO] Finished parsing inputs")
-
-        else:
+        elif self.model_name == "proteotypicity":
             request.inputs['peptides_in_1:0'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(sequences, shape=[num_seq, C.SEQ_LEN]))
-            charges = None
-            collision_energies = None
+                tf.contrib.util.make_tensor_proto(self.sequences_array, shape=[self.num_seq, C.SEQ_LEN]))
 
         self.throttle(0)  #
         timeout = 5  # in seconds
         result_future = self.stub.Predict.future(request, timeout)  # asynchronous request
+
         # Callback function
         result_future.add_done_callback(
-            self.prosit_callback(result_future=result_future, sequences=sequences,
-                                 charges=charges, collision_energies=collision_energies, verbose=verbose))
+            self.prosit_callback(
+                result_future=result_future,
+                sequences=self.sequences_array,
+                charges=self.charges_array_float32,
+                collision_energies=self.collision_energies_array_float32,
+                verbose=verbose
+            )
+        )
+
         # Wait untill all request finish
         with self._condition:
             while self._done != 0:
                 self._condition.wait()
-        end = time.time()
-        output = result_future.result()
-        if self.model_name == "intensity":
-            outputs_tensor_proto = output.outputs["out/Reshape:0"]
-            shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-            outputs = np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
-        else:
-            outputs_tensor_proto = output.outputs["pep_dense4/BiasAdd:0"]
-            shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-            outputs = np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
-            outputs = outputs.flatten()
-        return outputs
+
+        self.reshape_callback_output(result_future.result())
+
+        # self.OutputPROSIT(
+        #     response_outputs=result_future.result(),
+        #     sequences=self.sequences_list
+        #
+        # )
 
 
 
+        return self.raw_predictions
