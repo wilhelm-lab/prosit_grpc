@@ -1,6 +1,8 @@
+from prosit_grpc.predictPROSIT_2 import PredictPROSIT
+
 import h5py
 import csv
-from prosit_grpc.predictPROSIT_2 import PredictPROSIT
+import numpy as np
 
 with h5py.File("data.hdf5", 'r') as f:
     # List all groups
@@ -16,34 +18,38 @@ with open("input_test.csv", "r") as csvfile:
 
     header = next(reader, None)
 
-    seq = []
+    sequences = []
     ce = []
     charge = []
 
     for line in reader:
-        seq.append(line[0])
+        sequences.append(line[0])
         ce.append(int(line[1]))
         charge.append(int(line[2]))
 
-
-def test_pytest():
-    assert 1 == 1
-
-
-# def test_raw_predictions():
 predictor = PredictPROSIT(server="131.159.152.7:8500",
-                      sequences_list=seq,
-                      charges_list=charge,
-                      collision_energies_list=ce,
-                      model_name="intensity"
-                      )
-
+                          sequences_list=sequences,
+                          charges_list=charge,
+                          collision_energies_list=ce,
+                          model_name="intensity"
+                          )
 pred = predictor.get_predictions()
 
-print("="*100)
-print(pred[1])
-print("="*100)
-print(data[1])
-print(max(data[1]))
+def test_grpc_call():
+    assert type(pred) == np.ndarray
 
+def test_array_size():
+    # test number of predictions made
+    assert len(pred) == 27
+    # test number of returned intensities
+    for i in range(len(pred)):
+        assert len(pred[i]) == 174
 
+def test_predictions():
+    for i in range(len(pred)):
+        print(sequences[i])
+        print(pred[i])
+        print(data[i])
+        # for y in range(len(data[i])):
+        #     assert data[i][y] == pred[i][y]
+    assert 1 == 2

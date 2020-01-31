@@ -62,107 +62,21 @@ class PredictPROSIT:
         self.charges_array_float32 = None
         self.collision_energies_array_float32 = None
 
-        if model_name == "intensity":
-            self.normalize = True
-        else:
-            self.normalize = False
+        # if model_name == "intensity":
+        #     self.normalize = True
+        # else:
+        #     self.normalize = False
 
         # Create channel and stub
         self.channel = grpc.insecure_channel(self.server)
         self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
 
         self.outputs = {}  # for PROSIT OUTPUTS, key is the dataset number
-        print("[INFO] Initialized predicter with {} batches".format(self.num_batches))
+        self.callback_output = None
+        self.raw_predictions = []
+        self.filtered_invalid_predictions = []
 
-    class OutputPROSIT:
-
-        def __init__(self, response_outputs, sequences, charges, collision_energies,
-                     scan_nums=None, ids=None, labels=None):
-            """
-            :param response_outputs: output of PROSIT algorithm
-            """
-
-            self.sequences = sequences.reshape(-1, 30)  # reshaped to num_seq, 30
-            #self.charges = charges.reshape(-1, 6)  # reshaped to unum_seq, 6
-            #self.collision_energies = collision_energies
-            self.scan_nums = scan_nums
-            self.ids = ids
-            self.labels = labels
-            self.num_seq = self.sequences.shape[0]
-
-            self.predictions = np.array(response_outputs['out/Reshape:0'].float_val)
-
-            # self.reshaped_output = None  # after reshape
-            # self.normalized_predictions = None  # after normalizing
-            # self.final_predictions = None  # after filtering invalid and setting negative to 0
-
-        def reshape_output(self):
-            """
-            assume output array from prosit (one dimensional)
-            set array to dimensions (num_seq, 174)
-            """
-            # shape_output = 2 * 3 * (C.SEQ_LEN - 1)  # 2 type of ions, 3 charges for each ion, 29 possibe frags --> 174
-            # self.predictions = self.predictions.reshape(self.num_seq, shape_output)  # -1 stands for num_seq
-
-        def normalize_output(self):
-            """
-            assume reshaped and filtered output of prosit, shape should be (num_seq, 174) normalized along first axis
-            set normalized output between 0 and 1
-            """
-            self.predictions = normalize_intensities(self.predictions)
-            self.predictions[self.predictions < 0] = -1
-
-        def filter_invalid(self):
-            """
-            assume reshaped output of prosit, shape sould be (num_seq, 174)
-            set filtered output where not allowed positions are set to -1
-            prosit output has the form:
-            y1+1     y1+2 y1+3     b1+1     b1+2 b1+3     y2+1     y2+2 y2+3     b2+1     b2+2 b2+3
-            if charge >= 3: all allowed
-            if charge == 2: all +3 invalid
-            if charge == 1: all +2 & +3 invalid
-            """
-            # self.final_predictions = self.normalized_predictions.copy()
-
-            # print("Number of sequences", self.num_seq)
-            for i in range(self.num_seq):
-                # 1. Filter by charges
-                charge, = np.where(self.charges[i] == 1)[0] + 1  # Charge sould be between 1 and 6
-                preds = self.predictions[i]
-                # print("[INFO] Charge of sequence is {}".format(charge))
-                if charge == 1:
-                    # if charge == 1: all +2 & +3 invalid i.e. indexes only valid are indexes 0,3,6,9,...
-                    # invalid are x mod 3 != 0
-                    invalid_indexes = [(x * 3 + 1) for x in range(C.SEQ_LEN)] + [(x * 3 + 2) for x in range(C.SEQ_LEN)]
-                    preds[invalid_indexes] = -1
-                elif charge == 2:
-                    # if charge == 1: all +2 & +3 invalid i.e. indexes only valid are indexes 0,1,3,4,6,7,9,10...
-                    # invalid are x mod 3 == 2
-                    invalid_indexes = [x * 3 + 2 for x in range(C.SEQ_LEN)]
-                    preds[invalid_indexes] = -1
-                else:
-                    if charge > 6:
-                        print("[ERROR] in charge greater than 6")
-                        return False
-                    # charge >= 3 --> all valid
-                    # print("No filtering by charges")
-
-                self.predictions[i] = preds
-
-                # 2. Filter by input seq
-                index_list = np.where(self.sequences[i] == 0)[0]
-                len_seq = index_list[0] if any(index_list) else C.SEQ_LEN  # e.g. seq is [1,4,1,1,0,...,0] then len is 4
-                # print("[INFO] Sequence has length", len_seq)
-                if len_seq < C.SEQ_LEN:
-                    self.predictions[i, (len_seq - 1) * 6:] = -1  # valid indexes are less than len_seq * 6
-            return True
-
-        def set_negative_to_zero(self):
-            """
-            assume reshaped and filtered output or prosit, shape should be (num_seq, 174)
-            set output with positions <0 set to 0
-            """
-            self.predictions[(self.predictions != -1) & (self.predictions < 0)] = 0
+        # print("[INFO] Initialized predicter with {} batches".format(self.num_batches))
 
     @staticmethod
     def sequence_numbers_to_alpha(x):
@@ -271,17 +185,79 @@ class PredictPROSIT:
     def set_sequences_array_float32(self):
         self.sequences_array = np.array(self.sequences_list_numeric).astype(np.float32)
 
-    def reshape_callback_output(self, callback_output):
+    def reshape_callback_output(self):
         if self.model_name == "intensity":
-            outputs_tensor_proto = callback_output.outputs["out/Reshape:0"]
+            outputs_tensor_proto = self.callback_output.outputs["out/Reshape:0"]
             shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
             self.raw_predictions = np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
 
         elif self.model_name == "proteotypicity":
-            outputs_tensor_proto = callback_output.outputs["pep_dense4/BiasAdd:0"]
+            outputs_tensor_proto = self.callback_output.outputs["pep_dense4/BiasAdd:0"]
             shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
             outputs = np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
             self.raw_predictions = outputs.flatten()
+
+    # normalization functions
+    def filter_invalid(self):
+        """
+        assume reshaped output of prosit, shape sould be (num_seq, 174)
+        set filtered output where not allowed positions are set to -1
+        prosit output has the form:
+        y1+1     y1+2 y1+3     b1+1     b1+2 b1+3     y2+1     y2+2 y2+3     b2+1     b2+2 b2+3
+        if charge >= 3: all allowed
+        if charge == 2: all +3 invalid
+        if charge == 1: all +2 & +3 invalid
+        """
+        # self.final_predictions = self.normalized_predictions.copy()
+
+        # print("Number of sequences", self.num_seq)
+        for i in range(self.num_seq):
+            charge = self.charges_list[i]
+            preds = self.raw_predictions[i]
+
+            # print(preds, charge)
+
+            if charge == 1:
+                # if charge == 1: all +2 & +3 invalid i.e. indexes only valid are indexes 0,3,6,9,...
+                # invalid are x mod 3 != 0
+                invalid_indexes = [(x * 3 + 1) for x in range(C.SEQ_LEN)] + [(x * 3 + 2) for x in range(C.SEQ_LEN)]
+                preds[invalid_indexes] = -1
+            elif charge == 2:
+                # if charge == 1: all +2 & +3 invalid i.e. indexes only valid are indexes 0,1,3,4,6,7,9,10...
+                # invalid are x mod 3 == 2
+                invalid_indexes = [x * 3 + 2 for x in range(C.SEQ_LEN)]
+                preds[invalid_indexes] = -1
+            else:
+                if charge > 6:
+                    print("[ERROR] in charge greater than 6")
+                    return False
+                # charge >= 3 --> all valid
+                # print("No filtering by charges")
+            self.filtered_invalid_predictions.append(preds)
+
+            # 2. Filter by length of input sequence
+            len_seq = len(self.sequences_list[i])  # e.g. seq is [1,4,1,1,0,...,0] then len is 4
+            # print("[INFO] Sequence has length", len_seq)
+            if len_seq < C.SEQ_LEN:
+                self.filtered_invalid_predictions[i][(len_seq - 1) * 6:] = -1  # valid indexes are less than len_seq * 6
+        return True
+
+
+    def set_negative_to_zero(self):
+        """
+        assume reshaped and filtered output or prosit, shape should be (num_seq, 174)
+        set output with positions <0 set to 0
+        """
+        for pred in self.filtered_invalid_predictions:
+            pred[(pred != -1) & (pred < 0)] = 0
+
+    def normalize_raw_predictions(self):
+        """
+        assume reshaped and filtered output of prosit, shape should be (num_seq, 174) normalized along first axis
+        set normalized output between 0 and 1
+        """
+        self.predictions = normalize_intensities(self.filtered_invalid_predictions)
+        self.predictions[self.predictions < 0] = -1
 
     def get_predictions(self, verbose=False):
         """
@@ -337,19 +313,22 @@ class PredictPROSIT:
             )
         )
 
-        # Wait untill all request finish
+        # Wait until all request finish
         with self._condition:
             while self._done != 0:
                 self._condition.wait()
 
-        self.reshape_callback_output(result_future.result())
-
-        # self.OutputPROSIT(
-        #     response_outputs=result_future.result(),
-        #     sequences=self.sequences_list
-        #
-        # )
+        self.callback_output = result_future.result()
+        self.reshape_callback_output()
 
 
+        if self.model_name == "intensity":
+            self.filter_invalid()
+            self.set_negative_to_zero()
+            self.normalize_raw_predictions()
 
-        return self.raw_predictions
+        if self.model_name == "proteotypicity":
+            self.predictions = self.raw_predictions
+
+        return self.predictions
+
