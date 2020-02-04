@@ -49,7 +49,7 @@ class PredictPROSIT:
         # prediction input instructions
         self.sequences_list = sequences_list
         self.charges_list = charges_list
-        self.collision_energies_list = collision_energies_list
+        self.collision_energies_list = [i / 100 for i in collision_energies_list]
         self.num_seq = len(sequences_list)
 
         # prepared/encoded input instructions
@@ -90,7 +90,7 @@ class PredictPROSIT:
         return [C.AMINO_ACIDS_ALPH[n] for n in x]
 
     @staticmethod
-    def _create_request(model_name="intensity", signature_name="serving_default"):
+    def _create_request(model_name="intensity_prosit_publication", signature_name="serving_default"):
         """
         :param model_name: Model name (taken from PROSIT)
         :param signature_name: Signature Name for the estimator (serving_default is by default set with custom tf estimator)
@@ -186,7 +186,7 @@ class PredictPROSIT:
         self.sequences_array = np.array(self.sequences_list_numeric).astype(np.float32)
 
     def reshape_callback_output(self):
-        if self.model_name == "intensity":
+        if self.model_name == "intensity_prosit_publication":
             outputs_tensor_proto = self.callback_output.outputs["out/Reshape:0"]
             shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
             self.raw_predictions = np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
@@ -269,7 +269,7 @@ class PredictPROSIT:
 
         self.set_sequence_list_numeric()
 
-        if self.model_name == "intensity":
+        if self.model_name == "intensity_prosit_publication":
             # set charges to one hot
             self.set_charges_list_one_hot()
 
@@ -285,7 +285,7 @@ class PredictPROSIT:
         request = self._create_request(model_name=self.model_name)
 
         # set tensors
-        if self.model_name == "intensity":
+        if self.model_name == "intensity_prosit_publication":
             # Parse inputs to request
             request.inputs['peptides_in:0'].CopyFrom(
                 tf.contrib.util.make_tensor_proto(self.sequences_array, shape=[self.num_seq, C.SEQ_LEN]))
@@ -322,7 +322,7 @@ class PredictPROSIT:
         self.reshape_callback_output()
 
 
-        if self.model_name == "intensity":
+        if self.model_name == "intensity_prosit_publication":
             self.filter_invalid()
             self.set_negative_to_zero()
             self.normalize_raw_predictions()
