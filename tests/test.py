@@ -1,4 +1,4 @@
-from prosit_grpc.predictPROSIT_2 import PredictPROSIT
+from prosit_grpc.predictPROSIT import PredictPROSIT
 
 import h5py
 import csv
