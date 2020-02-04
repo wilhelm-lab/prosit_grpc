@@ -6,7 +6,7 @@ import numpy as np
 
 with h5py.File("data.hdf5", 'r') as f:
     # List all groups
-    print("Keys: %s" % f.keys())
+    # print("Keys: %s" % f.keys())
     # a_group_key = list(f.keys())[0]
 
     # Get the data
@@ -31,7 +31,7 @@ predictor = PredictPROSIT(server="131.159.152.7:8500",
                           sequences_list=sequences,
                           charges_list=charge,
                           collision_energies_list=ce,
-                          model_name="intensity"
+                          model_name="intensity_prosit_publication"
                           )
 pred = predictor.get_predictions()
 
@@ -47,9 +47,10 @@ def test_array_size():
 
 def test_predictions():
     for i in range(len(pred)):
-        print(sequences[i])
-        print(pred[i])
-        print(data[i])
-        # for y in range(len(data[i])):
-        #     assert data[i][y] == pred[i][y]
-    assert 1 == 2
+        pearson_correlation = np.corrcoef(data[i], pred[i])[0,1]
+        assert round(pearson_correlation, 12) == 1
+
+def test_sequence_alpha_to_numbers():
+    result=predictor.sequence_alpha_to_numbers("ACDEFGHIKLMNPQRSTVWYUO")
+    target= [x+1 for x in range(22)]
+    assert result == target
