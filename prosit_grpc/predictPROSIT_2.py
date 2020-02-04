@@ -49,7 +49,9 @@ class PredictPROSIT:
         # prediction input instructions
         self.sequences_list = sequences_list
         self.charges_list = charges_list
-        self.collision_energies_list = [i / 100 for i in collision_energies_list]
+
+        if self.model_name == "intensity_prosit_publication":
+               self.collision_energies_list = [i / 100 for i in collision_energies_list]
         self.num_seq = len(sequences_list)
 
         # prepared/encoded input instructions
@@ -78,12 +80,12 @@ class PredictPROSIT:
 
         # print("[INFO] Initialized predicter with {} batches".format(self.num_batches))
 
-    @staticmethod
-    def sequence_numbers_to_alpha(x):
-        """
-        :param seq: list of letters to be converted to numbers
-        """
-        return [C.AMINO_ACIDS_INT[n] for n in x]
+    # @staticmethod
+    # def sequence_numbers_to_alpha(x):
+    #     """
+    #     :param seq: list of letters to be converted to numbers
+    #     """
+    #     return [C.AMINO_ACIDS_INT[n] for n in x]
 
     @staticmethod
     def sequence_alpha_to_numbers(x):
@@ -225,7 +227,7 @@ class PredictPROSIT:
             elif charge == 2:
                 # if charge == 1: all +2 & +3 invalid i.e. indexes only valid are indexes 0,1,3,4,6,7,9,10...
                 # invalid are x mod 3 == 2
-                invalid_indexes = [x * 3 + 2 for x in range(C.SEQ_LEN)]
+                invalid_indexes = [x * 3 + 2 for x in range((C.SEQ_LEN-1)*2)]
                 preds[invalid_indexes] = -1
             else:
                 if charge > C.MAX_CHARGE:
