@@ -45,10 +45,29 @@ def test_array_size():
     for i in range(len(pred)):
         assert len(pred[i]) == 174
 
-def test_predictions():
+def test_intensity():
+    predictor = PredictPROSIT(server="131.159.152.7:8500",
+                              sequences_list=sequences,
+                              charges_list=charge,
+                              collision_energies_list=ce,
+                              model_name="intensity_prosit_publication"
+                              )
+    pred = predictor.get_predictions()
+
     for i in range(len(pred)):
         pearson_correlation = np.corrcoef(data[i], pred[i])[0,1]
         assert round(pearson_correlation, 12) == 1
+
+
+def test_proteotypicity():
+    predictor = PredictPROSIT(server="131.159.152.7:8500",
+                              sequences_list= ["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
+                              model_name="proteotypicity"
+                              )
+    pred = predictor.get_predictions()
+    target = [-0.762, -6.674, -4.055]
+    for i in range(3):
+        assert round(pred[i], 3) == target[i]
 
 def test_sequence_alpha_to_numbers():
     result=predictor.sequence_alpha_to_numbers("ACDEFGHIKLMNPQRSTVWYUO")
