@@ -220,7 +220,7 @@ class PredictPROSIT:
             if charge == 1:
                 # if charge == 1: all +2 & +3 invalid i.e. indexes only valid are indexes 0,3,6,9,...
                 # invalid are x mod 3 != 0
-                invalid_indexes = [(x * 3 + 1) for x in range(C.SEQ_LEN)] + [(x * 3 + 2) for x in range(C.SEQ_LEN)]
+                invalid_indexes = [(x * 3 + 1) for x in range((C.SEQ_LEN-1)*2)] + [(x * 3 + 2) for x in range((C.SEQ_LEN-1)*2)]
                 preds[invalid_indexes] = -1
             elif charge == 2:
                 # if charge == 1: all +2 & +3 invalid i.e. indexes only valid are indexes 0,1,3,4,6,7,9,10...
@@ -228,18 +228,18 @@ class PredictPROSIT:
                 invalid_indexes = [x * 3 + 2 for x in range(C.SEQ_LEN)]
                 preds[invalid_indexes] = -1
             else:
-                if charge > 6:
+                if charge > C.MAX_CHARGE:
                     print("[ERROR] in charge greater than 6")
                     return False
-                # charge >= 3 --> all valid
+            # charge >= 3 --> all valid
                 # print("No filtering by charges")
             self.filtered_invalid_predictions.append(preds)
 
             # 2. Filter by length of input sequence
-            len_seq = len(self.sequences_list[i])  # e.g. seq is [1,4,1,1,0,...,0] then len is 4
-            # print("[INFO] Sequence has length", len_seq)
+            len_seq = len(self.sequences_list[i])
             if len_seq < C.SEQ_LEN:
                 self.filtered_invalid_predictions[i][(len_seq - 1) * 6:] = -1  # valid indexes are less than len_seq * 6
+
         return True
 
 
