@@ -64,11 +64,6 @@ class PredictPROSIT:
         self.charges_array_float32 = None
         self.collision_energies_array_float32 = None
 
-        # if model_name == "intensity":
-        #     self.normalize = True
-        # else:
-        #     self.normalize = False
-
         # Create channel and stub
         self.channel = grpc.insecure_channel(self.server)
         self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
@@ -76,15 +71,6 @@ class PredictPROSIT:
         self.outputs = {}  # for PROSIT OUTPUTS, key is the dataset number
         self.raw_predictions = []
         self.filtered_invalid_predictions = []
-
-
-
-    # @staticmethod
-    # def sequence_numbers_to_alpha(x):
-    #     """
-    #     :param seq: list of letters to be converted to numbers
-    #     """
-    #     return [C.AMINO_ACIDS_INT[n] for n in x]
 
     @staticmethod
     def sequence_alpha_to_numbers(x):
@@ -141,65 +127,6 @@ class PredictPROSIT:
     def create_request_irt(seq_array, batchsize, model_name):
         pass
 
-
-    # def throttle(self, dataset_index):
-    #     with self._condition:
-    #         while self._active == self.concurrency:
-    #             self._condition.wait()
-    #         self._active += 1
-    #         # print("Activated BATCH",dataset_index)
-    #
-    # def dec_active(self, dataset_index):
-    #     with self._condition:
-    #         self._active -= 1
-    #         self._condition.notify()
-    #         # print("Deactivated for BATCH", dataset_index)
-    #
-    # def inc_done(self, dataset_index):
-    #     with self._condition:
-    #         self._done += 1
-    #         self._condition.notify()
-    #         print("DONE with BATCH", dataset_index)
-
-    # def set_collision_energies(ce):
-    #     self.collision_energies_list = ce
-    #
-    # def set_charges(c):
-    #     self.charges_list = c
-    #
-    # def set_sequences(s):
-    #     self.sequences_list = s
-
-
-    # def prosit_callback(self, result_future, sequences, charges, collision_energies,
-    #                     scan_nums=None, ids=None, labels=None, verbose=False):
-    #     """
-    #     Wrapper for callback function needed to add parameters
-    #     returns the callback function
-    #     """
-    #
-    #     def _callback(result_future):
-    #         """
-    #         Calculates the statistics for the prediction result.
-    #         :param result_future:
-    #         """
-    #
-    #         exception = result_future.exception()
-    #             # Get output
-    #         response_outputs = result_future.result().outputs
-    #
-    #     return _callback
-    #
-    # def _callback(result_future):
-    #     """
-    #     Calculates the statistics for the prediction result.
-    #     :param result_future:
-    #     """
-    #
-    #     exception = result_future.exception()
-    #     # Get output
-    #     response_outputs = result_future.result().outputs
-
     def set_sequence_list_numeric(self):
         """
         Function that converts the sequences saved in self.sequence_list to a numerical encoding
@@ -253,34 +180,21 @@ class PredictPROSIT:
         if charge == 2: all +3 invalid
         if charge == 1: all +2 & +3 invalid
         """
-        # self.final_predictions = self.normalized_predictions.copy()
-
-        # print("Number of sequences", self.num_seq)
         for i in range(self.num_seq):
             charge = self.charges_list[i]
             preds = self.raw_predictions[i]
 
-            # print(preds, charge)
-
             if charge == 1:
-                # if charge == 1: all +2 & +3 invalid i.e. indexes only valid are indexes 0,3,6,9,...
-                # invalid are x mod 3 != 0
                 invalid_indexes = [(x * 3 + 1) for x in range((C.SEQ_LEN-1)*2)] + [(x * 3 + 2) for x in range((C.SEQ_LEN-1)*2)]
                 preds[invalid_indexes] = -1
             elif charge == 2:
-                # if charge == 1: all +2 & +3 invalid i.e. indexes only valid are indexes 0,1,3,4,6,7,9,10...
-                # invalid are x mod 3 == 2
                 invalid_indexes = [x * 3 + 2 for x in range((C.SEQ_LEN-1)*2)]
                 preds[invalid_indexes] = -1
             else:
                 if charge > C.MAX_CHARGE:
                     print("[ERROR] in charge greater than 6")
                     return False
-            # charge >= 3 --> all valid
-                # print("No filtering by charges")
             self.filtered_invalid_predictions.append(preds)
-
-            # 2. Filter by length of input sequence
             len_seq = len(self.sequences_list[i])
             if len_seq < C.SEQ_LEN:
                 self.filtered_invalid_predictions[i][(len_seq - 1) * 6:] = -1  # valid indexes are less than len_seq * 6
