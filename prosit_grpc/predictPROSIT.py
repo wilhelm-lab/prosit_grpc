@@ -39,6 +39,7 @@ class PredictPROSIT:
         # server settings
         self.server = server
         self.model_name = model_name
+        self.model_type = model_name.split("_")[0]
 
         self.concurrency = 1
         self._condition = threading.Condition()
@@ -50,7 +51,7 @@ class PredictPROSIT:
         self.sequences_list = sequences_list
         self.charges_list = charges_list
 
-        if self.model_name == "intensity_prosit_publication":
+        if self.model_type == "intensity":
                self.collision_energies_list = [i / 100 for i in collision_energies_list]
         self.num_seq = len(sequences_list)
 
@@ -159,7 +160,7 @@ class PredictPROSIT:
 
     @staticmethod
     def reshape_predict_response_to_raw_predictions(predict_response, model_type):
-        if model_type == "intensity_prosit_publication":
+        if model_type == "intensity":
             outputs_tensor_proto = predict_response.outputs["out/Reshape:0"]
             shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
             return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
@@ -183,7 +184,6 @@ class PredictPROSIT:
         for i in range(self.num_seq):
             charge = self.charges_list[i]
             preds = self.raw_predictions[i]
-
             if charge == 1:
                 invalid_indexes = [(x * 3 + 1) for x in range((C.SEQ_LEN-1)*2)] + [(x * 3 + 2) for x in range((C.SEQ_LEN-1)*2)]
                 preds[invalid_indexes] = -1
@@ -228,7 +228,7 @@ class PredictPROSIT:
 
         batch_start = 0
 
-        if self.model_name == "intensity_prosit_publication":
+        if self.model_type == "intensity":
             # set charges to one hot
             self.set_charges_list_one_hot()
 
@@ -270,16 +270,16 @@ class PredictPROSIT:
                 batch_start = batch_end + 1
 
         for request in requests:
-            self.raw_predictions.append(self.reshape_predict_response_to_raw_predictions(self._predict_request(request), model_type=self.model_name))
+            self.raw_predictions.append(self.reshape_predict_response_to_raw_predictions(self._predict_request(request), model_type=self.model_type))
 
         self.raw_predictions = np.vstack(self.raw_predictions)
 
-        if self.model_name == "intensity_prosit_publication":
+        if self.model_type == "intensity":
             self.filter_invalid()
             self.set_negative_to_zero()
             self.normalize_raw_predictions()
 
-        if self.model_name == "proteotypicity":
+        if self.model_type == "proteotypicity":
             self.predictions = self.raw_predictions.flatten()
 
     def get_raw_predictions(self):
