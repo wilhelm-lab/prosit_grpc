@@ -120,3 +120,4 @@ MASSES["NH3"] = MASSES["N"] + MASSES["H"] * 3
 
 SEQ_LEN = 30 # Sequence length for prosit
 MAX_CHARGE = 6
+BATCH_SIZE = 7000

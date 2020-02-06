@@ -39,7 +39,7 @@ class PredictPROSIT:
         # server settings
         self.server = server
         self.model_name = model_name
-        self.num_batches = len(sequences_list)
+
         self.concurrency = 1
         self._condition = threading.Condition()
         self._done = 0
@@ -74,11 +74,10 @@ class PredictPROSIT:
         self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
 
         self.outputs = {}  # for PROSIT OUTPUTS, key is the dataset number
-        self.callback_output = None
         self.raw_predictions = []
         self.filtered_invalid_predictions = []
 
-        # print("[INFO] Initialized predicter with {} batches".format(self.num_batches))
+
 
     # @staticmethod
     # def sequence_numbers_to_alpha(x):
@@ -92,7 +91,7 @@ class PredictPROSIT:
         return [C.AMINO_ACIDS_ALPH[n] for n in x]
 
     @staticmethod
-    def _create_request(model_name="intensity_prosit_publication", signature_name="serving_default"):
+    def _create_request(model_name, signature_name="serving_default"):
         """
         :param model_name: Model name (taken from PROSIT)
         :param signature_name: Signature Name for the estimator (serving_default is by default set with custom tf estimator)
@@ -101,31 +100,66 @@ class PredictPROSIT:
         # Create Request
         request = predict_pb2.PredictRequest()
         # print("[INFO] Created Request")
-
         # Model and Signature Name
         request.model_spec.name = model_name
         request.model_spec.signature_name = signature_name
         # print("[INFO] Set model and signature name")
         return request
 
-    def throttle(self, dataset_index):
-        with self._condition:
-            while self._active == self.concurrency:
-                self._condition.wait()
-            self._active += 1
-            # print("Activated BATCH",dataset_index)
+    @staticmethod
+    def create_request_intensity(seq_array, ce_array, charges_array, batchsize, model_name):
+        """
+        seq_array
+        ce_array
+        charges_array
+        batchsize       size of the created request
+        model_name      specify the model that should be used to predict
+        return:         request ready to be sent ther server
+        """
+        request = PredictPROSIT._create_request(model_name=model_name)
+        request.inputs['peptides_in:0'].CopyFrom(
+            tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
+        request.inputs['collision_energy_in:0'].CopyFrom(
+            tf.contrib.util.make_tensor_proto(ce_array, shape=[batchsize, 1]))
+        request.inputs['precursor_charge_in:0'].CopyFrom(
+            tf.contrib.util.make_tensor_proto(charges_array, shape=[batchsize, 6]))
+        return request
 
-    def dec_active(self, dataset_index):
-        with self._condition:
-            self._active -= 1
-            self._condition.notify()
-            # print("Deactivated for BATCH", dataset_index)
+    @staticmethod
+    def create_request_proteotypicity(seq_array, batchsize, model_name):
+        """
+        seq array
+        batchsize
+        model_name  specify the model used for prediction
+        """
+        request = PredictPROSIT._create_request(model_name=model_name)
+        request.inputs['peptides_in_1:0'].CopyFrom(
+                tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
+        return request
 
-    def inc_done(self, dataset_index):
-        with self._condition:
-            self._done += 1
-            self._condition.notify()
-            print("DONE with BATCH", dataset_index)
+    @staticmethod
+    def create_request_irt(seq_array, batchsize, model_name):
+        pass
+
+
+    # def throttle(self, dataset_index):
+    #     with self._condition:
+    #         while self._active == self.concurrency:
+    #             self._condition.wait()
+    #         self._active += 1
+    #         # print("Activated BATCH",dataset_index)
+    #
+    # def dec_active(self, dataset_index):
+    #     with self._condition:
+    #         self._active -= 1
+    #         self._condition.notify()
+    #         # print("Deactivated for BATCH", dataset_index)
+    #
+    # def inc_done(self, dataset_index):
+    #     with self._condition:
+    #         self._done += 1
+    #         self._condition.notify()
+    #         print("DONE with BATCH", dataset_index)
 
     # def set_collision_energies(ce):
     #     self.collision_energies_list = ce
@@ -137,25 +171,34 @@ class PredictPROSIT:
     #     self.sequences_list = s
 
 
-    def prosit_callback(self, result_future, sequences, charges, collision_energies,
-                        scan_nums=None, ids=None, labels=None, verbose=False):
-        """
-        Wrapper for callback function needed to add parameters
-        returns the callback function
-        """
-
-        def _callback(result_future):
-            """
-            Calculates the statistics for the prediction result.
-            :param result_future:
-            """
-
-            exception = result_future.exception()
-                # Get output
-            response_outputs = result_future.result().outputs
-
-        return _callback
-
+    # def prosit_callback(self, result_future, sequences, charges, collision_energies,
+    #                     scan_nums=None, ids=None, labels=None, verbose=False):
+    #     """
+    #     Wrapper for callback function needed to add parameters
+    #     returns the callback function
+    #     """
+    #
+    #     def _callback(result_future):
+    #         """
+    #         Calculates the statistics for the prediction result.
+    #         :param result_future:
+    #         """
+    #
+    #         exception = result_future.exception()
+    #             # Get output
+    #         response_outputs = result_future.result().outputs
+    #
+    #     return _callback
+    #
+    # def _callback(result_future):
+    #     """
+    #     Calculates the statistics for the prediction result.
+    #     :param result_future:
+    #     """
+    #
+    #     exception = result_future.exception()
+    #     # Get output
+    #     response_outputs = result_future.result().outputs
 
     def set_sequence_list_numeric(self):
         """
@@ -187,17 +230,17 @@ class PredictPROSIT:
     def set_sequences_array_float32(self):
         self.sequences_array = np.array(self.sequences_list_numeric).astype(np.float32)
 
-    def reshape_callback_output(self):
-        if self.model_name == "intensity_prosit_publication":
-            outputs_tensor_proto = self.callback_output.outputs["out/Reshape:0"]
+    @staticmethod
+    def reshape_predict_response_to_raw_predictions(predict_response, model_type):
+        if model_type == "intensity_prosit_publication":
+            outputs_tensor_proto = predict_response.outputs["out/Reshape:0"]
             shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-            self.raw_predictions = np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+            return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
 
-        elif self.model_name == "proteotypicity":
-            outputs_tensor_proto = self.callback_output.outputs["pep_dense4/BiasAdd:0"]
+        elif model_type == "proteotypicity":
+            outputs_tensor_proto = predict_response.outputs["pep_dense4/BiasAdd:0"]
             shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-            outputs = np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
-            self.raw_predictions = outputs.flatten()
+            return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
 
     # normalization functions
     def filter_invalid(self):
@@ -261,15 +304,15 @@ class PredictPROSIT:
         self.predictions = normalize_intensities(self.filtered_invalid_predictions)
         self.predictions[self.predictions < 0] = -1
 
-    def get_predictions(self, verbose=False):
-        """
-        Tests PredictionService with concurrent requests.
+    def _predict_request(self, request):
+        timeout = 5  # in seconds
+        result_future = self.stub.Predict.future(request, timeout)  # asynchronous request
+        return result_future.result()
 
-        :return: The classification error rate.
-        :raises IOError: An error occurred processing test data set.
-        """
-
+    def predict(self):
         self.set_sequence_list_numeric()
+
+        batch_start = 0
 
         if self.model_name == "intensity_prosit_publication":
             # set charges to one hot
@@ -280,49 +323,42 @@ class PredictPROSIT:
             self.set_collision_energies_array_float32()
             self.set_sequences_array_int32()
 
+            requests = []
+            while batch_start < self.num_seq:
+
+                batch_end = batch_start+C.BATCH_SIZE-1
+                batch_end = min(self.num_seq, batch_end)
+
+                request = PredictPROSIT.create_request_intensity(
+                    seq_array= self.sequences_array[batch_start:batch_end],
+                    ce_array= self.collision_energies_array_float32[batch_start:batch_end],
+                    charges_array= self.charges_array_float32[batch_start:batch_end],
+                    model_name=self.model_name,
+                    batchsize=(batch_end-batch_start))
+                requests.append(request)
+
+                batch_start = batch_end+1
+
+
         elif self.model_name == "proteotypicity":
             self.set_sequences_array_float32()
 
-        # Create request
-        request = self._create_request(model_name=self.model_name)
+            requests = []
+            while batch_start < self.num_seq:
+                batch_end = batch_start + C.BATCH_SIZE - 1
+                batch_end = min(self.num_seq, batch_end)
 
-        # set tensors
-        if self.model_name == "intensity_prosit_publication":
-            # Parse inputs to request
-            request.inputs['peptides_in:0'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(self.sequences_array, shape=[self.num_seq, C.SEQ_LEN]))
-            request.inputs['collision_energy_in:0'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(self.collision_energies_array_float32, shape=[self.num_seq, 1]))
-            request.inputs['precursor_charge_in:0'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(self.charges_array_float32, shape=[self.num_seq, 6]))
+                request = PredictPROSIT.create_request_proteotypicity(
+                    seq_array=self.sequences_array[batch_start:batch_end],
+                    model_name=self.model_name,
+                    batchsize=(batch_end - batch_start))
+                requests.append(request)
+                batch_start = batch_end + 1
 
-        elif self.model_name == "proteotypicity":
-            request.inputs['peptides_in_1:0'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(self.sequences_array, shape=[self.num_seq, C.SEQ_LEN]))
+        for request in requests:
+            self.raw_predictions.append(self.reshape_predict_response_to_raw_predictions(self._predict_request(request), model_type=self.model_name))
 
-        self.throttle(0)  #
-        timeout = 5  # in seconds
-        result_future = self.stub.Predict.future(request, timeout)  # asynchronous request
-
-        # Callback function
-        result_future.add_done_callback(
-            self.prosit_callback(
-                result_future=result_future,
-                sequences=self.sequences_array,
-                charges=self.charges_array_float32,
-                collision_energies=self.collision_energies_array_float32,
-                verbose=verbose
-            )
-        )
-
-        # Wait until all request finish
-        with self._condition:
-            while self._done != 0:
-                self._condition.wait()
-
-        self.callback_output = result_future.result()
-        self.reshape_callback_output()
-
+        self.raw_predictions = np.vstack(self.raw_predictions)
 
         if self.model_name == "intensity_prosit_publication":
             self.filter_invalid()
@@ -330,7 +366,15 @@ class PredictPROSIT:
             self.normalize_raw_predictions()
 
         if self.model_name == "proteotypicity":
-            self.predictions = self.raw_predictions
+            self.predictions = self.raw_predictions.flatten()
 
+    def get_raw_predictions(self):
+        self.predict()
+        return self.raw_predictions
+
+    def get_predictions(self):
+        """
+        TODO: add flag to prevent repeated prediction calls
+        """
+        self.predict()
         return self.predictions
-

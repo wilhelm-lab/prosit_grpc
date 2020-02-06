@@ -54,6 +54,7 @@ def test_intensity():
                               )
     pred = predictor.get_predictions()
 
+    assert len(data) == len(pred)
     for i in range(len(pred)):
         pearson_correlation = np.corrcoef(data[i], pred[i])[0,1]
         assert round(pearson_correlation, 12) == 1
@@ -66,6 +67,10 @@ def test_proteotypicity():
                               )
     pred = predictor.get_predictions()
     target = [-0.762, -6.674, -4.055]
+
+    print(pred)
+
+    assert len(pred) == len(target)
     for i in range(3):
         assert round(pred[i], 3) == target[i]
 
@@ -73,3 +78,12 @@ def test_sequence_alpha_to_numbers():
     result=predictor.sequence_alpha_to_numbers("ACDEFGHIKLMNPQRSTVWYUO")
     target= [x+1 for x in range(22)]
     assert result == target
+
+def test_batching():
+    predictor = PredictPROSIT(server="131.159.152.7:8500",
+                              sequences_list=["THDLGKW" for i in range(100000)],
+                              charges_list= [2 for i in range(100000)],
+                              collision_energies_list= [20 for i in range(100000)],
+                              model_name="proteotypicity"
+                              )
+    pred = predictor.get_predictions()
