@@ -10,7 +10,7 @@ prosit_grpc = {git = "git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git"
 
 ## How to use the gRPC Client using Python?
 ```
-from prosit_grpc.predictPROSIT_2 import PredictPROSIT
+from prosit_grpc.predictPROSIT import PredictPROSIT
 
 #Initialize Predictor
 predictor = PredictPROSIT(server="131.159.152.7:8500",
