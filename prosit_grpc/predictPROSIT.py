@@ -45,6 +45,7 @@ class PredictPROSIT:
         self._condition = threading.Condition()
         self._done = 0
         self._active = 0
+        self.predictions_done = False
 
 
         # prediction input instructions
@@ -282,13 +283,16 @@ class PredictPROSIT:
         if self.model_type == "proteotypicity":
             self.predictions = self.raw_predictions.flatten()
 
+        self.predictions_done = True
+
+
+
     def get_raw_predictions(self):
-        self.predict()
+        if self.predictions_done == False:
+            self.predict()
         return self.raw_predictions
 
     def get_predictions(self):
-        """
-        TODO: add flag to prevent repeated prediction calls
-        """
-        self.predict()
+        if self.predictions_done == False:
+            self.predict()
         return self.predictions
