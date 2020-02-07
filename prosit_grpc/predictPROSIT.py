@@ -87,7 +87,6 @@ class PredictPROSIT:
         """
         # Create Request
         request = predict_pb2.PredictRequest()
-        # print("[INFO] Created Request")
         # Model and Signature Name
         request.model_spec.name = model_name
         request.model_spec.signature_name = signature_name
@@ -298,8 +297,6 @@ class PredictPROSIT:
                 requests.append(request)
                 batch_start = batch_end
 
-
-
         self.raw_predictions = []
         for request in requests:
             self.raw_predictions.append(self.reshape_predict_response_to_raw_predictions(self._predict_request(request), model_type=self.model_type))
@@ -319,8 +316,6 @@ class PredictPROSIT:
             self.predictions = [i * 43.39373 + 56.35363441 for i in self.raw_predictions]
 
         self.predictions_done = True
-
-
 
     def get_raw_predictions(self):
         if self.predictions_done == False:
