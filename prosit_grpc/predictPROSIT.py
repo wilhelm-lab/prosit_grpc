@@ -134,6 +134,7 @@ class PredictPROSIT:
         Function that converts the sequences saved in self.sequence_list to a numerical encoding
         saves the encoded sequence in self.sequence_list_numeric
         """
+        self.sequences_list_numeric = []
         for sequence in self.sequences_list:
             sequence_temp = self.sequence_alpha_to_numbers(sequence)
             while len(sequence_temp)<30:
@@ -182,6 +183,7 @@ class PredictPROSIT:
         if charge == 2: all +3 invalid
         if charge == 1: all +2 & +3 invalid
         """
+        self.filtered_invalid_predictions = []
         for i in range(self.num_seq):
             charge = self.charges_list[i]
             preds = self.raw_predictions[i]
@@ -270,6 +272,7 @@ class PredictPROSIT:
                 requests.append(request)
                 batch_start = batch_end + 1
 
+        self.raw_predictions = []
         for request in requests:
             self.raw_predictions.append(self.reshape_predict_response_to_raw_predictions(self._predict_request(request), model_type=self.model_type))
 
