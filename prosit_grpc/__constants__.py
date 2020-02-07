@@ -85,7 +85,6 @@ AMINO_ACIDS_MASS = ODict(
         "K": 128.094963,
         "U": 168.064, # NEW
         "O": 255.313, # NEW
-        
         # Mods
         "M(ox)": 131.040485 + 15.99491,
         "M(O)":  131.040485 + 15.99491,
@@ -120,4 +119,4 @@ MASSES["NH3"] = MASSES["N"] + MASSES["H"] * 3
 
 SEQ_LEN = 30 # Sequence length for prosit
 MAX_CHARGE = 6
-BATCH_SIZE = 7000
+BATCH_SIZE = 6000
