@@ -76,19 +76,10 @@ Tyrosine|Y
 
 Modified AA can be specified with:
 
-Modifed Amino Acid|accepted abbreviation
+Modified Amino Acid|accepted abbreviation
 :-----:|:-----:
+Alkylated Cystein |C, Cac, Cam
 Oxidized Methionine|M(ox), M(O), OxM
-Phosphorylation Serine|Phs, S(ph)
-Phosphorylation Threonine|PhT, T(ph)
-Phosphorylation Tyrosine|PhY, Y(ph)
-Citrullination Arginine|R(ci) 
-Glycosylation Lysine|K(gl) 
-Glycosylation Threonine|T(gl) 
-Glycosylation Serine|S(gl) 
-Glycosylation Glutamine|Q(gl) 
-Methylation Arginine|R(me) 
-Methylation Lysine|K(me) 
-T(ga) |T(ga) 
-S(ga) |S(ga) 
-Acetylation Lysine|K(ac) 
+Phosphorylated Serine|Phs, S(ph)
+Phosphorylated Threonine|PhT, T(ph)
+Phosphorylated Tyrosine|PhY, Y(ph)
