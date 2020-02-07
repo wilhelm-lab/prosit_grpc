@@ -3,20 +3,11 @@ from prosit_grpc.predictPROSIT import PredictPROSIT
 import h5py
 import csv
 import numpy as np
-import pdb
 
 with h5py.File("data.hdf5", 'r') as f:
-    # List all groups
-    # print("Keys: %s" % f.keys())
-    # a_group_key = list(f.keys())[0]
-
-    # Get the intensities
-    # intensities = list(f[a_group_key])
     intensities = list(f["intensities_pred"])
-    # get irt
     irt = list(f["iRT"])
     irt = [i[0] for i in irt]
-
 
 with open("input_test.csv", "r") as csvfile:
     reader = csv.reader(csvfile, delimiter=',')
@@ -44,11 +35,14 @@ def test_grpc_call():
     assert type(pred) == np.ndarray
 
 def test_array_size():
-    # test number of predictions made
     assert len(pred) == 27
-    # test number of returned intensities
     for i in range(len(pred)):
         assert len(pred[i]) == 174
+
+def test_sequence_alpha_to_numbers():
+    result=predictor.sequence_alpha_to_numbers("ACDEFGHIKLMNPQRSTVWYUO")
+    target= [x+1 for x in range(22)]
+    assert result == target
 
 def test_intensity():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
@@ -79,19 +73,29 @@ def test_proteotypicity():
     for i in range(3):
         assert round(pred[i], 3) == target[i]
 
-def test_sequence_alpha_to_numbers():
-    result=predictor.sequence_alpha_to_numbers("ACDEFGHIKLMNPQRSTVWYUO")
-    target= [x+1 for x in range(22)]
-    assert result == target
-
 def test_batching():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
                               sequences_list=["THDLGKW" for i in range(10000)],
                               charges_list= [2 for i in range(10000)],
                               collision_energies_list= [20 for i in range(10000)],
+                              model_name="intensity_prosit_publication"
+                              )
+    pred = predictor.get_predictions()
+    assert len(pred) == 10000
+
+    predictor = PredictPROSIT(server="131.159.152.7:8500",
+                              sequences_list=["THDLGKW" for i in range(10000)],
                               model_name="proteotypicity"
                               )
     pred = predictor.get_predictions()
+    assert len(pred) == 10000
+
+    predictor = PredictPROSIT(server="131.159.152.7:8500",
+                              sequences_list=["THDLGKW" for i in range(10000)],
+                              model_name="iRT"
+                              )
+    pred = predictor.get_predictions()
+    assert len(pred) == 10000
 
 def test_irt():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
@@ -103,9 +107,6 @@ def test_irt():
     assert len(pred) == len(irt)
 
     for i in range(len(irt)):
-        # print(pred[i], "\t","==", irt[i])
-        # print(pred[i]/irt[i])
         # converting them to float because:
         # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
         assert round(float(pred[i]), 1) == round(float(irt[i]), 1)
-
