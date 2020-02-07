@@ -8,6 +8,8 @@ with h5py.File("data.hdf5", 'r') as f:
     intensities = list(f["intensities_pred"])
     irt = list(f["iRT"])
     irt = [i[0] for i in irt]
+    masses = list(f["masses_pred"])
+
 
 with open("input_test.csv", "r") as csvfile:
     reader = csv.reader(csvfile, delimiter=',')
@@ -39,12 +41,7 @@ def test_array_size():
     for i in range(len(pred)):
         assert len(pred[i]) == 174
 
-def test_sequence_alpha_to_numbers():
-    result=predictor.sequence_alpha_to_numbers("ACDEFGHIKLMNPQRSTVWYUO")
-    target= [x+1 for x in range(22)]
-    assert result == target
-
-def test_intensity():
+def test_intensity_prediction():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
                               sequences_list=sequences,
                               charges_list=charge,
@@ -52,14 +49,21 @@ def test_intensity():
                               model_name="intensity_prosit_publication"
                               )
     pred = predictor.get_predictions()
+    mymasses = predictor.get_fragment_masses()
+
+    print(mymasses)
 
     assert len(intensities) == len(pred)
     for i in range(len(pred)):
         pearson_correlation = np.corrcoef(intensities[i], pred[i])[0,1]
         assert round(pearson_correlation, 12) == 1
 
+    for i in range(len(pred)):
+        pearson_correlation = np.corrcoef(masses[i], mymasses[i])[0,1]
+        assert round(pearson_correlation, 12) == 1
 
-def test_proteotypicity():
+
+def test_proteotypicity_prediction():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
                               sequences_list= ["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
                               model_name="proteotypicity"
@@ -73,7 +77,7 @@ def test_proteotypicity():
     for i in range(3):
         assert round(pred[i], 3) == target[i]
 
-def test_batching():
+def test_batched_prediction():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
                               sequences_list=["THDLGKW" for i in range(10000)],
                               charges_list= [2 for i in range(10000)],
@@ -97,7 +101,7 @@ def test_batching():
     pred = predictor.get_predictions()
     assert len(pred) == 10000
 
-def test_irt():
+def test_irt_prediction():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
                               sequences_list=sequences,
                               model_name="iRT"

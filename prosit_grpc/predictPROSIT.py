@@ -14,7 +14,7 @@ from tensorflow_serving.apis import predict_pb2, prediction_service_pb2_grpc
 from typing import Iterable, Optional, Union
 
 from . import __constants__ as C  # For constants
-from .__utils__ import normalize_intensities, indices_to_one_hot,map_peptide_to_numbers  # For ion mass computation
+from .__utils__ import compute_ion_masses,normalize_intensities, indices_to_one_hot,map_peptide_to_numbers  # For ion mass computation
 
 class PredictPROSIT:
     def __init__(self,
@@ -51,10 +51,13 @@ class PredictPROSIT:
         # prediction input instructions
         self.sequences_list = sequences_list
         self.charges_list = charges_list
-
         if self.model_type == "intensity":
-               self.collision_energies_list = [i / 100 for i in collision_energies_list]
+            self.collision_energies_list = [i / 100 for i in collision_energies_list]
+
         self.num_seq = len(sequences_list)
+
+
+
 
         # prepared/encoded input instructions
         # set with seperate function
@@ -164,6 +167,12 @@ class PredictPROSIT:
     def set_sequences_array_float32(self):
         self.sequences_array = np.array(self.sequences_list_numeric).astype(np.float32)
 
+    def set_fragment_masses(self):
+        self.fragment_masses = []
+        for i in range(self.num_seq):
+            self.fragment_masses.append(compute_ion_masses(seq_int= self.sequences_list_numeric[i],
+                                                           charge_onehot=self.charges_list_one_hot[i]))
+
     @staticmethod
     def reshape_predict_response_to_raw_predictions(predict_response, model_type):
         if model_type == "intensity":
@@ -236,12 +245,14 @@ class PredictPROSIT:
 
     def predict(self):
         self.set_sequence_list_numeric()
-
         batch_start = 0
 
         if self.model_type == "intensity":
             # set charges to one hot
             self.set_charges_list_one_hot()
+            # set fragment masses
+            self.set_fragment_masses()
+
 
             # set numpy arrays
             self.set_charges_array_float32()
@@ -323,3 +334,8 @@ class PredictPROSIT:
         if self.predictions_done == False:
             self.predict()
         return self.predictions
+
+    def get_fragment_masses(self):
+        if self.predictions_done == False:
+            self.predict()
+        return self.fragment_masses
