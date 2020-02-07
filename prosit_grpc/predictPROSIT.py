@@ -14,7 +14,7 @@ from tensorflow_serving.apis import predict_pb2, prediction_service_pb2_grpc
 from typing import Iterable, Optional, Union
 
 from . import __constants__ as C  # For constants
-from .__utils__ import normalize_intensities, indices_to_one_hot  # For ion mass computation
+from .__utils__ import normalize_intensities, indices_to_one_hot,map_peptide_to_numbers  # For ion mass computation
 
 class PredictPROSIT:
     def __init__(self,
@@ -73,10 +73,6 @@ class PredictPROSIT:
         self.outputs = {}  # for PROSIT OUTPUTS, key is the dataset number
         self.raw_predictions = []
         self.filtered_invalid_predictions = []
-
-    @staticmethod
-    def sequence_alpha_to_numbers(x):
-        return [C.AMINO_ACIDS_ALPH[n] for n in x]
 
     @staticmethod
     def _create_request(model_name, signature_name="serving_default"):
@@ -143,10 +139,11 @@ class PredictPROSIT:
         """
         self.sequences_list_numeric = []
         for sequence in self.sequences_list:
-            sequence_temp = self.sequence_alpha_to_numbers(sequence)
-            while len(sequence_temp)<30:
-                sequence_temp.append(0)
-            self.sequences_list_numeric.append(sequence_temp)
+            numeric_sequence = list(map_peptide_to_numbers(sequence))
+            while len(numeric_sequence)<30:
+                numeric_sequence.append(0)
+
+            self.sequences_list_numeric.append(numeric_sequence)
 
     def set_charges_list_one_hot(self):
         """
