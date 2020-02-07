@@ -3,6 +3,7 @@ from prosit_grpc.predictPROSIT import PredictPROSIT
 import h5py
 import csv
 import numpy as np
+import pdb
 
 with h5py.File("data.hdf5", 'r') as f:
     # List all groups
@@ -99,17 +100,12 @@ def test_irt():
                               )
     pred = predictor.get_predictions()
 
-    print(pred)
-    print("*"*50)
-    print(irt)
-
     assert len(pred) == len(irt)
+
     for i in range(len(irt)):
-        """
-        TODO normalization? for irt values
-        """
-        print(pred[i], "\t","==", irt[i])
+        # print(pred[i], "\t","==", irt[i])
         # print(pred[i]/irt[i])
-        # assert pred[i] == irt[i]
-    assert 1 == 2
+        # converting them to float because:
+        # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
+        assert round(float(pred[i]), 1) == round(float(irt[i]), 1)
 

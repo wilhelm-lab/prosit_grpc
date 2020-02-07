@@ -312,8 +312,12 @@ class PredictPROSIT:
             self.set_negative_to_zero()
             self.normalize_raw_predictions()
 
-        if self.model_type == "proteotypicity" or self.model_type == "iRT":
+        elif self.model_type == "proteotypicity":
             self.predictions = self.raw_predictions.flatten()
+
+        elif self.model_type == "iRT":
+            self.raw_predictions = [i[0] for i in self.raw_predictions]
+            self.predictions = [i * 43.39373 + 56.35363441 for i in self.raw_predictions]
 
         self.predictions_done = True
 
