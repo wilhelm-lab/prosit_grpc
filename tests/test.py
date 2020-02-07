@@ -9,9 +9,13 @@ with h5py.File("data.hdf5", 'r') as f:
     # print("Keys: %s" % f.keys())
     # a_group_key = list(f.keys())[0]
 
-    # Get the data
-    # data = list(f[a_group_key])
-    data = list(f["intensities_pred"])
+    # Get the intensities
+    # intensities = list(f[a_group_key])
+    intensities = list(f["intensities_pred"])
+    # get irt
+    irt = list(f["iRT"])
+    irt = [i[0] for i in irt]
+
 
 with open("input_test.csv", "r") as csvfile:
     reader = csv.reader(csvfile, delimiter=',')
@@ -54,9 +58,9 @@ def test_intensity():
                               )
     pred = predictor.get_predictions()
 
-    assert len(data) == len(pred)
+    assert len(intensities) == len(pred)
     for i in range(len(pred)):
-        pearson_correlation = np.corrcoef(data[i], pred[i])[0,1]
+        pearson_correlation = np.corrcoef(intensities[i], pred[i])[0,1]
         assert round(pearson_correlation, 12) == 1
 
 
@@ -81,9 +85,31 @@ def test_sequence_alpha_to_numbers():
 
 def test_batching():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
-                              sequences_list=["THDLGKW" for i in range(100000)],
-                              charges_list= [2 for i in range(100000)],
-                              collision_energies_list= [20 for i in range(100000)],
+                              sequences_list=["THDLGKW" for i in range(10000)],
+                              charges_list= [2 for i in range(10000)],
+                              collision_energies_list= [20 for i in range(10000)],
                               model_name="proteotypicity"
                               )
     pred = predictor.get_predictions()
+
+def test_irt():
+    predictor = PredictPROSIT(server="131.159.152.7:8500",
+                              sequences_list=sequences,
+                              model_name="iRT"
+                              )
+    pred = predictor.get_predictions()
+
+    print(pred)
+    print("*"*50)
+    print(irt)
+
+    assert len(pred) == len(irt)
+    for i in range(len(irt)):
+        """
+        TODO normalization? for irt values
+        """
+        print(pred[i], "\t","==", irt[i])
+        # print(pred[i]/irt[i])
+        # assert pred[i] == irt[i]
+    assert 1 == 2
+

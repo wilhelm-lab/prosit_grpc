@@ -127,7 +127,15 @@ class PredictPROSIT:
 
     @staticmethod
     def create_request_irt(seq_array, batchsize, model_name):
-        pass
+        """
+        seq array
+        batchsize
+        model_name  specify the model used for prediction
+        """
+        request = PredictPROSIT._create_request(model_name=model_name)
+        request.inputs['sequence_integer'].CopyFrom(
+            tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
+        return request
 
     def set_sequence_list_numeric(self):
         """
@@ -169,6 +177,11 @@ class PredictPROSIT:
 
         elif model_type == "proteotypicity":
             outputs_tensor_proto = predict_response.outputs["pep_dense4/BiasAdd:0"]
+            shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
+            return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+
+        elif model_type == "iRT":
+            outputs_tensor_proto = predict_response.outputs["prediction/BiasAdd:0"]
             shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
             return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
 
@@ -256,8 +269,22 @@ class PredictPROSIT:
 
                 batch_start = batch_end+1
 
+        elif self.model_type == "iRT":
+            self.set_sequences_array_int32()
 
-        elif self.model_name == "proteotypicity":
+            requests = []
+            while batch_start < self.num_seq:
+                batch_end = batch_start + C.BATCH_SIZE - 1
+                batch_end = min(self.num_seq, batch_end)
+
+                request = PredictPROSIT.create_request_irt(
+                    seq_array=self.sequences_array[batch_start:batch_end],
+                    model_name=self.model_name,
+                    batchsize=(batch_end - batch_start))
+                requests.append(request)
+                batch_start = batch_end + 1
+
+        elif self.model_type == "proteotypicity":
             self.set_sequences_array_float32()
 
             requests = []
@@ -272,6 +299,8 @@ class PredictPROSIT:
                 requests.append(request)
                 batch_start = batch_end + 1
 
+
+
         self.raw_predictions = []
         for request in requests:
             self.raw_predictions.append(self.reshape_predict_response_to_raw_predictions(self._predict_request(request), model_type=self.model_type))
@@ -283,7 +312,7 @@ class PredictPROSIT:
             self.set_negative_to_zero()
             self.normalize_raw_predictions()
 
-        if self.model_type == "proteotypicity":
+        if self.model_type == "proteotypicity" or self.model_type == "iRT":
             self.predictions = self.raw_predictions.flatten()
 
         self.predictions_done = True
