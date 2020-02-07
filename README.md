@@ -12,15 +12,83 @@ prosit_grpc = {git = "git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git"
 ```
 from prosit_grpc.predictPROSIT import PredictPROSIT
 
-#Initialize Predictor
+# Predict Intensities
 predictor = PredictPROSIT(server="131.159.152.7:8500",
                           sequences_list=["AAAAAKAK","AAAAAA"],
                           charges_list=[1,2],
                           collision_energies_list=[25,25],
                           model_name="intensity"
                           )
-
 # Get predictions
 predictions = predictor.get_predictions()
 
 ```
+
+```
+# Predict Proteotypicity
+predictor = PredictPROSIT(server="131.159.152.7:8500",
+                          sequences_list= ["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
+                          model_name="proteotypicity"
+                          )
+pred = predictor.get_predictions()
+```
+
+```
+# Predict iRT
+predictor = PredictPROSIT(server="131.159.152.7:8500",
+                              sequences_list=["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
+                              model_name="iRT"
+                              )
+pred = predictor.get_predictions()
+```
+
+## Sequence Restrictions
+
+The peptide Sequence can only contain the following AA abbreviations:
+(Cysteine is expected to be alkylated as such all three representations are treated the same)
+
+Amino acid|accepted abbreviation
+:-----:|:-----:
+Alanine|A
+Cysteine|C, Cac, Cam
+Aspartic acid|D
+Glutamic acid|E
+Phenylalanine|F
+Glycine|G
+Histidine|H
+Isoleucine|I
+Lysine|K
+Leucine|L
+Methionine|M
+Asparagine|N
+Pyrrolysine|O
+Proline|P
+Glutamine|Q
+Arginine|R
+Serine|S
+Threonine|T
+Selenocysteine|U
+Valine|V
+Tryptophan|W
+Tyrosine|Y
+
+
+
+Modified AA can be specified with:
+
+Modifed Amino Acid|accepted abbreviation
+:-----:|:-----:
+Oxidized Methionine|M(ox), M(O), OxM
+Phosphorylation Serine|Phs, S(ph)
+Phosphorylation Threonine|PhT, T(ph)
+Phosphorylation Tyrosine|PhY, Y(ph)
+Citrullination Arginine|R(ci) 
+Glycosylation Lysine|K(gl) 
+Glycosylation Threonine|T(gl) 
+Glycosylation Serine|S(gl) 
+Glycosylation Glutamine|Q(gl) 
+Methylation Arginine|R(me) 
+Methylation Lysine|K(me) 
+T(ga) |T(ga) 
+S(ga) |S(ga) 
+Acetylation Lysine|K(ac) 
