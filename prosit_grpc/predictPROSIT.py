@@ -217,7 +217,6 @@ class PredictPROSIT:
 
         return True
 
-
     def set_negative_to_zero(self):
         """
         assume reshaped and filtered output or prosit, shape should be (num_seq, 174)
@@ -256,7 +255,7 @@ class PredictPROSIT:
             requests = []
             while batch_start < self.num_seq:
 
-                batch_end = batch_start+C.BATCH_SIZE-1
+                batch_end = batch_start+C.BATCH_SIZE
                 batch_end = min(self.num_seq, batch_end)
 
                 request = PredictPROSIT.create_request_intensity(
@@ -267,14 +266,14 @@ class PredictPROSIT:
                     batchsize=(batch_end-batch_start))
                 requests.append(request)
 
-                batch_start = batch_end+1
+                batch_start = batch_end
 
         elif self.model_type == "iRT":
             self.set_sequences_array_int32()
 
             requests = []
             while batch_start < self.num_seq:
-                batch_end = batch_start + C.BATCH_SIZE - 1
+                batch_end = batch_start + C.BATCH_SIZE
                 batch_end = min(self.num_seq, batch_end)
 
                 request = PredictPROSIT.create_request_irt(
@@ -282,14 +281,14 @@ class PredictPROSIT:
                     model_name=self.model_name,
                     batchsize=(batch_end - batch_start))
                 requests.append(request)
-                batch_start = batch_end + 1
+                batch_start = batch_end
 
         elif self.model_type == "proteotypicity":
             self.set_sequences_array_float32()
 
             requests = []
             while batch_start < self.num_seq:
-                batch_end = batch_start + C.BATCH_SIZE - 1
+                batch_end = batch_start + C.BATCH_SIZE
                 batch_end = min(self.num_seq, batch_end)
 
                 request = PredictPROSIT.create_request_proteotypicity(
@@ -297,7 +296,7 @@ class PredictPROSIT:
                     model_name=self.model_name,
                     batchsize=(batch_end - batch_start))
                 requests.append(request)
-                batch_start = batch_end + 1
+                batch_start = batch_end
 
 
 
