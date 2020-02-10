@@ -50,7 +50,7 @@ The peptide Sequence can only contain the following AA abbreviations:
 Amino acid|accepted abbreviation
 :-----:|:-----:
 Alanine|A
-Cysteine|C, Cac, Cam
+Cysteine|C, Cac
 Aspartic acid|D
 Glutamic acid|E
 Phenylalanine|F
@@ -78,8 +78,8 @@ Modified AA can be specified with:
 
 Modified Amino Acid|accepted abbreviation
 :-----:|:-----:
-Alkylated Cystein |C, Cac, Cam
-Oxidized Methionine|M(ox), M(O), OxM
-Phosphorylated Serine|Phs, S(ph)
-Phosphorylated Threonine|PhT, T(ph)
-Phosphorylated Tyrosine|PhY, Y(ph)
+Alkylated Cystein |C, Cac
+Oxidized Methionine|M(ox), OxM
+Phosphorylated Serine|Phs
+Phosphorylated Threonine|PhT
+Phosphorylated Tyrosine|PhY
