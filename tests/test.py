@@ -51,9 +51,8 @@ def test_intensity_prediction():
     pred = predictor.get_predictions()
     mymasses = predictor.get_fragment_masses()
 
-    print(mymasses)
-
     assert len(intensities) == len(pred)
+
     for i in range(len(pred)):
         pearson_correlation = np.corrcoef(intensities[i], pred[i])[0,1]
         assert round(pearson_correlation, 12) == 1
@@ -70,9 +69,6 @@ def test_proteotypicity_prediction():
                               )
     pred = predictor.get_predictions()
     target = [-0.762, -6.674, -4.055]
-
-    print(pred)
-
     assert len(pred) == len(target)
     for i in range(3):
         assert round(pred[i], 3) == target[i]
