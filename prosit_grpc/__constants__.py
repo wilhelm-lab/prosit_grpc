@@ -24,14 +24,14 @@ ALPHABET_UNMOD = {
     "V": 18,
     "W": 19,
     "Y": 20,
-    "U": 21, # NEW
-    "O": 22  # NEW
+    # "U": 21, # NEW
+    # "O": 22  # NEW
 }
 
 ALPHABET_MOD = {
-    "M(ox)": 23,
-    "M(O)":  23,
-    "OxM":   23,
+    "M(ox)": 21,
+    "M(O)":  21,
+    "OxM":   21,
     
     'PhS':   24, 
     "S(ph)": 24,
