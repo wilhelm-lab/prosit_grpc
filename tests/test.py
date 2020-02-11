@@ -37,7 +37,7 @@ def test_grpc_call():
     assert type(pred) == np.ndarray
 
 def test_array_size():
-    assert len(pred) == 27
+    assert len(pred) == 120
     for i in range(len(pred)):
         assert len(pred[i]) == 174
 
@@ -55,12 +55,11 @@ def test_intensity_prediction():
 
     for i in range(len(pred)):
         pearson_correlation = np.corrcoef(intensities[i], pred[i])[0,1]
-        assert round(pearson_correlation, 12) == 1
+        assert round(pearson_correlation, 11) == 1
 
     for i in range(len(pred)):
         pearson_correlation = np.corrcoef(masses[i], mymasses[i])[0,1]
-        assert round(pearson_correlation, 12) == 1
-
+        assert round(pearson_correlation, 15) == 1
 
 def test_proteotypicity_prediction():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
