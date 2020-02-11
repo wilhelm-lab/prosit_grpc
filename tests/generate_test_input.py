@@ -1,7 +1,7 @@
 import random
 
 aa_unmod = ["A", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"]
-aa_mod = {"Cac":"C", "M(ox)": "M", "OxM":"M"}
+aa_mod = {"M(ox)": "M"} # the Prosit WEbsite only knows M(ox)
 ce_range = [i for i in range(10, 51) if i % 10 == 0] # last value is not included
 charge_range = [i for i in range(1,7)] # last value is not included
 
