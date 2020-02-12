@@ -54,6 +54,7 @@ ALPHABET_MOD = {
     "K(ac)": 36,
 }
 
+# ALPHABET contains all amino acid and ptm abbreviations and
 ALPHABET = {**ALPHABET_UNMOD, **ALPHABET_MOD}
 AMINO_ACIDS_INT = {integer: char for char, integer in ALPHABET.items()}
 AMINO_ACIDS_INT[0] = ""
@@ -113,7 +114,7 @@ MASSES["N_TERMINUS"] = MASSES["H"]
 MASSES["C_TERMINUS"] = MASSES["O"] +MASSES["H"]
 MASSES["CO"] = MASSES["C"] + MASSES["O"]
 MASSES["CHO"] = MASSES["C"] + MASSES["H"] + MASSES["O"]
-MASSES["NH2"] = MASSES["N"] + MASSES["H"] *2 
+MASSES["NH2"] = MASSES["N"] + MASSES["H"] *2
 MASSES["H2O"] = MASSES["H"] * 2 + MASSES["O"]
 MASSES["NH3"] = MASSES["N"] + MASSES["H"] * 3
 
