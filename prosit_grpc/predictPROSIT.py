@@ -341,3 +341,21 @@ class PredictPROSIT:
             self.predict()
         # return self.fragment_masses
         return [[mass for mass in el if mass != -1] for el in self.fragment_masses]
+
+    def get_fragment_annotation(self):
+        if self.predictions_done == False:
+            self.predict()
+        # return self.fragment_masses
+
+        annotation = []
+
+        for annotation_type in C.ANNOTATION:
+            temp = []
+            for masses, annotations in zip(self.fragment_masses, annotation_type):
+                for mass, annotation_element in zip(masses, annotations):
+                    print(annotation_element)
+                    if mass != -1:
+                        temp.append(annotation_element)
+            annotation.append(temp)
+
+        return annotation

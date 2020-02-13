@@ -126,10 +126,24 @@ def test_get_functions():
                               )
     pred = predictor.get_predictions()
     masses = predictor.get_fragment_masses()
+    annotations = predictor.get_fragment_annotation()
 
+    # assert that the number of masses matches the number of predictions
     assert len(pred) == len(masses)
+
+    # assert that the number of annotations matches the number of predictions
+    for annotation in annotations:
+        assert len(pred) == len(annotation)
+
+    # assert that the number of number of peaks for each spectrum matches in intensities and masses
     for i in range(len(pred)):
         assert len(pred[i]) == len(masses[i])
 
-    # min of min because pred is a nested list
-    assert min((min(pred))) >= 0
+    # assert that the number of number of peaks for each spectrum matches in intensities and annotations
+    for annotation in annotations:
+        for i in range(len(pred)):
+            assert len(pred[i]) == len(annotation[i])
+
+    # assert that the lowest intensity is at least 0
+    assert min((min(pred))) >= 0 # min of min because pred is a nested list
+
