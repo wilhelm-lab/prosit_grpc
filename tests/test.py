@@ -31,7 +31,8 @@ predictor = PredictPROSIT(server="131.159.152.7:8500",
                           collision_energies_list=ce,
                           model_name="intensity_prosit_publication"
                           )
-pred = predictor.get_predictions()
+predictor.predict()
+pred = predictor.predictions
 
 def test_grpc_call():
     assert type(pred) == np.ndarray
@@ -48,8 +49,9 @@ def test_intensity_prediction():
                               collision_energies_list=ce,
                               model_name="intensity_prosit_publication"
                               )
-    pred = predictor.get_predictions()
-    mymasses = predictor.get_fragment_masses()
+    predictor.predict()
+    pred = predictor.predictions
+    mymasses = predictor.fragment_masses
 
     assert len(intensities) == len(pred)
 
@@ -66,7 +68,8 @@ def test_proteotypicity_prediction():
                               sequences_list= ["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
                               model_name="proteotypicity"
                               )
-    pred = predictor.get_predictions()
+    predictor.predict()
+    pred = predictor.predictions
     target = [-0.762, -6.674, -4.055]
     assert len(pred) == len(target)
     for i in range(3):
@@ -79,6 +82,7 @@ def test_batched_prediction():
                               collision_energies_list= [20 for i in range(10000)],
                               model_name="intensity_prosit_publication"
                               )
+    predictor.predict()
     pred = predictor.get_predictions()
     assert len(pred) == 10000
 
@@ -86,14 +90,16 @@ def test_batched_prediction():
                               sequences_list=["THDLGKW" for i in range(10000)],
                               model_name="proteotypicity"
                               )
-    pred = predictor.get_predictions()
+    predictor.predict()
+    pred = predictor.predictions
     assert len(pred) == 10000
 
     predictor = PredictPROSIT(server="131.159.152.7:8500",
                               sequences_list=["THDLGKW" for i in range(10000)],
                               model_name="iRT"
                               )
-    pred = predictor.get_predictions()
+    predictor.predict()
+    pred = predictor.predictions
     assert len(pred) == 10000
 
 def test_irt_prediction():
@@ -101,7 +107,8 @@ def test_irt_prediction():
                               sequences_list=sequences,
                               model_name="iRT"
                               )
-    pred = predictor.get_predictions()
+    predictor.predict()
+    pred = predictor.predictions
 
     assert len(pred) == len(irt)
 
@@ -109,3 +116,20 @@ def test_irt_prediction():
         # converting them to float because:
         # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
         assert round(float(pred[i]), 1) == round(float(irt[i]), 1)
+
+def test_get_functions():
+    predictor = PredictPROSIT(server="131.159.152.7:8500",
+                              sequences_list=sequences,
+                              charges_list=charge,
+                              collision_energies_list=ce,
+                              model_name="intensity_prosit_publication"
+                              )
+    pred = predictor.get_predictions()
+    masses = predictor.get_fragment_masses()
+
+    assert len(pred) == len(masses)
+    for i in range(len(pred)):
+        assert len(pred[i]) == len(masses[i])
+
+    # min of min because pred is a nested list
+    assert min((min(pred))) >= 0

@@ -333,9 +333,11 @@ class PredictPROSIT:
     def get_predictions(self):
         if self.predictions_done == False:
             self.predict()
-        return self.predictions
+        # return self.predictions
+        return [[int for int in el if int != -1] for el in self.predictions]
 
     def get_fragment_masses(self):
         if self.predictions_done == False:
             self.predict()
-        return self.fragment_masses
+        # return self.fragment_masses
+        return [[mass for mass in el if mass != -1] for el in self.fragment_masses]
