@@ -9,12 +9,11 @@ __email__ = "daniela.andrade@tum.de"
 import numpy as np
 import threading
 import grpc
-import tensorflow as tf
-from tensorflow_serving.apis import predict_pb2, prediction_service_pb2_grpc
+from tensorflow_serving.apis import prediction_service_pb2_grpc
 from typing import Iterable, Optional, Union
 
 from . import __constants__ as C  # For constants
-from .__utils__ import compute_ion_masses,normalize_intensities, indices_to_one_hot,map_peptide_to_numbers  # For ion mass computation
+from . import __utils__ as U # Utility/Static functions
 
 class PredictPROSIT:
     def __init__(self,
@@ -56,9 +55,6 @@ class PredictPROSIT:
 
         self.num_seq = len(sequences_list)
 
-
-
-
         # prepared/encoded input instructions
         # set with seperate function
         self.sequences_list_numeric = []
@@ -77,64 +73,6 @@ class PredictPROSIT:
         self.raw_predictions = []
         self.filtered_invalid_predictions = []
 
-    @staticmethod
-    def _create_request(model_name, signature_name="serving_default"):
-        """
-        :param model_name: Model name (taken from PROSIT)
-        :param signature_name: Signature Name for the estimator (serving_default is by default set with custom tf estimator)
-        :return created request
-        """
-        # Create Request
-        request = predict_pb2.PredictRequest()
-        # Model and Signature Name
-        request.model_spec.name = model_name
-        request.model_spec.signature_name = signature_name
-        # print("[INFO] Set model and signature name")
-        return request
-
-    @staticmethod
-    def create_request_intensity(seq_array, ce_array, charges_array, batchsize, model_name):
-        """
-        seq_array
-        ce_array
-        charges_array
-        batchsize       size of the created request
-        model_name      specify the model that should be used to predict
-        return:         request ready to be sent ther server
-        """
-        request = PredictPROSIT._create_request(model_name=model_name)
-        request.inputs['peptides_in:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
-        request.inputs['collision_energy_in:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(ce_array, shape=[batchsize, 1]))
-        request.inputs['precursor_charge_in:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(charges_array, shape=[batchsize, 6]))
-        return request
-
-    @staticmethod
-    def create_request_proteotypicity(seq_array, batchsize, model_name):
-        """
-        seq array
-        batchsize
-        model_name  specify the model used for prediction
-        """
-        request = PredictPROSIT._create_request(model_name=model_name)
-        request.inputs['peptides_in_1:0'].CopyFrom(
-                tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
-        return request
-
-    @staticmethod
-    def create_request_irt(seq_array, batchsize, model_name):
-        """
-        seq array
-        batchsize
-        model_name  specify the model used for prediction
-        """
-        request = PredictPROSIT._create_request(model_name=model_name)
-        request.inputs['sequence_integer'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
-        return request
-
     def set_sequence_list_numeric(self):
         """
         Function that converts the sequences saved in self.sequence_list to a numerical encoding
@@ -142,7 +80,7 @@ class PredictPROSIT:
         """
         self.sequences_list_numeric = []
         for sequence in self.sequences_list:
-            numeric_sequence = list(map_peptide_to_numbers(sequence))
+            numeric_sequence = list(U.map_peptide_to_numbers(sequence))
             while len(numeric_sequence)<30:
                 numeric_sequence.append(0)
 
@@ -153,7 +91,7 @@ class PredictPROSIT:
         convert charges to one hot encoding
         One hot encoding of every charge value --> 6 possible charges for every sequence for PROSIT
         """
-        self.charges_list_one_hot = [indices_to_one_hot(x, C.MAX_CHARGE) for x in self.charges_list]
+        self.charges_list_one_hot = [U.indices_to_one_hot(x, C.MAX_CHARGE) for x in self.charges_list]
 
     def set_charges_array_float32(self):
         self.charges_array_float32 = np.array(self.charges_list_one_hot).astype(np.float32)
@@ -170,25 +108,8 @@ class PredictPROSIT:
     def set_fragment_masses(self):
         self.fragment_masses = []
         for i in range(self.num_seq):
-            self.fragment_masses.append(compute_ion_masses(seq_int= self.sequences_list_numeric[i],
+            self.fragment_masses.append(U.compute_ion_masses(seq_int= self.sequences_list_numeric[i],
                                                            charge_onehot=self.charges_list_one_hot[i]))
-
-    @staticmethod
-    def reshape_predict_response_to_raw_predictions(predict_response, model_type):
-        if model_type == "intensity":
-            outputs_tensor_proto = predict_response.outputs["out/Reshape:0"]
-            shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-            return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
-
-        elif model_type == "proteotypicity":
-            outputs_tensor_proto = predict_response.outputs["pep_dense4/BiasAdd:0"]
-            shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-            return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
-
-        elif model_type == "iRT":
-            outputs_tensor_proto = predict_response.outputs["prediction/BiasAdd:0"]
-            shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-            return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
 
     # normalization functions
     def filter_invalid(self):
@@ -235,7 +156,7 @@ class PredictPROSIT:
         assume reshaped and filtered output of prosit, shape should be (num_seq, 174) normalized along first axis
         set normalized output between 0 and 1
         """
-        self.predictions = normalize_intensities(self.filtered_invalid_predictions)
+        self.predictions = U.normalize_intensities(self.filtered_invalid_predictions)
         self.predictions[self.predictions < 0] = -1
 
     def _predict_request(self, request):
@@ -265,7 +186,7 @@ class PredictPROSIT:
                 batch_end = batch_start+C.BATCH_SIZE
                 batch_end = min(self.num_seq, batch_end)
 
-                request = PredictPROSIT.create_request_intensity(
+                request = U.create_request_intensity(
                     seq_array= self.sequences_array[batch_start:batch_end],
                     ce_array= self.collision_energies_array_float32[batch_start:batch_end],
                     charges_array= self.charges_array_float32[batch_start:batch_end],
@@ -283,7 +204,7 @@ class PredictPROSIT:
                 batch_end = batch_start + C.BATCH_SIZE
                 batch_end = min(self.num_seq, batch_end)
 
-                request = PredictPROSIT.create_request_irt(
+                request = U.create_request_irt(
                     seq_array=self.sequences_array[batch_start:batch_end],
                     model_name=self.model_name,
                     batchsize=(batch_end - batch_start))
@@ -298,7 +219,7 @@ class PredictPROSIT:
                 batch_end = batch_start + C.BATCH_SIZE
                 batch_end = min(self.num_seq, batch_end)
 
-                request = PredictPROSIT.create_request_proteotypicity(
+                request = U.create_request_proteotypicity(
                     seq_array=self.sequences_array[batch_start:batch_end],
                     model_name=self.model_name,
                     batchsize=(batch_end - batch_start))
@@ -307,7 +228,7 @@ class PredictPROSIT:
 
         self.raw_predictions = []
         for request in requests:
-            self.raw_predictions.append(self.reshape_predict_response_to_raw_predictions(self._predict_request(request), model_type=self.model_type))
+            self.raw_predictions.append(U.reshape_predict_response_to_raw_predictions(self._predict_request(request), model_type=self.model_type))
 
         self.raw_predictions = np.vstack(self.raw_predictions)
 
@@ -359,7 +280,5 @@ class PredictPROSIT:
                 # convert annotation list to dictionary
             valid_annotation = {key: value for key, value in zip(["type", "charge", "number"], valid_annotation)}
             annotation.append(valid_annotation)
-
-
 
         return annotation
