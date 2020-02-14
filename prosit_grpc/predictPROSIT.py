@@ -333,9 +333,33 @@ class PredictPROSIT:
     def get_predictions(self):
         if self.predictions_done == False:
             self.predict()
-        return self.predictions
+        # return self.predictions
+        return [[int for int in el if int != -1] for el in self.predictions]
 
     def get_fragment_masses(self):
         if self.predictions_done == False:
             self.predict()
-        return self.fragment_masses
+        # return self.fragment_masses
+        return [[mass for mass in el if mass != -1] for el in self.fragment_masses]
+
+    def get_fragment_annotation(self):
+        if self.predictions_done == False:
+            self.predict()
+        # return self.fragment_masses
+
+        annotation = []
+        for masses in self.fragment_masses:
+            valid_annotation = []
+            for annotation_type in C.ANNOTATION:
+                valid_annotation_types = []
+                for mass, annotation_element in zip(masses, annotation_type):
+                    if mass != -1:
+                        valid_annotation_types.append(annotation_element)
+                valid_annotation.append(valid_annotation_types)
+                # convert annotation list to dictionary
+            valid_annotation = {key: value for key, value in zip(["type", "charge", "number"], valid_annotation)}
+            annotation.append(valid_annotation)
+
+
+
+        return annotation
