@@ -348,14 +348,18 @@ class PredictPROSIT:
         # return self.fragment_masses
 
         annotation = []
-
-        for annotation_type in C.ANNOTATION:
-            temp = []
-            for masses, annotations in zip(self.fragment_masses, annotation_type):
-                for mass, annotation_element in zip(masses, annotations):
-                    print(annotation_element)
+        for masses in self.fragment_masses:
+            valid_annotation = []
+            for annotation_type in C.ANNOTATION:
+                valid_annotation_types = []
+                for mass, annotation_element in zip(masses, annotation_type):
                     if mass != -1:
-                        temp.append(annotation_element)
-            annotation.append(temp)
+                        valid_annotation_types.append(annotation_element)
+                valid_annotation.append(valid_annotation_types)
+                # convert annotation list to dictionary
+            valid_annotation = {key: value for key, value in zip(["type", "charge", "number"], valid_annotation)}
+            annotation.append(valid_annotation)
+
+
 
         return annotation
