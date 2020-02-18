@@ -7,7 +7,6 @@ __author__ = "Daniela Andrade Salazar"
 __email__ = "daniela.andrade@tum.de"
 """
 import numpy as np
-import threading
 import grpc
 from tensorflow_serving.apis import prediction_service_pb2_grpc
 from typing import Iterable, Optional, Union
@@ -15,11 +14,12 @@ from typing import Iterable, Optional, Union
 from . import __constants__ as C  # For constants
 from . import __utils__ as U # Utility/Static functions
 
+
 class PredictPROSIT:
     def __init__(self,
                  server: str,
                  model_name: str,
-                 sequences_list: Union[np.ndarray, Iterable],
+                 sequences_list: Optional[Union[np.ndarray, Iterable]] = None,
                  charges_list: Optional[Union[np.ndarray, Iterable]] = None,
                  collision_energies_list: Optional[Union[np.ndarray, Iterable]] = None,
                  ):
@@ -39,65 +39,71 @@ class PredictPROSIT:
         self.server = server
         self.model_name = model_name
         self.model_type = model_name.split("_")[0]
-
-        self.concurrency = 1
-        self._condition = threading.Condition()
-        self._done = 0
-        self._active = 0
         self.predictions_done = False
 
-
-        # prediction input instructions
+        # sequences
         self.sequences_list = sequences_list
+        self.sequences_list_numeric = None
+        self.sequences_array = None
+
+        # charges
         self.charges_list = charges_list
-        if self.model_type == "intensity":
-            self.collision_energies_list = [i / 100 for i in collision_energies_list]
-
-        self.num_seq = len(sequences_list)
-
-        # prepared/encoded input instructions
-        # set with seperate function
-        self.sequences_list_numeric = []
-        self.charges_list_one_hot = []
-
-        # prediction variables in array form for calling tensorflow
-        self.sequences_array_int32 = None
+        self.charges_list_one_hot = None
         self.charges_array_float32 = None
+
+        # ce
+        self.collision_energies_list = collision_energies_list
+        self.collision_energy_normed = None
         self.collision_energies_array_float32 = None
 
         # Create channel and stub
         self.channel = grpc.insecure_channel(self.server)
         self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
 
-        self.outputs = {}  # for PROSIT OUTPUTS, key is the dataset number
+
+        # Output
         self.raw_predictions = []
         self.filtered_invalid_predictions = []
 
-    def set_sequence_list_numeric(self):
+    def set_sequence_list_numeric(self, numeric_sequence_list = None):
         """
         Function that converts the sequences saved in self.sequence_list to a numerical encoding
         saves the encoded sequence in self.sequence_list_numeric
         """
-        self.sequences_list_numeric = []
-        for sequence in self.sequences_list:
-            numeric_sequence = list(U.map_peptide_to_numbers(sequence))
-            while len(numeric_sequence)<30:
-                numeric_sequence.append(0)
+        if numeric_sequence_list == None:
+            self.sequences_list_numeric = []
+            for sequence in self.sequences_list:
+                numeric_sequence = list(U.map_peptide_to_numbers(sequence))
+                while len(numeric_sequence)<30:
+                    numeric_sequence.append(0)
 
-            self.sequences_list_numeric.append(numeric_sequence)
+                self.sequences_list_numeric.append(numeric_sequence)
+        else:
+            self.sequences_list_numeric = numeric_sequence_list
 
-    def set_charges_list_one_hot(self):
+    def set_charges_list_one_hot(self, one_hot_charges_list = None):
         """
         convert charges to one hot encoding
         One hot encoding of every charge value --> 6 possible charges for every sequence for PROSIT
         """
-        self.charges_list_one_hot = [U.indices_to_one_hot(x, C.MAX_CHARGE) for x in self.charges_list]
+
+        if one_hot_charges_list == None:
+            self.charges_list_one_hot = [U.indices_to_one_hot(x, C.MAX_CHARGE) for x in self.charges_list]
+        else:
+            self.charges_list_one_hot = one_hot_charges_list
+
+    def set_collision_energy_normed(self, collision_energy_normed = None):
+        if collision_energy_normed == None:
+            self.collision_energy_normed = [i / 100 for i in self.collision_energies_list]
+        else:
+            self.collision_energy_normed = collision_energy_normed
+
 
     def set_charges_array_float32(self):
         self.charges_array_float32 = np.array(self.charges_list_one_hot).astype(np.float32)
 
     def set_collision_energies_array_float32(self):
-        self.collision_energies_array_float32 = np.array(self.collision_energies_list).astype(np.float32)
+        self.collision_energies_array_float32 = np.array(self.collision_energy_normed).astype(np.float32)
 
     def set_sequences_array_int32(self):
         self.sequences_array = np.array(self.sequences_list_numeric).astype(np.int32)
@@ -124,23 +130,27 @@ class PredictPROSIT:
         """
         self.filtered_invalid_predictions = []
         for i in range(self.num_seq):
-            charge = self.charges_list[i]
+            charge_one_hot = self.charges_list_one_hot[i]
             preds = self.raw_predictions[i]
-            if charge == 1:
+
+            # filter invalid fragment charges
+            if np.array_equal(charge_one_hot, [1, 0, 0, 0, 0, 0]):
                 invalid_indexes = [(x * 3 + 1) for x in range((C.SEQ_LEN-1)*2)] + [(x * 3 + 2) for x in range((C.SEQ_LEN-1)*2)]
                 preds[invalid_indexes] = -1
-            elif charge == 2:
+            elif np.array_equal(charge_one_hot, [0, 1, 0, 0, 0, 0]):
                 invalid_indexes = [x * 3 + 2 for x in range((C.SEQ_LEN-1)*2)]
                 preds[invalid_indexes] = -1
-            else:
-                if charge > C.MAX_CHARGE:
-                    print("[ERROR] in charge greater than 6")
-                    return False
+
             self.filtered_invalid_predictions.append(preds)
-            len_seq = len(self.sequences_list[i])
+
+            # filter invalid fragment numbers
+            len_seq = 0
+            for amino_acid in self.sequences_list_numeric[i]:
+                if amino_acid != 0:
+                    len_seq += 1
+
             if len_seq < C.SEQ_LEN:
                 self.filtered_invalid_predictions[i][(len_seq - 1) * 6:] = -1  # valid indexes are less than len_seq * 6
-
         return True
 
     def set_negative_to_zero(self):
@@ -165,15 +175,24 @@ class PredictPROSIT:
         return result_future.result()
 
     def predict(self):
-        self.set_sequence_list_numeric()
         batch_start = 0
 
+        if self.sequences_list_numeric == None:
+            self.set_sequence_list_numeric()
+
+        self.num_seq = len(self.sequences_list_numeric)
+
         if self.model_type == "intensity":
-            # set charges to one hot
-            self.set_charges_list_one_hot()
+            if self.charges_list_one_hot == None:
+                # set charges to one hot
+                self.set_charges_list_one_hot()
+
+            if self.collision_energy_normed == None:
+                # norm ce
+                self.set_collision_energy_normed()
+
             # set fragment masses
             self.set_fragment_masses()
-
 
             # set numpy arrays
             self.set_charges_array_float32()
