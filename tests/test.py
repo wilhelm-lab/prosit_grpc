@@ -166,13 +166,13 @@ def test_hdf5_input_output():
         pred_irt = np.array(predictor.raw_predictions).astype(np.float32)
 
         with h5py.File("output.hdf5", "w") as data_file:
-            data_file.create_dataset('intensities_pred', data=pred_intensities)
-            data_file.create_dataset('masses_pred', data=pred_masses)
-            data_file.create_dataset('iRT', data=pred_irt)
+            data_file.create_dataset('intensities_pred', data=pred_intensities, compression="gzip")
+            data_file.create_dataset('masses_pred', data=pred_masses, compression="gzip")
+            data_file.create_dataset('iRT', data=pred_irt, compression="gzip")
 
-            data_file.create_dataset('collision_energy_aligned_normed', data=f["collision_energy_aligned_normed"])
-            data_file.create_dataset('precursor_charge_onehot', data=f["precursor_charge_onehot"])
-            data_file.create_dataset('sequence_integer', data=f["sequence_integer"])
+            data_file.create_dataset('collision_energy_aligned_normed', data=f["collision_energy_aligned_normed"], compression="gzip")
+            data_file.create_dataset('precursor_charge_onehot', data=f["precursor_charge_onehot"], compression="gzip")
+            data_file.create_dataset('sequence_integer', data=f["sequence_integer"], compression="gzip")
 
     import filecmp
     assert filecmp.cmp("data.hdf5", "output.hdf5")
