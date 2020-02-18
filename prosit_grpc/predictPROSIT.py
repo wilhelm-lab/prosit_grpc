@@ -37,8 +37,8 @@ class PredictPROSIT:
 
         # server settings
         self.server = server
-        self.model_name = model_name
-        self.model_type = model_name.split("_")[0]
+
+        self.set_model_name(model_name=model_name)
         self.predictions_done = False
 
         # sequences
@@ -98,6 +98,11 @@ class PredictPROSIT:
         else:
             self.collision_energy_normed = collision_energy_normed
 
+    def set_model_name(self, model_name):
+        self.model_name = model_name
+        self.model_type = model_name.split("_")[0]
+
+        self.predictions_done = False
 
     def set_charges_array_float32(self):
         self.charges_array_float32 = np.array(self.charges_list_one_hot).astype(np.float32)

@@ -63,6 +63,7 @@ def test_intensity_prediction():
         pearson_correlation = np.corrcoef(masses[i], mymasses[i])[0,1]
         assert round(pearson_correlation, 15) == 1
 
+
 def test_proteotypicity_prediction():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
                               sequences_list= ["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
@@ -145,4 +146,36 @@ def test_get_functions():
 
     # assert that the lowest intensity is at least 0
     assert min((min(pred))) >= 0 # min of min because pred is a nested list
+
+def test_hdf5_input_output():
+    with h5py.File("data.hdf5", 'r') as f:
+
+        print(f.keys())
+        predictor = PredictPROSIT(server="131.159.152.7:8500",
+                                  model_name="intensity_prosit_publication")
+
+        predictor.set_sequence_list_numeric(numeric_sequence_list=list(f["sequence_integer"]))
+        predictor.set_charges_list_one_hot(list(f["precursor_charge_onehot"]))
+        predictor.set_collision_energy_normed(list(f["collision_energy_aligned_normed"]))
+        predictor.predict()
+
+        pred_intensities = np.array(predictor.raw_predictions).astype(np.float32)
+        pred_masses = np.array(predictor.fragment_masses).astype(np.float32)
+        predictor.set_model_name(model_name="iRT")
+        predictor.predict()
+        pred_irt = np.array(predictor.raw_predictions).astype(np.float32)
+
+        with h5py.File("output.hdf5", "w") as data_file:
+            data_file.create_dataset('intensities_pred', data=pred_intensities)
+            data_file.create_dataset('masses_pred', data=pred_masses)
+            data_file.create_dataset('iRT', data=pred_irt)
+
+            data_file.create_dataset('collision_energy_aligned_normed', data=f["collision_energy_aligned_normed"])
+            data_file.create_dataset('precursor_charge_onehot', data=f["precursor_charge_onehot"])
+            data_file.create_dataset('sequence_integer', data=f["sequence_integer"])
+
+    import filecmp
+    assert filecmp.cmp("data.hdf5", "output.hdf5")
+
+
 
