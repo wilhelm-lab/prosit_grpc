@@ -159,20 +159,20 @@ def test_hdf5_input_output():
         predictor.set_collision_energy_normed(list(f["collision_energy_aligned_normed"]))
         predictor.predict()
 
-        pred_intensities = np.array(predictor.raw_predictions).astype(np.float32)
-        pred_masses = np.array(predictor.fragment_masses).astype(np.float32)
+        output_dict={
+            "sequence_integer": f["sequence_integer"],
+            "precursor_charge_onehot": f["precursor_charge_onehot"],
+            "collision_energy_aligned_normed": f["collision_energy_aligned_normed"],
+            'intensities_pred': np.array(predictor.raw_predictions).astype(np.float32),
+            'masses_pred': np.array(predictor.fragment_masses).astype(np.float32)}
+
         predictor.set_model_name(model_name="iRT")
         predictor.predict()
-        pred_irt = np.array(predictor.raw_predictions).astype(np.float32)
+        output_dict["iRT"] = np.array(predictor.raw_predictions).astype(np.float32)
 
         with h5py.File("output.hdf5", "w") as data_file:
-            data_file.create_dataset('intensities_pred', data=pred_intensities, compression="gzip")
-            data_file.create_dataset('masses_pred', data=pred_masses, compression="gzip")
-            data_file.create_dataset('iRT', data=pred_irt, compression="gzip")
-
-            data_file.create_dataset('collision_energy_aligned_normed', data=f["collision_energy_aligned_normed"], compression="gzip")
-            data_file.create_dataset('precursor_charge_onehot', data=f["precursor_charge_onehot"], compression="gzip")
-            data_file.create_dataset('sequence_integer', data=f["sequence_integer"], compression="gzip")
+            for key, data in output_dict.items():
+                data_file.create_dataset(key, data=data, dtype=data.dtype, compression="gzip")
 
     import filecmp
     assert filecmp.cmp("data.hdf5", "output.hdf5")
