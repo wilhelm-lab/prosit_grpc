@@ -57,14 +57,9 @@ def test_intensity_prediction():
 
     for i in range(len(pred)):
         pearson_correlation = np.corrcoef(intensities[i], pred[i])[0,1]
-        print(pearson_correlation)
         assert round(pearson_correlation, 11) == 1
 
     for i in range(len(pred)):
-        print(masses[i])
-        print(mymasses[i])
-        print("*"*10)
-
         pearson_correlation = np.corrcoef(masses[i], mymasses[i])[0,1]
         assert round(pearson_correlation, 15) == 1
 
