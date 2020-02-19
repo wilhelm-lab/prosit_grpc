@@ -63,6 +63,7 @@ def test_intensity_prediction():
         pearson_correlation = np.corrcoef(masses[i], mymasses[i])[0,1]
         assert round(pearson_correlation, 15) == 1
 
+
 def test_proteotypicity_prediction():
     predictor = PredictPROSIT(server="131.159.152.7:8500",
                               sequences_list= ["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
@@ -146,3 +147,60 @@ def test_get_functions():
     # assert that the lowest intensity is at least 0
     assert min((min(pred))) >= 0 # min of min because pred is a nested list
 
+# def test_hdf5_input_output():
+#     with h5py.File("data.hdf5", 'r') as f:
+#
+#         print(f.keys())
+#         predictor = PredictPROSIT(server="131.159.152.7:8500",
+#                                   model_name="intensity_prosit_publication")
+#
+#         predictor.set_sequence_list_numeric(numeric_sequence_list=list(f["sequence_integer"]))
+#         predictor.set_charges_list_one_hot(list(f["precursor_charge_onehot"]))
+#         predictor.set_collision_energy_normed(list(f["collision_energy_aligned_normed"]))
+#         predictor.predict()
+#
+#         output_dict={
+#             "sequence_integer": f["sequence_integer"],
+#             "precursor_charge_onehot": f["precursor_charge_onehot"],
+#             "collision_energy_aligned_normed": f["collision_energy_aligned_normed"],
+#             'intensities_pred': np.array(predictor.predictions).astype(np.float64),
+#             'masses_pred': np.array(predictor.fragment_masses).astype(np.float64)}
+#
+#
+#
+#         predictor.set_model_name(model_name="iRT")
+#         predictor.predict()
+#         output_dict["iRT"] = np.array([np.array(el).astype(np.float32) for el in predictor.predictions]).astype(np.float32)
+#
+#         output_dict["iRT"].shape = (120,1)
+#
+#         with h5py.File("output.hdf5", "w") as data_file:
+#             for key, data in output_dict.items():
+#                 data_file.create_dataset(key, data=data, dtype=data.dtype, compression="gzip")
+#
+#         # pred_web = list(f["intensities_pred"])
+#         # pred_grpc = output_dict["intensities_pred"]
+#         # # assert len(pred_web) == len(pred_grpc)
+#         # # for i in range(len(pred_web)):
+#         # #     assert len(pred_web[i]) == len(pred_grpc[i])
+#         # print(np.corrcoef(pred_web[i], pred_grpc[i])[0, 1])
+#         #
+#         # for j in range(len(pred_web[i])):
+#         #     assert pred_web[i][j] == pred_grpc[i][j]
+#
+#
+#
+#     with h5py.File("data.hdf5", 'r') as input_file:
+#         with h5py.File("output.hdf5", 'r') as output_file:
+#
+#             assert input_file.keys() == output_file.keys()
+#
+#             print(input_file["iRT"].shape)
+#             print(output_file["iRT"].shape)
+#
+#             for key in input_file.keys():
+#                 print(key)
+#                 print(list(input_file[key]))
+#                 print(list(output_file[key]))
+#
+#                 assert list(input_file[key]) == list(output_file[key])
