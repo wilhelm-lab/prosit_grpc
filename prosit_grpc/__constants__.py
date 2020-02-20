@@ -54,6 +54,7 @@ ALPHABET_MOD = {
     "K(ac)": 36,
 }
 
+# ALPHABET contains all amino acid and ptm abbreviations and
 ALPHABET = {**ALPHABET_UNMOD, **ALPHABET_MOD}
 AMINO_ACIDS_INT = {integer: char for char, integer in ALPHABET.items()}
 AMINO_ACIDS_INT[0] = ""
@@ -113,10 +114,26 @@ MASSES["N_TERMINUS"] = MASSES["H"]
 MASSES["C_TERMINUS"] = MASSES["O"] +MASSES["H"]
 MASSES["CO"] = MASSES["C"] + MASSES["O"]
 MASSES["CHO"] = MASSES["C"] + MASSES["H"] + MASSES["O"]
-MASSES["NH2"] = MASSES["N"] + MASSES["H"] *2 
+MASSES["NH2"] = MASSES["N"] + MASSES["H"] *2
 MASSES["H2O"] = MASSES["H"] * 2 + MASSES["O"]
 MASSES["NH3"] = MASSES["N"] + MASSES["H"] * 3
 
 SEQ_LEN = 30 # Sequence length for prosit
 MAX_CHARGE = 6
 BATCH_SIZE = 6000
+
+IONS = ['y', 'b']
+CHARGES = [1, 2, 3]
+POSITIONS = [1, 2, 3, 4, 5, 6,7, 8, 9, 10,11, 12, 13, 14, 15, 16, 17, 18, 19,20,21, 22, 23, 24, 25, 26, 27, 28, 29]
+
+ANNOTATION_FRAGMENT_TYPE = []
+ANNOTATION_FRAGMENT_CHARGE = []
+ANNOTATION_FRAGMENT_NUMBER = []
+for pos in POSITIONS:
+    for ion in IONS:
+        for charge in CHARGES:
+            ANNOTATION_FRAGMENT_TYPE.append(ion)
+            ANNOTATION_FRAGMENT_CHARGE.append(charge)
+            ANNOTATION_FRAGMENT_NUMBER.append(pos)
+
+ANNOTATION = [ANNOTATION_FRAGMENT_TYPE,ANNOTATION_FRAGMENT_CHARGE,ANNOTATION_FRAGMENT_NUMBER]
