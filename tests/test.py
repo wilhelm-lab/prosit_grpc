@@ -6,9 +6,9 @@ import numpy as np
 
 # constants
 test_server = "proteomicsdb.org:8500"
-ca_cert = "/home/ludwig/01_code/prosit_grpc/cert/Proteomicsdb-Prosit.crt"
-cert = "/home/ludwig/01_code/prosit_grpc/cert/skyline_dec_2019.crt"
-key = "/home/ludwig/01_code/prosit_grpc/cert/skyline_dec_2019.key"
+ca_cert = "../cert/Proteomicsdb-Prosit.crt"
+cert = "../cert/ci-pipeline.crt"
+key = "../cert/ci-pipeline.key"
 
 with h5py.File("data.hdf5", 'r') as f:
     intensities = list(f["intensities_pred"])

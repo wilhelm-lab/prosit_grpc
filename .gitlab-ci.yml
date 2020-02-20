@@ -30,6 +30,9 @@ check_code:
   - modern
   stage: test
   script:
+  - echo "$ca_cert" > "./cert/Proteomicsdb-Prosit.crt"
+  - echo "$cert" > "./cert/ci-pipeline.crt"
+  - echo "$key" > "./cert/ci-pipeline.key"
   - cd tests
   - pytest test.py --junitxml=junit.xml
 
