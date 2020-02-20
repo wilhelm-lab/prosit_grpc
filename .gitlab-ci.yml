@@ -30,6 +30,7 @@ check_code:
   - modern
   stage: test
   script:
+  - mkdir cert
   - echo "$ca_cert" > "./cert/Proteomicsdb-Prosit.crt"
   - echo "$cert" > "./cert/ci-pipeline.crt"
   - echo "$key" > "./cert/ci-pipeline.key"
