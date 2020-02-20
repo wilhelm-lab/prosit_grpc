@@ -62,15 +62,12 @@ class PredictPROSIT:
         # Create channel and stub                                                                                                                                                                                                                                                                 cert = open('/home/llautenbacher/prosit_grpc/prosit_grpc/skyline_dec_2019.cert', 'rb').read()
         with open(path_to_certificate, "rb") as f:
             cert = f.read()
-            print(cert)
 
         with open(path_to_key_certificate, "rb") as f:
             key = f.read()
-            print(key)
 
         with open(path_to_ca_certificate, "rb") as f:
             ca_cert = f.read()
-            print(ca_cert)
 
         creds = grpc.ssl_channel_credentials(ca_cert, key, cert)
         self.channel = grpc.secure_channel(self.server, creds)
