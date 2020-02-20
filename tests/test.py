@@ -4,6 +4,12 @@ import h5py
 import csv
 import numpy as np
 
+# constants
+test_server = "proteomicsdb.org:8500"
+ca_cert = "/home/ludwig/01_code/prosit_grpc/cert/Proteomicsdb-Prosit.crt"
+cert = "/home/ludwig/01_code/prosit_grpc/cert/skyline_dec_2019.crt"
+key = "/home/ludwig/01_code/prosit_grpc/cert/skyline_dec_2019.key"
+
 with h5py.File("data.hdf5", 'r') as f:
     intensities = list(f["intensities_pred"])
     irt = list(f["iRT"])
@@ -25,11 +31,14 @@ with open("input_test.csv", "r") as csvfile:
         ce.append(int(line[1]))
         charge.append(int(line[2]))
 
-predictor = PredictPROSIT(server="131.159.152.7:8500",
+predictor = PredictPROSIT(server=test_server,
                           sequences_list=sequences,
                           charges_list=charge,
                           collision_energies_list=ce,
-                          model_name="intensity_prosit_publication"
+                          model_name="intensity_prosit_publication",
+                          path_to_ca_certificate=ca_cert,
+                          path_to_certificate=cert,
+                          path_to_key_certificate=key,
                           )
 predictor.predict()
 pred = predictor.predictions
@@ -43,11 +52,14 @@ def test_array_size():
         assert len(pred[i]) == 174
 
 def test_intensity_prediction():
-    predictor = PredictPROSIT(server="131.159.152.7:8500",
+    predictor = PredictPROSIT(server=test_server,
                               sequences_list=sequences,
                               charges_list=charge,
                               collision_energies_list=ce,
-                              model_name="intensity_prosit_publication"
+                              model_name="intensity_prosit_publication",
+                              path_to_ca_certificate=ca_cert,
+                              path_to_certificate=cert,
+                              path_to_key_certificate=key,
                               )
     predictor.predict()
     pred = predictor.predictions
@@ -65,9 +77,12 @@ def test_intensity_prediction():
 
 
 def test_proteotypicity_prediction():
-    predictor = PredictPROSIT(server="131.159.152.7:8500",
+    predictor = PredictPROSIT(server=test_server,
                               sequences_list= ["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
-                              model_name="proteotypicity"
+                              model_name="proteotypicity",
+                              path_to_ca_certificate=ca_cert,
+                              path_to_certificate=cert,
+                              path_to_key_certificate=key,
                               )
     predictor.predict()
     pred = predictor.predictions
@@ -77,36 +92,48 @@ def test_proteotypicity_prediction():
         assert round(pred[i], 3) == target[i]
 
 def test_batched_prediction():
-    predictor = PredictPROSIT(server="131.159.152.7:8500",
+    predictor = PredictPROSIT(server=test_server,
                               sequences_list=["THDLGKW" for i in range(10000)],
                               charges_list= [2 for i in range(10000)],
                               collision_energies_list= [20 for i in range(10000)],
-                              model_name="intensity_prosit_publication"
+                              model_name="intensity_prosit_publication",
+                              path_to_ca_certificate=ca_cert,
+                              path_to_certificate=cert,
+                              path_to_key_certificate=key,
                               )
     predictor.predict()
     pred = predictor.get_predictions()
     assert len(pred) == 10000
 
-    predictor = PredictPROSIT(server="131.159.152.7:8500",
+    predictor = PredictPROSIT(server=test_server,
                               sequences_list=["THDLGKW" for i in range(10000)],
-                              model_name="proteotypicity"
+                              model_name="proteotypicity",
+                              path_to_ca_certificate=ca_cert,
+                              path_to_certificate=cert,
+                              path_to_key_certificate=key,
                               )
     predictor.predict()
     pred = predictor.predictions
     assert len(pred) == 10000
 
-    predictor = PredictPROSIT(server="131.159.152.7:8500",
+    predictor = PredictPROSIT(server=test_server,
                               sequences_list=["THDLGKW" for i in range(10000)],
-                              model_name="iRT"
+                              model_name="iRT",
+                              path_to_ca_certificate=ca_cert,
+                              path_to_certificate=cert,
+                              path_to_key_certificate=key,
                               )
     predictor.predict()
     pred = predictor.predictions
     assert len(pred) == 10000
 
 def test_irt_prediction():
-    predictor = PredictPROSIT(server="131.159.152.7:8500",
+    predictor = PredictPROSIT(server=test_server,
                               sequences_list=sequences,
-                              model_name="iRT"
+                              model_name="iRT",
+                              path_to_ca_certificate=ca_cert,
+                              path_to_certificate=cert,
+                              path_to_key_certificate=key,
                               )
     predictor.predict()
     pred = predictor.predictions
@@ -119,11 +146,14 @@ def test_irt_prediction():
         assert round(float(pred[i]), 1) == round(float(irt[i]), 1)
 
 def test_get_functions():
-    predictor = PredictPROSIT(server="131.159.152.7:8500",
+    predictor = PredictPROSIT(server=test_server,
                               sequences_list=sequences,
                               charges_list=charge,
                               collision_energies_list=ce,
-                              model_name="intensity_prosit_publication"
+                              model_name="intensity_prosit_publication",
+                              path_to_ca_certificate=ca_cert,
+                              path_to_certificate=cert,
+                              path_to_key_certificate=key,
                               )
     pred = predictor.get_predictions()
     masses = predictor.get_fragment_masses()
@@ -151,7 +181,7 @@ def test_get_functions():
 #     with h5py.File("data.hdf5", 'r') as f:
 #
 #         print(f.keys())
-#         predictor = PredictPROSIT(server="131.159.152.7:8500",
+#         predictor = PredictPROSIT(server=test_server,
 #                                   model_name="intensity_prosit_publication")
 #
 #         predictor.set_sequence_list_numeric(numeric_sequence_list=list(f["sequence_integer"]))

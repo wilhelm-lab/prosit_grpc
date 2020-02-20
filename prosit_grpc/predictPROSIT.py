@@ -22,6 +22,9 @@ class PredictPROSIT:
                  sequences_list: Optional[Union[np.ndarray, Iterable]] = None,
                  charges_list: Optional[Union[np.ndarray, Iterable]] = None,
                  collision_energies_list: Optional[Union[np.ndarray, Iterable]] = None,
+                 path_to_ca_certificate = None,
+                 path_to_certificate = None,
+                 path_to_key_certificate = None
                  ):
         """
         :param concurrency: Maximum number of concurrent inference requests
@@ -56,10 +59,20 @@ class PredictPROSIT:
         self.collision_energy_normed = None
         self.collision_energies_array_float32 = None
 
-        # Create channel and stub
-        self.channel = grpc.insecure_channel(self.server)
-        self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
+        # Create channel and stub                                                                                                                                                                                                                                                                 cert = open('/home/llautenbacher/prosit_grpc/prosit_grpc/skyline_dec_2019.cert', 'rb').read()
+        with open(path_to_certificate, "rb") as f:
+            cert = f.read()
 
+        with open(path_to_key_certificate, "rb") as f:
+            key = f.read()
+
+        with open(path_to_ca_certificate, "rb") as f:
+            ca_cert = f.read()
+
+        creds = grpc.ssl_channel_credentials(ca_cert, key, cert)
+        self.channel = grpc.secure_channel(self.server, creds)
+
+        self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
 
         # Output
         self.raw_predictions = []
