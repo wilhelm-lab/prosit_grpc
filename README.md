@@ -1,3 +1,7 @@
+[![pipeline status](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/badges/master/pipeline.svg)](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/commits/master)
+[![coverage report](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/badges/master/coverage.svg)](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/commits/master)
+
+
 # Prosit gRPC Client as a poetry package
 
 ## How to use the gRPC client in my own project using the poetry package managment system?
