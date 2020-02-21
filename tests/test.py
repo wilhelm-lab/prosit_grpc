@@ -1,4 +1,4 @@
-from prosit_grpc.predictPROSIT import PredictPROSIT
+from prosit_grpc.old_predictPROSIT import PredictPROSIT
 
 import h5py
 import csv
@@ -75,6 +75,7 @@ def test_intensity_prediction():
         pearson_correlation = np.corrcoef(masses[i], mymasses[i])[0,1]
         assert round(pearson_correlation, 15) == 1
 
+    assert 0
 
 def test_proteotypicity_prediction():
     predictor = PredictPROSIT(server=test_server,
