@@ -34,8 +34,7 @@ check_code:
   - echo "$ca_cert" > "./cert/Proteomicsdb-Prosit.crt"
   - echo "$cert" > "./cert/ci-pipeline.crt"
   - echo "$key" > "./cert/ci-pipeline.key"
-  - cd tests
-  - pytest test.py --junitxml=junit.xml
+  - py.test --junitxml=junit.xml
 
   artifacts:
     reports:
