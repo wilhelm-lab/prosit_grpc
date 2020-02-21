@@ -99,14 +99,15 @@ class PROSITcollisionenergies:
 
     @staticmethod
     def determine_type(collision_energies):
-        if collision_energies[1] > 1:
+        if type(collision_energies) == np.ndarray:
+            return "array"
 
+        elif collision_energies[1] < 1:
+            return "procentual"
 
-        elif type(collision_energies) == "numeric":
+        else:
             return "numeric"
 
-        elif type(collision_energies) == "array":
-            return "array"
 
     def numeric_to_procentual(self):
         pass
