@@ -75,7 +75,7 @@ def map_peptide_to_numbers(seq):
     while i<l:
         # Special Cases: CaC, OxM, M(ox), M(O), PhS, PhT, PhY, (Cam)
         if (i+3)<l and seq[i:i+3] == "Cac": 
-            nums.append(C.ALPHABET["CaC"])
+            nums.append(C.ALPHABET["Cac"])
             i += 3
         elif (i+3)<l and seq[i:i+3] == "PhS": 
             nums.append(C.ALPHABET["PhS"])
