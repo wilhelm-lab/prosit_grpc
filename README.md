@@ -17,11 +17,14 @@ prosit_grpc = {git = "git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git"
 from prosit_grpc.predictPROSIT import PredictPROSIT
 
 # Predict Intensities
-predictor = PredictPROSIT(server="131.159.152.7:8500",
+predictor = PredictPROSIT(server="proteomicsdb.org:8500",
                           sequences_list=["AAAAAKAK","AAAAAA"],
                           charges_list=[1,2],
                           collision_energies_list=[25,25],
-                          model_name="intensity"
+                          model_name="intensity",
+                          path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
+                          path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
+                          path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
                           )
 # Get predictions
 predictions = predictor.get_predictions()
@@ -30,18 +33,24 @@ predictions = predictor.get_predictions()
 
 ```
 # Predict Proteotypicity
-predictor = PredictPROSIT(server="131.159.152.7:8500",
+predictor = PredictPROSIT(server="proteomicsdb.org:8500",
                           sequences_list= ["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
-                          model_name="proteotypicity"
+                          model_name="proteotypicity",
+                          path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
+                          path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
+                          path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
                           )
 pred = predictor.get_predictions()
 ```
 
 ```
 # Predict iRT
-predictor = PredictPROSIT(server="131.159.152.7:8500",
+predictor = PredictPROSIT(server="proteomicsdb.org:8500",
                               sequences_list=["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
-                              model_name="iRT"
+                              model_name="iRT",
+                              path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
+                              path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
+                              path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
                               )
 pred = predictor.get_predictions()
 ```
