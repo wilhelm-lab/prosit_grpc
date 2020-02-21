@@ -263,6 +263,9 @@ class PredictPROSIT:
                 requests.append(request)
                 batch_start = batch_end
 
+        else:
+            raise ValueError(f"model_type {self.model_type} not known")
+
         self.raw_predictions = []
         for request in requests:
             self.raw_predictions.append(U.reshape_predict_response_to_raw_predictions(self._predict_request(request), model_type=self.model_type))
@@ -273,6 +276,8 @@ class PredictPROSIT:
             self.filter_invalid()
             self.set_negative_to_zero()
             self.normalize_raw_predictions()
+
+            self.predictions = [[round(peak, 5) for peak in spectrum] for spectrum in self.predictions]
 
         elif self.model_type == "proteotypicity":
             self.predictions = self.raw_predictions.flatten()
@@ -319,3 +324,33 @@ class PredictPROSIT:
             annotation.append(valid_annotation)
 
         return annotation
+
+    def write_hdf5(self, intensity_model, irt_model, output_file):
+
+        import h5py
+
+        self.set_model_name(model_name=intensity_model)
+        self.predict()
+
+        output_dict={
+            "sequence_integer": self.sequences_array,
+            "precursor_charge_onehot": self.charges_array_float32,
+            "collision_energy_aligned_normed": self.collision_energies_array_float32,
+            'intensities_pred': np.array(self.predictions).astype(np.float64),
+            'masses_pred': np.array(self.fragment_masses).astype(np.float64)}
+
+        self.set_model_name(model_name=irt_model)
+        self.predict()
+        output_dict["iRT"] = np.array([np.array(el).astype(np.float32) for el in self.predictions]).astype(
+            np.float32)
+
+        output_dict["sequence_integer"].shape = (self.num_seq, 30)
+        output_dict["precursor_charge_onehot"].shape = (self.num_seq, 6)
+        output_dict["collision_energy_aligned_normed"].shape = (self.num_seq, 1)
+        output_dict["intensities_pred"].shape = (self.num_seq, 174)
+        output_dict["masses_pred"].shape = (self.num_seq, 174)
+        output_dict["iRT"].shape = (self.num_seq, 1)
+
+        with h5py.File(output_file, "w") as data_file:
+            for key, data in output_dict.items():
+                data_file.create_dataset(key, data=data, dtype=data.dtype, compression="gzip")
