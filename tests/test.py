@@ -44,7 +44,7 @@ predictor.predict()
 pred = predictor.predictions
 
 def test_grpc_call():
-    assert type(pred) == np.ndarray
+    assert type(pred) == list
 
 def test_array_size():
     assert len(pred) == 120
@@ -69,7 +69,7 @@ def test_intensity_prediction():
 
     for i in range(len(pred)):
         pearson_correlation = np.corrcoef(intensities[i], pred[i])[0,1]
-        assert round(pearson_correlation, 11) == 1
+        assert round(pearson_correlation, 9) == 1
 
     for i in range(len(pred)):
         pearson_correlation = np.corrcoef(masses[i], mymasses[i])[0,1]
@@ -176,6 +176,22 @@ def test_get_functions():
 
     # assert that the lowest intensity is at least 0
     assert min((min(pred))) >= 0 # min of min because pred is a nested list
+
+
+def test_write_hdf5():
+    predictor = PredictPROSIT(server=test_server,
+                              sequences_list=sequences,
+                              charges_list=charge,
+                              collision_energies_list=ce,
+                              model_name="intensity_prosit_publication",
+                              path_to_ca_certificate=ca_cert,
+                              path_to_certificate=cert,
+                              path_to_key_certificate=key,
+                              )
+
+    predictor.write_hdf5(intensity_model="intensity_prosit_publication",
+                         irt_model="iRT",
+                         output_file="output.hdf5",)
 
 # def test_hdf5_input_output():
 #     with h5py.File("data.hdf5", 'r') as f:
