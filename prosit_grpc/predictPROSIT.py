@@ -18,10 +18,12 @@ class PROSITpredictor:
     """
     def __init__(self,
                  server: str,
-                 model_name: str,
-                 sequences_list: Optional[Union[np.ndarray, Iterable]] = None,
-                 charges_list: Optional[Union[np.ndarray, Iterable]] = None,
-                 collision_energies_list: Optional[Union[np.ndarray, Iterable]] = None,
+                 irt_model: str = None,
+                 intensity_model: str = None,
+                 proteotypicity_model: str = None,
+                 sequences: list = None,
+                 charges: list = None,
+                 collision_energies: list = None,
                  path_to_ca_certificate: str = None,
                  path_to_certificate: str = None,
                  path_to_key_certificate: str = None):
@@ -41,16 +43,60 @@ class PROSITpredictor:
         :param collision_energies_list
         """
         self.server = server
-        self.model_name = model_name
-        self.model_type = model_name.split("_")[0]
+        self.create_channel(path_to_ca_certificate=path_to_ca_certificate,
+                            path_to_key_certificate=path_to_key_certificate,
+                            path_to_certificate=path_to_certificate)
+        self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
 
-        self.input = PROSITinput()
+        self.irt_model = irt_model
+        self.intensity_model = intensity_model
+        self.proteotypicity_model = proteotypicity_model
+
+        self.input = PROSITinput(sequences=sequences,
+                                 charges=charges,
+                                 collision_energies=collision_energies)
+
+        self.output = PROSIToutput()
+
+    def create_channel(self, path_to_certificate, path_to_key_certificate, path_to_ca_certificate):
+        try:
+            # read certificates and create credentials
+            with open(path_to_certificate, "rb") as f:
+                cert = f.read()
+            with open(path_to_key_certificate, "rb") as f:
+                key = f.read()
+            with open(path_to_ca_certificate, "rb") as f:
+                ca_cert = f.read()
+            creds = grpc.ssl_channel_credentials(ca_cert, key, cert)
+            # create secure channel
+            self.channel = grpc.secure_channel(self.server, creds)
+        except:
+            print("Establishing a secure channel was not possible")
+            self.channel = grpc.insecure_channel(self.server)
 
 class PROSITinput:
     def __init__(self, sequences=None, charges=None, collision_energies=None):
+        l1 = len(sequences)
+        l2 = len(charges)
+        l3 = len(collision_energies)
+
+        if l1 != l2 or l1 != l3 or l2 != l3:
+            raise Exception(f"Please ensure that all list have the same length.\n"
+                            f"The Sequences have:            {l1} entries.\n"
+                            f"The charges have:              {l2} entries.\n"
+                            f"The collision_energies have:   {l3} entries\n")
+
         self.sequences = PROSITsequences(sequences)
         self.charges = PROSITcharges(charges)
         self.collision_energies = PROSITcollisionenergies(collision_energies)
+
+    def prepare_input(self):
+        if self.sequences != None:
+           self.sequences.prepare_sequences()
+        if self.charges != None:
+           self.charges.prepare_charges()
+        if self.collision_energies != None:
+            self.collision_energies.prepare_collisionenergies()
 
 class PROSITcharges:
     def __init__(self, charges):

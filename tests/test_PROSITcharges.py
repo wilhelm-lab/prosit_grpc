@@ -26,7 +26,7 @@ def test_PROSITcharges_determine_type():
     ret = prpc.PROSITcharges.determine_type(charges_array)
     assert ret == "array"
 
-def test_PROSITcharges(): # test instanciation
+def test_PROSITcharges_init(): # test instanciation
     #numeric
     inst = prpc.PROSITcharges(charges_numeric)
     assert inst.numeric == charges_numeric

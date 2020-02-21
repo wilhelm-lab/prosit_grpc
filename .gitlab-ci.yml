@@ -38,5 +38,5 @@ check_code:
 
   artifacts:
     reports:
-      junit: tests/junit.xml
+      junit: junit.xml
 

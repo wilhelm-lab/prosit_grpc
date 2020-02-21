@@ -39,7 +39,7 @@ def test_PROSITsequences_determine_type():
     ret = prpc.PROSITsequences.determine_type(seq)
     assert ret == "array"
 
-def test_PROSITsequences(): # test instanciation
+def test_PROSITsequences_init(): # test instanciation
     # character
     inst = prpc.PROSITsequences(sequences_character)
     assert inst.character == sequences_character

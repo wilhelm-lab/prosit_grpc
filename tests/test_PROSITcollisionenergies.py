@@ -21,7 +21,7 @@ def test_PROSITcollisionenergies_determine_type():
     ret = prpc.PROSITcollisionenergies.determine_type(ce)
     assert ret == "array"
 
-def test_PROSITcollisionenergies():
+def test_PROSITcollisionenergies_init():
     # numeric
     inst = prpc.PROSITcollisionenergies(ce_numeric)
     assert inst.numeric == ce_numeric
