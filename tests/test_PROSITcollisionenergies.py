@@ -1,5 +1,5 @@
 import numpy as np
-import prosit_grpc.predictPROSIT as prpc
+import prosit_grpc.inputPROSIT as prpc
 
 ce_numeric = [10,20,30,40,50]
 ce_procentual = [0.10,0.20,0.30,0.40,0.50]

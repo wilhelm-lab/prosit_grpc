@@ -1,5 +1,5 @@
 import numpy as np
-import prosit_grpc.predictPROSIT as prpc
+import prosit_grpc.inputPROSIT as prpc
 
 
 

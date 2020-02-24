@@ -119,8 +119,10 @@ MASSES["H2O"] = MASSES["H"] * 2 + MASSES["O"]
 MASSES["NH3"] = MASSES["N"] + MASSES["H"] * 3
 
 SEQ_LEN = 30 # Sequence length for prosit
+NUM_CHARGES_ONEHOT = 6
 MAX_CHARGE = 6
 BATCH_SIZE = 6000
+VEC_LENGTH = 174
 
 IONS = ['y', 'b']
 CHARGES = [1, 2, 3]

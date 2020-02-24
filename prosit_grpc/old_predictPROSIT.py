@@ -217,13 +217,6 @@ class PredictPROSIT:
             self.set_collision_energies_array_float32()
             self.set_sequences_array_int32()
 
-
-            print(self.collision_energies_list)
-            print(self.collision_energy_normed)
-            print(self.collision_energies_array_float32)
-            print(type(self.collision_energies_array_float32))
-
-
             requests = []
             while batch_start < self.num_seq:
 
