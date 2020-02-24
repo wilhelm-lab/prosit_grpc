@@ -19,17 +19,25 @@ before_script:
   - python -m venv venv
   - source venv/bin/activate
   - pip install -U pip
-  - pip install poetry
-  - poetry install
+  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+
 
 stages:
   - test
+  - installation_pip
 
 check_code:
   tags:
   - modern
   stage: test
   script:
+  - pip install poetry
+  - poetry install
   - mkdir cert
   - echo "$ca_cert" > "./cert/Proteomicsdb-Prosit.crt"
   - echo "$cert" > "./cert/ci-pipeline.crt"
@@ -41,3 +49,10 @@ check_code:
     reports:
       junit: tests/junit.xml
 
+
+check_simple_installation:
+  tags:
+  - modern
+  stage: installation_pip
+  script:
+  - pip install -e git+git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git@$CI_COMMIT_SHORT_SHA#egg=prosit_grpc
