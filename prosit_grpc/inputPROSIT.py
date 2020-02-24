@@ -1,6 +1,7 @@
 import numpy as np
 from . import __constants__ as C  # For constants
-from . import __utils__ as U # Utility/Static functions
+from . import __utils__ as U  # Utility/Static functions
+
 
 class PROSITinput:
     def __init__(self, sequences=None, charges=None, collision_energies=None):
@@ -9,12 +10,13 @@ class PROSITinput:
         self.collision_energies = PROSITcollisionenergies(collision_energies)
 
     def prepare_input(self):
-        if self.sequences != None:
+        if self.sequences is not None:
             self.sequences.prepare_sequences()
-        if self.charges != None:
+        if self.charges is not None:
             self.charges.prepare_charges()
-        if self.collision_energies != None:
+        if self.collision_energies is not None:
             self.collision_energies.prepare_collisionenergies()
+
 
 class PROSITcharges:
     def __init__(self, charges):
@@ -46,19 +48,21 @@ class PROSITcharges:
         self.array = np.array(self.onehot, dtype=np.float32)
 
     def prepare_charges(self):
-        if self.array == None:
-            if self.onehot == None:
-                if self.numeric == None:
+        if self.array is None:
+            if self.onehot is None:
+                if self.numeric is None:
                     pass  # No charges known
                 self.numeric_to_onehot()
             self.onehot_to_array()
+
 
 class PROSITsequences:
     def __init__(self, sequences):
 
         self.character = None
         self.numeric = None
-        self.array = None
+        self.array_int32 = None
+        self.array_float32 = None
         self.lengths = None
 
         seq_type = PROSITsequences.determine_type(sequences)
@@ -80,7 +84,7 @@ class PROSITsequences:
 
     def character_to_numeric(self):
         self.numeric = []
-        for i,sequence in enumerate(self.character):
+        for i, sequence in enumerate(self.character):
             num_seq = U.map_peptide_to_numbers(sequence)
             if len(num_seq) > C.SEQ_LEN:
                 raise Exception(f"The Sequence {sequence}, has {i} Amino Acids."
@@ -91,7 +95,8 @@ class PROSITsequences:
             self.numeric.append(num_seq)
 
     def numeric_to_array(self):
-        self.array = np.array(self.numeric, dtype=np.int32)
+        self.array_int32 = np.array(self.numeric, dtype=np.int32)
+        self.array_float32 = np.array(self.numeric, dtype=np.float32)
 
     def calculate_lengths(self):
         """Calculates the length of all sequences saved in an instance of PROSITsequences
@@ -101,7 +106,13 @@ class PROSITsequences:
         :sets PROSITsequences.lengths
         """
         self.lengths = []
-        for sequence in self.array:
+
+        if self.array_int32 is not None:
+            array = self.array_int32
+        elif self.array_float32 is not None:
+            array = self.array_float32
+
+        for sequence in array:
             counter = 0
             for aa in sequence:
                 if aa != 0:
@@ -109,13 +120,20 @@ class PROSITsequences:
             self.lengths.append(counter)
 
     def prepare_sequences(self):
-        if self.array == None:
-            if self.numeric == None:
-                if self.character == None:
+        if self.array_float32 is None and self.array_int32 is None:
+            if self.numeric is None:
+                if self.character is None:
                     raise ValueError("No Sequences known")
                 self.character_to_numeric()
             self.numeric_to_array()
             self.calculate_lengths()
+
+        elif self.array_float32 is None:
+            self.array_int32 = np.copy(self.array_float32).dtype = np.int32
+
+        elif self.array_int32 is None:
+            self.array_float32 = np.copy(self.array_int32).dtype = np.float32
+
 
 class PROSITcollisionenergies:
     def __init__(self, collision_energies):
@@ -143,15 +161,15 @@ class PROSITcollisionenergies:
             return "numeric"
 
     def numeric_to_procentual(self):
-        self.procentual = [i/100 for i in self.numeric]
+        self.procentual = [i / 100 for i in self.numeric]
 
     def procentual_to_array(self):
         self.array = np.array(self.procentual, dtype=np.float32)
 
     def prepare_collisionenergies(self):
-        if self.array == None:
-            if self.procentual == None:
-                if self.numeric == None:
+        if self.array is None:
+            if self.procentual is None:
+                if self.numeric is None:
                     pass  # No Collision Energies known
                 self.numeric_to_procentual()
             self.procentual_to_array()

@@ -35,6 +35,6 @@ def test_PROSITinput_prepare_input():
 
     inst.prepare_input()
 
-    assert type(inst.sequences.array) == np.ndarray
+    assert type(inst.sequences.array_int32) == np.ndarray
     assert type(inst.charges.array) == np.ndarray
     assert type(inst.collision_energies.array) == np.ndarray

@@ -166,7 +166,7 @@ def create_request_general(seq_array, ce_array, charges_array, batchsize, model_
     if model_type == "intensity":
         return create_request_intensity(seq_array, ce_array, charges_array, batchsize, model_name)
     elif model_type == "iRT":
-        return create_request_irt
+        return create_request_irt(seq_array, batchsize, model_name)
     elif model_type == "proteotypicity":
         return create_request_proteotypicity(seq_array, batchsize, model_name)
 

@@ -58,4 +58,4 @@ def test_PROSITsequences_prepare_sequences():
 
     assert inst.character == sequences_character
     assert inst.numeric == sequences_numeric
-    assert np.array_equal(inst.array, sequences_array)
+    assert np.array_equal(inst.array_int32, sequences_array)

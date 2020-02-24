@@ -32,17 +32,33 @@ with open("input_test.csv", "r") as csvfile:
 
 def test_prediction():
     predictor = prpc.PROSITpredictor(server=test_server,
-                              sequences=sequences,
-                              charges=charge,
-                              collision_energies=ce,
-                              intensity_model="intensity_prosit_publication",
-                              irt_model="iRT",
-                              proteotypicity_model="proteotypicity",
                               path_to_ca_certificate=ca_cert,
                               path_to_certificate=cert,
                               path_to_key_certificate=key,
                               )
 
-    predictor.input.prepare_input()
-    predictor.create_requests_intensity()
-    predictor.send_requests()
+    x = predictor.predict(sequences=sequences,
+                      charges=charge,
+                      collision_energies=ce,
+                      intensity_model="intensity_prosit_publication",
+                      irt_model="iRT",
+                      proteotypicity_model="proteotypicity",)
+
+def test_temp():
+    charges_onehot = [[1, 0, 0, 0, 0, 0],
+                      [0, 1, 0, 0, 0, 0],
+                      [0, 0, 1, 0, 0, 0],
+                      [0, 0, 0, 1, 0, 0],
+                      [0, 0, 0, 0, 1, 0],
+                      [0, 0, 0, 0, 0, 1]]
+    charges_array = np.array(charges_onehot, dtype=np.int32)
+
+
+    import prosit_grpc.outputPROSIT as opr
+
+    temp = opr.PROSITspectrum()
+    temp.create_masking(sequences_lengths=[7, 10, 15, 30, 13, 26],
+                        charges_array=charges_array)
+
+    print(temp.mask)
+
