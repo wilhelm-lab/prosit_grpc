@@ -19,15 +19,3 @@ pytest-cov = "^2.8.1"
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
-
-
-[tool.pytest]
-pytest = python -m pytest
-    -rEfswx
-    --ignore=setup.py
-    --ignore=.eggs
-    --doctest-modules
-    --cov prosit_grpc
-    --cov-report term-missing
-'''
-

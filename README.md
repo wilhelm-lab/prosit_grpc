@@ -1,8 +1,10 @@
 # Status of code
 ## Master
 [![pipeline status](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/badges/master/pipeline.svg)](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/commits/master)
+[![coverage report](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/badges/master/coverage.svg)](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/commits/master)
 ## Develop
 [![pipeline status](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/badges/develop/pipeline.svg)](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/commits/develop)
+[![coverage report](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/badges/develop/coverage.svg)](https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc/commits/develop)
 
 # Prosit gRPC Client as a poetry package
 
