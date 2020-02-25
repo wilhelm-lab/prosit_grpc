@@ -20,7 +20,7 @@ class PROSITpredictor:
     """
 
     def __init__(self,
-                 server: str,
+                 server: str = "proteomicsdb.org:8500",
                  path_to_ca_certificate: str = None,
                  path_to_certificate: str = None,
                  path_to_key_certificate: str = None):
