@@ -11,11 +11,11 @@
 ## 1. Simple installation by pip
 We provide **tagged** versions of our package pointing to the latest tested master releases but can give you also direct access to new features if requested. The correctness is indicated by the green=good or red=wrong flags above. 
 ```bash
-pip install -e git+https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc.git@v1.0.1#egg=prosit_grpc
+pip install -e git+https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc.git@v1.1.0#egg=prosit_grpc
 ```
 ### If you deployed an ssh key
 ```bash
-pip install -e git+git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git@v1.0.1#egg=prosit_grpc
+pip install -e git+git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git@v1.1.0#egg=prosit_grpc
 ```
 ## 2. Ask Ludwig for certificates
 You are using a special access to our GPUs and are therefore required to identify against our server. Ludwig Lautenbacher will provide you with certificates that are valid for a limited time but can be renewed. Do not share those certificates with people outside of our group.
