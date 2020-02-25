@@ -160,7 +160,7 @@ class PROSITpredictor:
 
         # prepare output
         self.output.prepare_output(charges_array=self.input.charges.array,
-                              sequences_lengths=self.input.sequences.lengths)
+                                   sequences_lengths=self.input.sequences.lengths)
 
         return_dictionary = {
             proteotypicity_model: self.output.proteotypicity.raw,

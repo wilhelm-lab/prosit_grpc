@@ -1,5 +1,8 @@
 .python-version
 */__pycache__/
+__pycache__/
+*xml
+.coverage
 .idea
 *crt
 *key

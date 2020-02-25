@@ -16,7 +16,7 @@ install_requires = \
 
 setup_kwargs = {
     'name': 'prosit-grpc',
-    'version': '1.0.1',
+    'version': '1.1.0',
     'description': 'A Client to access Prosit via GRPC',
     'long_description': None,
     'author': 'Daniela Andrade Salazar',

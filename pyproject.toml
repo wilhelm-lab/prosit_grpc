@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "prosit_grpc"
-version = "1.0.1"
+version = "1.1.0"
 description = "A Client to access Prosit via GRPC"
 authors = ["Daniela Andrade Salazar <danial.andrade@tum.de>"]
 
@@ -22,8 +22,8 @@ build-backend = "poetry.masonry.api"
 
 
 [tool.pytest]
-adopts ='''
-   -rEfswx
+pytest = python -m pytest
+    -rEfswx
     --ignore=setup.py
     --ignore=.eggs
     --doctest-modules
