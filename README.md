@@ -134,4 +134,3 @@ Specify the "**SSH** clone link" of the `prosit_grpc` repsitory in your `pyproje
 ```
 prosit_grpc = {git = "git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git"}
 ```
-
