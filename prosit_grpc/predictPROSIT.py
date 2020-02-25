@@ -105,11 +105,11 @@ class PROSITpredictor:
                 collision_energies: list = None,
                 ):
 
-        tmp_input = PROSITinput(sequences=sequences,
+        self.input = PROSITinput(sequences=sequences,
                                 charges=charges,
                                 collision_energies=collision_energies)
 
-        tmp_input.prepare_input()
+        self.input.prepare_input()
 
         # actual prediction
         predictions_irt = None
@@ -117,56 +117,59 @@ class PROSITpredictor:
         predictions_proteotypicity = None
         if irt_model is not None:
             requests = PROSITpredictor.create_requests(model_name=irt_model,
-                                                       sequences_array=tmp_input.sequences.array_int32,
-                                                       charge_array=tmp_input.charges.array,
-                                                       ce_array=tmp_input.collision_energies.array
+                                                       sequences_array=self.input.sequences.array_int32,
+                                                       charge_array=self.input.charges.array,
+                                                       ce_array=self.input.collision_energies.array
                                                        )
             predictions_irt = self.send_requests(requests)
 
         if intensity_model is not None:
             requests = PROSITpredictor.create_requests(model_name=intensity_model,
-                                                       sequences_array=tmp_input.sequences.array_int32,
-                                                       charge_array=tmp_input.charges.array,
-                                                       ce_array=tmp_input.collision_energies.array
+                                                       sequences_array=self.input.sequences.array_int32,
+                                                       charge_array=self.input.charges.array,
+                                                       ce_array=self.input.collision_energies.array
                                                        )
             predictions_intensity = np.array(self.send_requests(requests))
 
         if proteotypicity_model is not None:
             requests = PROSITpredictor.create_requests(model_name=proteotypicity_model,
-                                                       sequences_array=tmp_input.sequences.array_float32,
-                                                       charge_array=tmp_input.charges.array,
-                                                       ce_array=tmp_input.collision_energies.array
+                                                       sequences_array=self.input.sequences.array_float32,
+                                                       charge_array=self.input.charges.array,
+                                                       ce_array=self.input.collision_energies.array
                                                        )
             predictions_proteotypicity = self.send_requests(requests)
 
-        output = PROSIToutput()
+        self.output = PROSIToutput()
 
-        # prepare output
-        output.spectrum.intensity.raw = predictions_intensity
-        output.spectrum.mz.raw = np.array(
-            [U.compute_ion_masses(tmp_input.sequences.array_int32[i], tmp_input.charges.array[i]) for i in
-             range(len(tmp_input.sequences.array_int32))])
-        output.spectrum.annotation.raw_type = np.array([C.ANNOTATION[0] for _ in range(len(tmp_input.sequences.array_int32))])
-        output.spectrum.annotation.raw_charge = np.array([C.ANNOTATION[1] for _ in range(len(tmp_input.sequences.array_int32))])
-        output.spectrum.annotation.raw_number = np.array([C.ANNOTATION[2] for _ in range(len(tmp_input.sequences.array_int32))])
+        # initialize output
+        self.output.spectrum.intensity.raw = predictions_intensity
+        self.output.spectrum.mz.raw = np.array(
+            [U.compute_ion_masses(self.input.sequences.array_int32[i], self.input.charges.array[i]) for i in
+             range(len(self.input.sequences.array_int32))])
+        self.output.spectrum.annotation.raw_type = np.array([C.ANNOTATION[0] for _ in range(len(self.input.sequences.array_int32))])
+        self.output.spectrum.annotation.raw_charge = np.array([C.ANNOTATION[1] for _ in range(len(self.input.sequences.array_int32))])
+        self.output.spectrum.annotation.raw_number = np.array([C.ANNOTATION[2] for _ in range(len(self.input.sequences.array_int32))])
 
         # shape annotation
-        output.spectrum.annotation.raw_number.shape = (len(tmp_input.sequences.array_int32), C.VEC_LENGTH)
-        output.spectrum.annotation.raw_charge.shape = (len(tmp_input.sequences.array_int32), C.VEC_LENGTH)
-        output.spectrum.annotation.raw_type.shape = (len(tmp_input.sequences.array_int32), C.VEC_LENGTH)
+        self.output.spectrum.annotation.raw_number.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
+        self.output.spectrum.annotation.raw_charge.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
+        self.output.spectrum.annotation.raw_type.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
 
-        output.irt.raw = predictions_irt
-        output.proteotypicity.raw = predictions_proteotypicity
+        self.output.irt.raw = predictions_irt
+        self.output.proteotypicity.raw = predictions_proteotypicity
 
-        output.prepare_output(charges_array=tmp_input.charges.array,
-                              sequences_lengths=tmp_input.sequences.lengths)
+        # prepare output
+        self.output.prepare_output(charges_array=self.input.charges.array,
+                              sequences_lengths=self.input.sequences.lengths)
 
         return_dictionary = {
-            proteotypicity_model: output.proteotypicity.raw,
-            irt_model: output.irt.normalized,
-            intensity_model+"-intensity": output.spectrum.intensity.filtered,
-            intensity_model+"-fragmentmz": output.spectrum.mz.filtered,
-            intensity_model+"-annotation": output.spectrum.annotation.filtered
+            proteotypicity_model: self.output.proteotypicity.raw,
+            irt_model: self.output.irt.normalized,
+            intensity_model+"-intensity": self.output.spectrum.intensity.filtered,
+            intensity_model+"-fragmentmz": self.output.spectrum.mz.filtered,
+            intensity_model+"-annotation_number": self.output.spectrum.annotation.filtered_number,
+            intensity_model+"-annotation_type": self.output.spectrum.annotation.filtered_type,
+            intensity_model+"-annotation_charge": self.output.spectrum.annotation.filtered_charge
         }
 
         return return_dictionary
