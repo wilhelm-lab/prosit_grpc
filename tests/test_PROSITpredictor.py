@@ -82,3 +82,16 @@ def test_batching():
 
     for output in output_dict.values():
         assert len(output) == 10000
+
+def test_predict_to_hdf5():
+    predictor = prpc.PROSITpredictor(server=test_server,
+                                     path_to_ca_certificate=ca_cert,
+                                     path_to_certificate=cert,
+                                     path_to_key_certificate=key,
+                                     )
+    predictor.predict_to_hdf5(sequences=sequences,
+                              charges=charge,
+                              collision_energies=ce,
+                              intensity_model="intensity_prosit_publication",
+                              irt_model="iRT",
+                              path_hdf5="tests/output.hdf5")

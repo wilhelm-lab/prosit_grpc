@@ -173,3 +173,35 @@ class PROSITpredictor:
         }
 
         return return_dictionary
+
+    def predict_to_hdf5(self,
+                        path_hdf5: str,
+                        irt_model: str = None,
+                        intensity_model: str = None,
+                        sequences: list = None,
+                        charges: list = None,
+                        collision_energies: list = None):
+        import h5py
+
+        self.predict(irt_model=irt_model,
+                     intensity_model=intensity_model,
+                     sequences=sequences,
+                     charges=charges,
+                     collision_energies=collision_energies)
+
+        # weird formating of ce and irt is due to compatibility with converter tool
+        hdf5_dict = {
+            "sequence_integer": self.input.sequences.array_int32,
+            "precursor_charge_onehot": self.input.charges.array,
+            "collision_energy_aligned_normed": np.array([np.array(el).astype(np.float32) for el in self.input.collision_energies.array]).astype(np.float32),
+            'intensities_pred': self.output.spectrum.intensity.normalized,
+            'masses_pred': self.output.spectrum.mz.masked,
+            'iRT': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
+
+        hdf5_dict["collision_energy_aligned_normed"].shape = (120, 1)
+        hdf5_dict["iRT"].shape = (120, 1)
+
+
+        with h5py.File(path_hdf5, "w") as data_file:
+            for key, data in hdf5_dict.items():
+                data_file.create_dataset(key, data=data, dtype=data.dtype, compression="gzip")

@@ -32,7 +32,8 @@ class PROSITirt:
 
     def normalize(self):
         self.normalized = [i * 43.39373 + 56.35363441 for i in self.raw]
-
+        self.normalized = np.array(self.normalized)
+        self.normalized.shape = self.raw.shape
 
 class PROSITspectrum:
     def __init__(self):
