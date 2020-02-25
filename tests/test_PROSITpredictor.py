@@ -7,17 +7,17 @@ import numpy as np
 
 # constants
 test_server = "proteomicsdb.org:8500"
-ca_cert = "../cert/Proteomicsdb-Prosit.crt"
-cert = "../cert/ci-pipeline.crt"
-key = "../cert/ci-pipeline.key"
+ca_cert = "cert/Proteomicsdb-Prosit.crt"
+cert = "cert/ci-pipeline.crt"
+key = "cert/ci-pipeline.key"
 
-with h5py.File("data.hdf5", 'r') as f:
+with h5py.File("tests/data.hdf5", 'r') as f:
     intensities = list(f["intensities_pred"])
     irt = list(f["iRT"])
     irt = [i[0] for i in irt]
     masses = list(f["masses_pred"])
 
-with open("input_test.csv", "r") as csvfile:
+with open("tests/input_test.csv", "r") as csvfile:
     reader = csv.reader(csvfile, delimiter=',')
     header = next(reader, None)
     sequences = []
