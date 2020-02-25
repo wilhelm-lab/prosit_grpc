@@ -25,65 +25,36 @@ You are using a special access to our GPUs and are therefore required to identif
 ### Write HDF5 == Get everything as file -> Input for any kind of converter
 
 ```python
-predictor = PredictPROSIT(server="proteomicsdb.org:8500",
-                          sequences_list=["AAAAAKAK","AAAAAA"],
-                          charges_list=[1,2],
-                          collision_energies_list=[25,25],
-                          model_name="LOREM_IPSUM",
-                          path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
-                          path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
-                          path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
-                          )
-
-predictor.write_hdf5(intensity_model="intensity_prosit_publication",
-                         irt_model="iRT",
-                         output_file="output.hdf5",)
+from prosit_grpc.predictPROSIT import PROSITpredictor
+predictor = PROSITpredictor(server="proteomicsdb.org:8500",
+                            path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
+                            path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
+                            path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
+                            )
+predictor.predict_to_hdf5(sequences=["AAAAAKAK","AAAAAA"],
+                          charges=[1,2],
+                          collision_energies=[25,25],
+                          intensity_model="intensity_prosit_publication",
+                          irt_model="iRT",
+                          path_hdf5="tests/output.hdf5")
 ```
 
 ### Alternative: get predictions seperately
 
 ```python
-from prosit_grpc.predictPROSIT import PredictPROSIT
-
-# Predict Intensities
-predictor = PredictPROSIT(server="proteomicsdb.org:8500",
-                          sequences_list=["AAAAAKAK","AAAAAA"],
-                          charges_list=[1,2],
-                          collision_energies_list=[25,25],
-                          model_name="intensity_prosit_publication",
-                          path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
-                          path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
-                          path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
-                          )
-# Get predictions
-predictions = predictor.get_predictions()
-fragment_annotations = predictor.get_fragment_annotation()
-fragment_masses = predictor.get_fragment_masses()
-
-```
-
-```python
-# Predict Proteotypicity
-predictor = PredictPROSIT(server="proteomicsdb.org:8500",
-                          sequences_list= ["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
-                          model_name="proteotypicity",
-                          path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
-                          path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
-                          path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
-                          )
-pred = predictor.get_predictions()
-```
-
-```python
-# Predict iRT
-predictor = PredictPROSIT(server="proteomicsdb.org:8500",
-                              sequences_list=["THDLGKW", "VLQKQFFYCTMEKWNGRT", "QMQCNWNVMQGAPSMTCEHRVEYSMEWIID"],
-                              model_name="iRT",
-                              path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
-                              path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
-                              path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
-                              )
-pred = predictor.get_predictions()
+from prosit_grpc.predictPROSIT import PROSITpredictor
+predictor = PROSITpredictor(server="proteomicsdb.org:8500",
+                            path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
+                            path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
+                            path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
+                            )
+output_dict = predictor.predict_to_hdf5(sequences=["AAAAAKAK","AAAAAA"],
+                                        charges=[1,2],
+                                        collision_energies=[25,25],
+                                        intensity_model="intensity_prosit_publication",
+                                        irt_model="iRT",
+                                        proteotypicity_model="proteotypicity",
+                                        path_hdf5="tests/output.hdf5")
 ```
 
 ## Sequence Restrictions
