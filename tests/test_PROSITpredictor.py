@@ -66,7 +66,6 @@ def test_prediction():
         # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
         assert round(float(my_irt[i]), 3) == round(float(irt[i]), 3)
 
-
 def test_batching():
     predictor = prpc.PROSITpredictor(server=test_server,
                                      path_to_ca_certificate=ca_cert,
