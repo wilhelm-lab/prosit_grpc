@@ -198,8 +198,8 @@ class PROSITpredictor:
             'masses_pred': self.output.spectrum.mz.masked,
             'iRT': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
 
-        hdf5_dict["collision_energy_aligned_normed"].shape = (120, 1)
-        hdf5_dict["iRT"].shape = (120, 1)
+        hdf5_dict["collision_energy_aligned_normed"].shape = (len(hdf5_dict["collision_energy_aligned_normed"]), 1)
+        hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]), 1)
 
 
         with h5py.File(path_hdf5, "w") as data_file:
