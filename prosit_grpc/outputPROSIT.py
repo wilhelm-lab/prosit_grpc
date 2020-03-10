@@ -15,10 +15,10 @@ class PROSIToutput:
         self.spectrum.prepare_spectrum(charges_array=charges_array,
                                        sequences_lengths=sequences_lengths)
         # prepare irt
-        self.irt.normalize()
+        self.irt.prepare_irt()
 
         # prepare proteotypicity
-
+        # nothing to prepare proteotypicity is only reported raw
 
 class PROSITproteotypicity:
     def __init__(self):
@@ -34,6 +34,10 @@ class PROSITirt:
         self.normalized = [i * 43.39373 + 56.35363441 for i in self.raw]
         self.normalized = np.array(self.normalized)
         self.normalized.shape = self.raw.shape
+
+    def prepare_irt(self):
+        if type(self.raw) == np.ndarray:
+            self.normalize()
 
 class PROSITspectrum:
     def __init__(self):
