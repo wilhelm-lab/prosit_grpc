@@ -70,16 +70,21 @@ class PROSITpredictor:
         while batch_start < num_seq:
             batch_end = batch_start + C.BATCH_SIZE
             batch_end = min(num_seq, batch_end)
+            batchsize = batch_end - batch_start
+            model_type = model_name.split("_")[0]
+            seq_array_batch = sequences_array[batch_start:batch_end]
+            
+            if model_type == "intensity":
+                ce_array_batch = ce_array[batch_start:batch_end]
+                charges_array_batch = charge_array[batch_start:batch_end]
+                request = U.create_request_intensity(seq_array_batch, ce_array_batch, charges_array_batch, batchsize, model_name)
+            elif model_type == "iRT":
+                request = U.create_request_irt(seq_array_batch, batchsize, model_name)
+            elif model_type == "proteotypicity":
+                request = U.create_request_proteotypicity(seq_array_batch, batchsize, model_name)
 
-            request = U.create_request_general(
-                seq_array=sequences_array[batch_start:batch_end],
-                ce_array=ce_array[batch_start:batch_end],
-                charges_array=charge_array[batch_start:batch_end],
-                model_name=model_name,
-                batchsize=(batch_end - batch_start))
             requests.append(request)
             batch_start = batch_end
-
         return requests
 
     def send_requests(self, requests):
