@@ -109,19 +109,13 @@ class PROSITsequences:
 
         :sets PROSITsequences.lengths
         """
-        self.lengths = []
-
         if self.array_int32 is not None:
             array = self.array_int32
         elif self.array_float32 is not None:
             array = self.array_float32
 
-        for sequence in tqdm(array):
-            counter = 0
-            for aa in sequence:
-                if aa != 0:
-                    counter += 1
-            self.lengths.append(counter)
+        truth_array = np.in1d(array, [0], invert=True).reshape(array.shape)
+        self.lengths = np.sum(truth_array, axis=1)
 
     def prepare_sequences(self):
         if self.array_float32 is None and self.array_int32 is None:
