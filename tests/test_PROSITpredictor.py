@@ -73,10 +73,12 @@ def test_seperate_prediction():
                                      path_to_key_certificate=key,
                                      )
 
-    output_dict = predictor.predict(sequences=sequences,
+    dict_intensity = predictor.predict(sequences=sequences,
                                     charges=charge,
                                     collision_energies=ce,
                                     intensity_model="intensity_prosit_publication")
+
+    assert len(dict_intensity) == 5
 
     # test spectrum prediction
     my_int = predictor.output.spectrum.intensity.normalized
@@ -93,7 +95,9 @@ def test_seperate_prediction():
 
 
     dict_irt = predictor.predict(sequences=sequences,
-                                 irt_model="iRT")    
+                                 irt_model="iRT") 
+
+    assert len(dict_irt) == 1
 
     # test irt prediction
     my_irt = predictor.output.irt.normalized
@@ -105,9 +109,7 @@ def test_seperate_prediction():
 
     dict_proteotyp = predictor.predict(sequences=sequences,
                                        proteotypicity_model="proteotypicity")
-
-
-
+    assert len(dict_proteotyp) == 1
 
 def test_batching():
     predictor = prpc.PROSITpredictor(server=test_server,
@@ -138,3 +140,6 @@ def test_predict_to_hdf5():
                               intensity_model="intensity_prosit_publication",
                               irt_model="iRT",
                               path_hdf5="tests/output.hdf5")
+
+    import os
+    os.remove("tests/output.hdf5")

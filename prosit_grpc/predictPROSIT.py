@@ -144,40 +144,19 @@ class PROSITpredictor:
                                                        )
             predictions_proteotypicity = self.send_requests(requests)
 
-        self.output = PROSIToutput()
-
         # initialize output
-        self.output.spectrum.intensity.raw = predictions_intensity
-        self.output.spectrum.mz.raw = np.array(
-            [U.compute_ion_masses(self.input.sequences.array_int32[i], self.input.charges.array[i]) for i in
-             range(len(self.input.sequences.array_int32))])
-        self.output.spectrum.annotation.raw_type = np.array([C.ANNOTATION[0] for _ in range(len(self.input.sequences.array_int32))])
-        self.output.spectrum.annotation.raw_charge = np.array([C.ANNOTATION[1] for _ in range(len(self.input.sequences.array_int32))])
-        self.output.spectrum.annotation.raw_number = np.array([C.ANNOTATION[2] for _ in range(len(self.input.sequences.array_int32))])
-
-        # shape annotation
-        self.output.spectrum.annotation.raw_number.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
-        self.output.spectrum.annotation.raw_charge.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
-        self.output.spectrum.annotation.raw_type.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
-
-        self.output.irt.raw = predictions_irt
-        self.output.proteotypicity.raw = predictions_proteotypicity
+        self.output = PROSIToutput(
+            pred_intensity=predictions_intensity, 
+            pred_irt=predictions_irt, 
+            pred_proteotyp=predictions_proteotypicity,
+            sequences_array_int32=self.input.sequences.array_int32, 
+            charges_array=self.input.charges.array)
 
         # prepare output
         self.output.prepare_output(charges_array=self.input.charges.array,
                                    sequences_lengths=self.input.sequences.lengths)
 
-        return_dictionary = {
-            proteotypicity_model: self.output.proteotypicity.raw,
-            irt_model: self.output.irt.normalized,
-            intensity_model+"-intensity": self.output.spectrum.intensity.filtered,
-            intensity_model+"-fragmentmz": self.output.spectrum.mz.filtered,
-            intensity_model+"-annotation_number": self.output.spectrum.annotation.filtered_number,
-            intensity_model+"-annotation_type": self.output.spectrum.annotation.filtered_type,
-            intensity_model+"-annotation_charge": self.output.spectrum.annotation.filtered_charge
-        }
-
-        return return_dictionary
+        return self.output.assemble_dictionary()
 
     def predict_to_hdf5(self,
                         path_hdf5: str,
