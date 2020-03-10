@@ -1,7 +1,7 @@
 import numpy as np
+from tqdm import tqdm
 from . import __constants__ as C  # For constants
 from . import __utils__ as U  # Utility/Static functions
-
 
 class PROSITinput:
     def __init__(self, sequences=None, charges=None, collision_energies=None):
@@ -88,7 +88,7 @@ class PROSITsequences:
 
     def character_to_numeric(self):
         self.numeric = []
-        for i, sequence in enumerate(self.character):
+        for i, sequence in tqdm(enumerate(self.character)):
             num_seq = U.map_peptide_to_numbers(sequence)
             if len(num_seq) > C.SEQ_LEN:
                 raise Exception(f"The Sequence {sequence}, has {i} Amino Acids."
@@ -116,7 +116,7 @@ class PROSITsequences:
         elif self.array_float32 is not None:
             array = self.array_float32
 
-        for sequence in array:
+        for sequence in tqdm(array):
             counter = 0
             for aa in sequence:
                 if aa != 0:

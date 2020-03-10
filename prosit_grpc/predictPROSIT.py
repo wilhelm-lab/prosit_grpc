@@ -7,6 +7,7 @@ __email__ = "Ludwig.Lautenbacher@tum.de"
 
 import numpy as np
 import grpc
+from tqdm import tqdm
 from tensorflow_serving.apis import prediction_service_pb2_grpc
 
 from . import __constants__ as C  # For constants
@@ -91,12 +92,19 @@ class PROSITpredictor:
         timeout = 5  # in seconds
 
         predictions = []
-        while len(requests) > 0:
-            request = requests.pop()
+        # while len(requests) > 0:
+        #     request = requests.pop()
+        #     model_type = request.model_spec.name.split("_")[0]
+        #     response = self.stub.Predict.future(request, timeout).result()  # asynchronous request
+        #     prediction = U.unpack_response(response, model_type)
+        #     predictions.append(prediction)
+
+        for request in tqdm(requests):
             model_type = request.model_spec.name.split("_")[0]
             response = self.stub.Predict.future(request, timeout).result()  # asynchronous request
             prediction = U.unpack_response(response, model_type)
             predictions.append(prediction)
+
 
         predictions = np.vstack(predictions)
         return predictions
