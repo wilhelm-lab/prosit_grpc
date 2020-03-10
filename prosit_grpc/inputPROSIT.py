@@ -34,12 +34,16 @@ class PROSITcharges:
 
     @staticmethod
     def determine_type(charges):
-        if type(charges) == np.ndarray:
-            return "array"
-        elif type(charges[1]) is list:
-            return "one-hot"
-        elif type(charges[1]) is int:
-            return "numeric"
+
+        if charges is None:
+            return None
+        else:
+            if type(charges) == np.ndarray:
+                return "array"
+            elif type(charges[0]) is list:
+                return "one-hot"
+            elif type(charges[0]) is int:
+                return "numeric"
 
     def numeric_to_onehot(self):
         self.onehot = [U.indices_to_one_hot(x, C.MAX_CHARGE) for x in self.numeric]
@@ -51,7 +55,7 @@ class PROSITcharges:
         if self.array is None:
             if self.onehot is None:
                 if self.numeric is None:
-                    pass  # No charges known
+                    return  # No charges known
                 self.numeric_to_onehot()
             self.onehot_to_array()
 
@@ -148,17 +152,19 @@ class PROSITcollisionenergies:
             self.procentual = collision_energies
         elif ce_type == "array":
             self.array = collision_energies
-        else:
-            raise ValueError("The ce_type is not known")
 
     @staticmethod
     def determine_type(collision_energies):
-        if type(collision_energies) == np.ndarray:
-            return "array"
-        elif collision_energies[1] < 1:
-            return "procentual"
+        
+        if collision_energies is None:
+            return None
         else:
-            return "numeric"
+            if type(collision_energies) == np.ndarray:
+                return "array"
+            elif collision_energies[1] < 1:
+                return "procentual"
+            else:
+                return "numeric"
 
     def numeric_to_procentual(self):
         self.procentual = [i / 100 for i in self.numeric]
@@ -170,6 +176,6 @@ class PROSITcollisionenergies:
         if self.array is None:
             if self.procentual is None:
                 if self.numeric is None:
-                    pass  # No Collision Energies known
+                    return  # No Collision Energies known
                 self.numeric_to_procentual()
             self.procentual_to_array()

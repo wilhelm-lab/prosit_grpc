@@ -70,16 +70,21 @@ class PROSITpredictor:
         while batch_start < num_seq:
             batch_end = batch_start + C.BATCH_SIZE
             batch_end = min(num_seq, batch_end)
+            batchsize = batch_end - batch_start
+            model_type = model_name.split("_")[0]
+            seq_array_batch = sequences_array[batch_start:batch_end]
+            
+            if model_type == "intensity":
+                ce_array_batch = ce_array[batch_start:batch_end]
+                charges_array_batch = charge_array[batch_start:batch_end]
+                request = U.create_request_intensity(seq_array_batch, ce_array_batch, charges_array_batch, batchsize, model_name)
+            elif model_type == "iRT":
+                request = U.create_request_irt(seq_array_batch, batchsize, model_name)
+            elif model_type == "proteotypicity":
+                request = U.create_request_proteotypicity(seq_array_batch, batchsize, model_name)
 
-            request = U.create_request_general(
-                seq_array=sequences_array[batch_start:batch_end],
-                ce_array=ce_array[batch_start:batch_end],
-                charges_array=charge_array[batch_start:batch_end],
-                model_name=model_name,
-                batchsize=(batch_end - batch_start))
             requests.append(request)
             batch_start = batch_end
-
         return requests
 
     def send_requests(self, requests):
@@ -139,40 +144,19 @@ class PROSITpredictor:
                                                        )
             predictions_proteotypicity = self.send_requests(requests)
 
-        self.output = PROSIToutput()
-
         # initialize output
-        self.output.spectrum.intensity.raw = predictions_intensity
-        self.output.spectrum.mz.raw = np.array(
-            [U.compute_ion_masses(self.input.sequences.array_int32[i], self.input.charges.array[i]) for i in
-             range(len(self.input.sequences.array_int32))])
-        self.output.spectrum.annotation.raw_type = np.array([C.ANNOTATION[0] for _ in range(len(self.input.sequences.array_int32))])
-        self.output.spectrum.annotation.raw_charge = np.array([C.ANNOTATION[1] for _ in range(len(self.input.sequences.array_int32))])
-        self.output.spectrum.annotation.raw_number = np.array([C.ANNOTATION[2] for _ in range(len(self.input.sequences.array_int32))])
-
-        # shape annotation
-        self.output.spectrum.annotation.raw_number.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
-        self.output.spectrum.annotation.raw_charge.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
-        self.output.spectrum.annotation.raw_type.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
-
-        self.output.irt.raw = predictions_irt
-        self.output.proteotypicity.raw = predictions_proteotypicity
+        self.output = PROSIToutput(
+            pred_intensity=predictions_intensity, 
+            pred_irt=predictions_irt, 
+            pred_proteotyp=predictions_proteotypicity,
+            sequences_array_int32=self.input.sequences.array_int32, 
+            charges_array=self.input.charges.array)
 
         # prepare output
         self.output.prepare_output(charges_array=self.input.charges.array,
                                    sequences_lengths=self.input.sequences.lengths)
 
-        return_dictionary = {
-            proteotypicity_model: self.output.proteotypicity.raw,
-            irt_model: self.output.irt.normalized,
-            intensity_model+"-intensity": self.output.spectrum.intensity.filtered,
-            intensity_model+"-fragmentmz": self.output.spectrum.mz.filtered,
-            intensity_model+"-annotation_number": self.output.spectrum.annotation.filtered_number,
-            intensity_model+"-annotation_type": self.output.spectrum.annotation.filtered_type,
-            intensity_model+"-annotation_charge": self.output.spectrum.annotation.filtered_charge
-        }
-
-        return return_dictionary
+        return self.output.assemble_dictionary()
 
     def predict_to_hdf5(self,
                         path_hdf5: str,
@@ -198,8 +182,8 @@ class PROSITpredictor:
             'masses_pred': self.output.spectrum.mz.masked,
             'iRT': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
 
-        hdf5_dict["collision_energy_aligned_normed"].shape = (120, 1)
-        hdf5_dict["iRT"].shape = (120, 1)
+        hdf5_dict["collision_energy_aligned_normed"].shape = (len(hdf5_dict["collision_energy_aligned_normed"]), 1)
+        hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]), 1)
 
 
         with h5py.File(path_hdf5, "w") as data_file:

@@ -32,17 +32,17 @@ with open("tests/input_test.csv", "r") as csvfile:
 
 def test_prediction():
     predictor = prpc.PROSITpredictor(server=test_server,
-                              path_to_ca_certificate=ca_cert,
-                              path_to_certificate=cert,
-                              path_to_key_certificate=key,
-                              )
+                                     path_to_ca_certificate=ca_cert,
+                                     path_to_certificate=cert,
+                                     path_to_key_certificate=key,
+                                     )
 
     output_dict = predictor.predict(sequences=sequences,
-                      charges=charge,
-                      collision_energies=ce,
-                      intensity_model="intensity_prosit_publication",
-                      irt_model="iRT",
-                      proteotypicity_model="proteotypicity")
+                                    charges=charge,
+                                    collision_energies=ce,
+                                    intensity_model="intensity_prosit_publication",
+                                    irt_model="iRT",
+                                    proteotypicity_model="proteotypicity")
 
     # test spectrum prediction
     my_int = predictor.output.spectrum.intensity.normalized
@@ -65,6 +65,51 @@ def test_prediction():
         # converting them to float because:
         # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
         assert round(float(my_irt[i]), 3) == round(float(irt[i]), 3)
+
+def test_seperate_prediction():
+    predictor = prpc.PROSITpredictor(server=test_server,
+                                     path_to_ca_certificate=ca_cert,
+                                     path_to_certificate=cert,
+                                     path_to_key_certificate=key,
+                                     )
+
+    dict_intensity = predictor.predict(sequences=sequences,
+                                    charges=charge,
+                                    collision_energies=ce,
+                                    intensity_model="intensity_prosit_publication")
+
+    assert len(dict_intensity) == 5
+
+    # test spectrum prediction
+    my_int = predictor.output.spectrum.intensity.normalized
+    my_masses = predictor.output.spectrum.mz.masked
+    assert len(intensities) == len(my_int)
+    assert len(masses) == len(my_masses)
+    assert len(my_int) == len(my_masses)
+    for i in range(len(my_int)):
+        pearson_correlation_int = np.corrcoef(intensities[i], my_int[i])[0, 1]
+        assert round(pearson_correlation_int, 11) == 1
+
+        pearson_correlation_masses = np.corrcoef(masses[1], my_masses[1])[0,1]
+        assert round(pearson_correlation_masses, 15) == 1    
+
+
+    dict_irt = predictor.predict(sequences=sequences,
+                                 irt_model="iRT") 
+
+    assert len(dict_irt) == 1
+
+    # test irt prediction
+    my_irt = predictor.output.irt.normalized
+    assert len(my_irt) == len(irt)
+    for i in range(len(irt)):
+        # converting them to float because:
+        # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
+        assert round(float(my_irt[i]), 3) == round(float(irt[i]), 3)
+
+    dict_proteotyp = predictor.predict(sequences=sequences,
+                                       proteotypicity_model="proteotypicity")
+    assert len(dict_proteotyp) == 1
 
 def test_batching():
     predictor = prpc.PROSITpredictor(server=test_server,
@@ -95,3 +140,6 @@ def test_predict_to_hdf5():
                               intensity_model="intensity_prosit_publication",
                               irt_model="iRT",
                               path_hdf5="tests/output.hdf5")
+
+    import os
+    os.remove("tests/output.hdf5")
