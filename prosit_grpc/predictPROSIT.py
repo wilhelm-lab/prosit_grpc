@@ -25,7 +25,7 @@ class PROSITpredictor:
                  path_to_ca_certificate: str = None,
                  path_to_certificate: str = None,
                  path_to_key_certificate: str = None,
-		 keepalive_timeout_ms = 10000):
+		         keepalive_timeout_ms = 10000):
         """PROSITpredictor is a class that contains all fetures to generate predictions with a Prosit server
 
         -- Non optional Parameters --
@@ -41,7 +41,7 @@ class PROSITpredictor:
         self.create_channel(path_to_ca_certificate=path_to_ca_certificate,
                             path_to_key_certificate=path_to_key_certificate,
                             path_to_certificate=path_to_certificate,
-			    keepalive_timeout_ms=keepalive_timeout_ms)
+			                keepalive_timeout_ms=keepalive_timeout_ms)
         self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
         self.channel = None
 
