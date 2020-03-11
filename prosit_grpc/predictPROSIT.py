@@ -35,6 +35,7 @@ class PROSITpredictor:
         :param path_to_certificate
         :param path_to_key_certificate
         :param path_to_ca_certificate
+        :param
 
         """
         self.server = server
@@ -95,13 +96,6 @@ class PROSITpredictor:
         timeout = 5  # in seconds
 
         predictions = []
-        # while len(requests) > 0:
-        #     request = requests.pop()
-        #     model_type = request.model_spec.name.split("_")[0]
-        #     response = self.stub.Predict.future(request, timeout).result()  # asynchronous request
-        #     prediction = U.unpack_response(response, model_type)
-        #     predictions.append(prediction)
-
         for request in tqdm(requests):
             model_type = request.model_spec.name.split("_")[0]
             response = self.stub.Predict.future(request, timeout).result()  # asynchronous request
