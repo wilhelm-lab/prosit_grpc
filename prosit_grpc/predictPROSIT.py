@@ -7,6 +7,7 @@ __email__ = "Ludwig.Lautenbacher@tum.de"
 
 import numpy as np
 import grpc
+from tqdm import tqdm
 from tensorflow_serving.apis import prediction_service_pb2_grpc
 
 from . import __constants__ as C  # For constants
@@ -23,7 +24,8 @@ class PROSITpredictor:
                  server: str = "proteomicsdb.org:8500",
                  path_to_ca_certificate: str = None,
                  path_to_certificate: str = None,
-                 path_to_key_certificate: str = None):
+                 path_to_key_certificate: str = None,
+		         keepalive_timeout_ms = 10000):
         """PROSITpredictor is a class that contains all fetures to generate predictions with a Prosit server
 
         -- Non optional Parameters --
@@ -33,16 +35,19 @@ class PROSITpredictor:
         :param path_to_certificate
         :param path_to_key_certificate
         :param path_to_ca_certificate
+        :param
 
         """
         self.server = server
         self.create_channel(path_to_ca_certificate=path_to_ca_certificate,
                             path_to_key_certificate=path_to_key_certificate,
-                            path_to_certificate=path_to_certificate)
+                            path_to_certificate=path_to_certificate,
+			                keepalive_timeout_ms=keepalive_timeout_ms)
         self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
         self.channel = None
 
-    def create_channel(self, path_to_certificate, path_to_key_certificate, path_to_ca_certificate):
+
+    def create_channel(self, path_to_certificate, path_to_key_certificate, path_to_ca_certificate, keepalive_timeout_ms):
         try:
             # read certificates and create credentials
             with open(path_to_certificate, "rb") as f:
@@ -53,10 +58,10 @@ class PROSITpredictor:
                 ca_cert = f.read()
             creds = grpc.ssl_channel_credentials(ca_cert, key, cert)
             # create secure channel
-            self.channel = grpc.secure_channel(self.server, creds)
+            self.channel = grpc.secure_channel(self.server, creds, options=[('grpc.keepalive_timeout_ms',keepalive_timeout_ms)])
         except:
             print("Establishing a secure channel was not possible")
-            self.channel = grpc.insecure_channel(self.server)
+            self.channel = grpc.insecure_channel(self.server, options=[('grpc.keepalive_timeout_ms',keepalive_timeout_ms)])
 
     @staticmethod
     def create_requests(model_name,
@@ -91,12 +96,12 @@ class PROSITpredictor:
         timeout = 5  # in seconds
 
         predictions = []
-        while len(requests) > 0:
-            request = requests.pop()
+        for request in tqdm(requests):
             model_type = request.model_spec.name.split("_")[0]
             response = self.stub.Predict.future(request, timeout).result()  # asynchronous request
             prediction = U.unpack_response(response, model_type)
             predictions.append(prediction)
+
 
         predictions = np.vstack(predictions)
         return predictions
