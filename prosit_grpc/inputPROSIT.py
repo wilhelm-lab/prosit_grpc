@@ -17,6 +17,21 @@ class PROSITinput:
         if self.collision_energies is not None:
             self.collision_energies.prepare_collisionenergies()
 
+    def increase_matrices():
+        """
+        Expects a list with 3 input parameter
+        [1,21,2]
+        The first one is the number that should be replaced
+        The second one is the number that should be used to replace
+        The third one is the number of changes that are perfromed at the same time
+        """
+        
+
+        new_matrix, num_copies_created = U.generate_newMatrix_v2(
+                )
+
+
+
 
 class PROSITcharges:
     def __init__(self, charges):
