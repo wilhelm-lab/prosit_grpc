@@ -17,21 +17,31 @@ class PROSITinput:
         if self.collision_energies is not None:
             self.collision_energies.prepare_collisionenergies()
 
-    def increase_matrices():
+
+    def expand_matrices(self, param):
         """
-        Expects a list with 3 input parameter
+        Expects a list with 3 input parameters
         [1,21,2]
         The first one is the number that should be replaced
         The second one is the number that should be used to replace
-        The third one is the number of changes that are perfromed at the same time
+        The third one is the number of changes that are performed at the same time
         """
-        
 
-        new_matrix, num_copies_created = U.generate_newMatrix_v2(
-                )
+        self.sequences.array_int32, num_copies_created = U.generate_newMatrix_v2(npMatrix=self.sequences.array_int32,
+                                                                 iFromReplaceValue=param[0],
+                                                                 iToReplaceValue=param[1],
+                                                                 numberAtTheSameTime=param[2])
 
+        self.sequences.array_float32 = np.copy(self.sequences.array_int32)
+        self.sequences.array_float32.dtype = np.float32
 
+        for i,num in enumerate(num_copies_created):
+            array_charge = np.array([self.charges.array[i] for _ in range(num)])
+            array_charge.shape = (num, C.NUM_CHARGES_ONEHOT)
+            self.charges.array = np.vstack([self.charges.array,array_charge])
 
+            array_ce = np.array([self.collision_energies.array[i] for _ in range(num)])
+            self.collision_energies.array = np.hstack([self.collision_energies.array, array_ce])
 
 class PROSITcharges:
     def __init__(self, charges):
@@ -141,11 +151,13 @@ class PROSITsequences:
             self.numeric_to_array()
             self.calculate_lengths()
 
-        elif self.array_float32 is None:
-            self.array_int32 = np.copy(self.array_float32).dtype = np.int32
+        elif self.array_float32 is not None:
+            self.array_int32 = np.copy(self.array_float32)
+            self.array_int32.dtype = np.int32
 
-        elif self.array_int32 is None:
-            self.array_float32 = np.copy(self.array_int32).dtype = np.float32
+        elif self.array_int32 is not None:
+            self.array_float32 = np.copy(self.array_int32)
+            self.array_float32.dtype = np.float32
 
 
 class PROSITcollisionenergies:
