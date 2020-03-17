@@ -3,6 +3,7 @@ import numpy as np
 
 import itertools
 import tensorflow as tf
+import scipy
 from sklearn.preprocessing import normalize
 from tensorflow_serving.apis import predict_pb2
 
@@ -232,7 +233,7 @@ def unpack_response(predict_response, model_type):
         return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
 
 
-def genrate_newMatrix_v2(
+def generate_newMatrix_v2(
     npMatrix, iFromReplaceValue, iToReplaceValue, numberAtTheSameTime=2
 ):
     """
@@ -325,7 +326,7 @@ def genrate_newMatrix_v2(
     >>> m
     array([ 0,  1,  3,  6, 10])
     """
-    logging.info("start - concatenation of sequence integers")
+    # logging.info("start - concatenation of sequence integers")
     # print("shape {}".format(npMatrix.shape))
     vNumToBeRelaced = np.sum(npMatrix == iFromReplaceValue, 1)
     dicRowMultiplier = {}
@@ -338,7 +339,7 @@ def genrate_newMatrix_v2(
 
     dim_x_v = [int(dicRowMultiplier[i]) for i in vNumToBeRelaced]
     dim_x = np.sum(dim_x_v)
-    logging.info("Number of new combinations: {}".format(dim_x))
+    # logging.info("Number of new combinations: {}".format(dim_x))
 
     X = np.zeros((int(dim_x), np.shape(npMatrix)[1]))
     # print("original shape {}".format(X.shape))
@@ -362,6 +363,6 @@ def genrate_newMatrix_v2(
                     X[np.add(row_pos, position_x), index] = iToReplaceValue
                     position_x += int(row_pos.size / a2)
 
-    logging.info("done - concatenation of sequence integers")
+    # logging.info("done - concatenation of sequence integers")
     return (X.astype(int), np.array(dim_x_v) - 1)
 
