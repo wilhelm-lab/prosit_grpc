@@ -78,7 +78,7 @@ class PROSITpredictor:
             batchsize = batch_end - batch_start
             model_type = model_name.split("_")[0]
             seq_array_batch = sequences_array[batch_start:batch_end]
-            
+
             if model_type == "intensity":
                 ce_array_batch = ce_array[batch_start:batch_end]
                 charges_array_batch = charge_array[batch_start:batch_end]
@@ -113,13 +113,17 @@ class PROSITpredictor:
                 sequences: list = None,
                 charges: list = None,
                 collision_energies: list = None,
+                matrix_expansion_param: list = None
                 ):
 
         self.input = PROSITinput(sequences=sequences,
-                                charges=charges,
-                                collision_energies=collision_energies)
+                                 charges=charges,
+                                 collision_energies=collision_energies)
 
         self.input.prepare_input()
+        if matrix_expansion_param is not None:
+            self.input.expand_matrices(param=matrix_expansion_param)
+        self.input.sequences.calculate_lengths()
 
         # actual prediction
         predictions_irt = None
@@ -151,10 +155,10 @@ class PROSITpredictor:
 
         # initialize output
         self.output = PROSIToutput(
-            pred_intensity=predictions_intensity, 
-            pred_irt=predictions_irt, 
+            pred_intensity=predictions_intensity,
+            pred_irt=predictions_irt,
             pred_proteotyp=predictions_proteotypicity,
-            sequences_array_int32=self.input.sequences.array_int32, 
+            sequences_array_int32=self.input.sequences.array_int32,
             charges_array=self.input.charges.array)
 
         # prepare output
