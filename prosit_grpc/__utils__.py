@@ -183,11 +183,11 @@ def create_request_intensity(seq_array, ce_array, charges_array, batchsize, mode
     """
     request = create_request_scaffold(model_name=model_name)
     request.inputs['peptides_in:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
+        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.int32))
     request.inputs['collision_energy_in:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(ce_array, shape=[batchsize, 1]))
+        tf.contrib.util.make_tensor_proto(ce_array, shape=[batchsize, 1], dtype=np.float32))
     request.inputs['precursor_charge_in:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(charges_array, shape=[batchsize, C.NUM_CHARGES_ONEHOT]))
+        tf.contrib.util.make_tensor_proto(charges_array, shape=[batchsize, C.NUM_CHARGES_ONEHOT], dtype=np.float32))
     return request
 
 
@@ -199,7 +199,7 @@ def create_request_proteotypicity(seq_array, batchsize, model_name):
     """
     request = create_request_scaffold(model_name=model_name)
     request.inputs['peptides_in_1:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
+            tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.float32))
     return request
 
 
@@ -211,7 +211,7 @@ def create_request_irt(seq_array, batchsize, model_name):
     """
     request = create_request_scaffold(model_name=model_name)
     request.inputs['sequence_integer'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
+        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.int32))
     return request
 
 
@@ -364,5 +364,5 @@ def generate_newMatrix_v2(
                     position_x += int(row_pos.size / a2)
 
     # logging.info("done - concatenation of sequence integers")
-    return (X.astype(int), np.array(dim_x_v) - 1)
+    return (X.astype(np.int32), np.array(dim_x_v) - 1)
 
