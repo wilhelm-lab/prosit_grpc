@@ -43,6 +43,9 @@ class PROSITinput:
             array_ce = np.array([self.collision_energies.array[i] for _ in range(num)])
             self.collision_energies.array = np.hstack([self.collision_energies.array, array_ce])
 
+        self.charges.array.astype(dtype=np.float32)
+        self.collision_energies.array.astype(dtype=np.float32)
+
 class PROSITcharges:
     def __init__(self, charges):
         self.numeric = None
@@ -106,7 +109,7 @@ class PROSITsequences:
     def determine_type(sequences):
         if type(sequences) == np.ndarray:
             return "array"
-        elif type(sequences[1]) is str:
+        elif type(sequences[0]) is str:
             return "character"
         else:
             return "numeric"
@@ -149,7 +152,6 @@ class PROSITsequences:
                     raise ValueError("No Sequences known")
                 self.character_to_numeric()
             self.numeric_to_array()
-            self.calculate_lengths()
 
         elif self.array_float32 is not None:
             self.array_int32 = np.copy(self.array_float32)
@@ -159,6 +161,7 @@ class PROSITsequences:
             self.array_float32 = np.copy(self.array_int32)
             self.array_float32.dtype = np.float32
 
+        self.calculate_lengths()
 
 class PROSITcollisionenergies:
     def __init__(self, collision_energies):
@@ -182,7 +185,7 @@ class PROSITcollisionenergies:
         else:
             if type(collision_energies) == np.ndarray:
                 return "array"
-            elif collision_energies[1] < 1:
+            elif collision_energies[0] < 1:
                 return "procentual"
             else:
                 return "numeric"
