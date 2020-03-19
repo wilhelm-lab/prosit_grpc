@@ -113,7 +113,7 @@ class PROSITpredictor:
                 sequences: list = None,
                 charges: list = None,
                 collision_energies: list = None,
-                matrix_expansion_param: dict = None
+                matrix_expansion_param: list = []
                 ):
 
         self.input = PROSITinput(sequences=sequences,
@@ -121,8 +121,8 @@ class PROSITpredictor:
                                  collision_energies=collision_energies)
 
         self.input.prepare_input()
-        if matrix_expansion_param is not None:
-            self.input.expand_matrices(param=matrix_expansion_param)
+        for paramset in matrix_expansion_param:
+            self.input.expand_matrices(param=paramset)
         self.input.sequences.calculate_lengths()
 
         # actual prediction
