@@ -5,12 +5,12 @@ import numpy as np
 
 # Output
 class PROSIToutput:
-    def __init__(self, pred_intensity, pred_irt, pred_proteotyp,sequences_array_int32, charges_array):
+    def __init__(self, pred_intensity, pred_irt, pred_proteotyp,sequences_array, charges_array):
         
         if pred_intensity is not None:
             self.spectrum = PROSITspectrum(
                 pred_intensity=pred_intensity,
-                sequences_array_int32=sequences_array_int32, 
+                sequences_array=sequences_array,
                 charges_array=charges_array)
         else:
             self.spectrum = None
@@ -78,21 +78,21 @@ class PROSITirt:
             self.normalize()
 
 class PROSITspectrum:
-    def __init__(self, pred_intensity, sequences_array_int32, charges_array):
+    def __init__(self, pred_intensity, sequences_array, charges_array):
         self.intensity = PROSITintensity(pred_intensity)
 
         fragment_mz_raw = np.array(
-            [U.compute_ion_masses(sequences_array_int32[i], charges_array[i]) 
-            for i in range(len(sequences_array_int32))])
+            [U.compute_ion_masses(sequences_array[i], charges_array[i])
+            for i in range(len(sequences_array))])
 
 
         self.mz = PROSITfragmentmz(fragment_mz_raw)
 
-        annot_raw_charge = np.array([C.ANNOTATION[1] for _ in range(len(sequences_array_int32))])
-        annot_raw_number = np.array([C.ANNOTATION[2] for _ in range(len(sequences_array_int32))])
-        annot_raw_type = np.array([C.ANNOTATION[0] for _ in range(len(sequences_array_int32))])
+        annot_raw_charge = np.array([C.ANNOTATION[1] for _ in range(len(sequences_array))])
+        annot_raw_number = np.array([C.ANNOTATION[2] for _ in range(len(sequences_array))])
+        annot_raw_type = np.array([C.ANNOTATION[0] for _ in range(len(sequences_array))])
 
-        shape = (len(sequences_array_int32), C.VEC_LENGTH)
+        shape = (len(sequences_array), C.VEC_LENGTH)
 
         annot_raw_charge.shape = shape
         annot_raw_number.shape = shape

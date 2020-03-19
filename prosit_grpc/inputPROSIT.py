@@ -27,7 +27,7 @@ class PROSITinput:
         The third one is the number of changes that are performed at the same time
         """
 
-        self.sequences.array_int32, num_copies_created = U.generate_newMatrix_v2(npMatrix=self.sequences.array_int32,
+        self.sequences.array, num_copies_created = U.generate_newMatrix_v2(npMatrix=self.sequences.array,
                                                                  iFromReplaceValue=C.ALPHABET[param['AA_to_permutate']],
                                                                  iToReplaceValue=C.ALPHABET[param['into']],
                                                                  numberAtTheSameTime=param['max_in_parallel'])
@@ -90,7 +90,7 @@ class PROSITsequences:
 
         self.character = None
         self.numeric = None
-        self.array_int32 = None
+        self.array = None
         self.lengths = None
 
         seq_type = PROSITsequences.determine_type(sequences)
@@ -123,7 +123,7 @@ class PROSITsequences:
             self.numeric.append(num_seq)
 
     def numeric_to_array(self):
-        self.array_int32 = np.array(self.numeric, dtype=np.int32)
+        self.array = np.array(self.numeric, dtype=np.int32)
 
     def calculate_lengths(self):
         """Calculates the length of all sequences saved in an instance of PROSITsequences
@@ -132,11 +132,11 @@ class PROSITsequences:
 
         :sets PROSITsequences.lengths
         """
-        truth_array = np.in1d(self.array_int32, [0], invert=True).reshape(self.array_int32.shape)
+        truth_array = np.in1d(self.array, [0], invert=True).reshape(self.array.shape)
         self.lengths = np.sum(truth_array, axis=1)
 
     def prepare_sequences(self):
-        if self.array_int32 is None:
+        if self.array is None:
             if self.numeric is None:
                 if self.character is None:
                     raise ValueError("No Sequences known")

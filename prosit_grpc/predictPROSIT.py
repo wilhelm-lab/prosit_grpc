@@ -131,7 +131,7 @@ class PROSITpredictor:
         predictions_proteotypicity = None
         if irt_model is not None:
             requests = PROSITpredictor.create_requests(model_name=irt_model,
-                                                       sequences_array=self.input.sequences.array_int32,
+                                                       sequences_array=self.input.sequences.array,
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )
@@ -139,7 +139,7 @@ class PROSITpredictor:
 
         if intensity_model is not None:
             requests = PROSITpredictor.create_requests(model_name=intensity_model,
-                                                       sequences_array=self.input.sequences.array_int32,
+                                                       sequences_array=self.input.sequences.array,
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )
@@ -147,7 +147,7 @@ class PROSITpredictor:
 
         if proteotypicity_model is not None:
             requests = PROSITpredictor.create_requests(model_name=proteotypicity_model,
-                                                       sequences_array=self.input.sequences.array_int32,
+                                                       sequences_array=self.input.sequences.array,
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )
@@ -158,7 +158,7 @@ class PROSITpredictor:
             pred_intensity=predictions_intensity,
             pred_irt=predictions_irt,
             pred_proteotyp=predictions_proteotypicity,
-            sequences_array_int32=self.input.sequences.array_int32,
+            sequences_array=self.input.sequences.array,
             charges_array=self.input.charges.array)
 
         # prepare output
@@ -184,7 +184,7 @@ class PROSITpredictor:
 
         # weird formating of ce and irt is due to compatibility with converter tool
         hdf5_dict = {
-            "sequence_integer": self.input.sequences.array_int32,
+            "sequence_integer": self.input.sequences.array,
             "precursor_charge_onehot": self.input.charges.array,
             "collision_energy_aligned_normed": np.array([np.array(el).astype(np.float32) for el in self.input.collision_energies.array]).astype(np.float32),
             'intensities_pred': self.output.spectrum.intensity.normalized,

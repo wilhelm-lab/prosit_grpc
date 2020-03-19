@@ -35,7 +35,7 @@ def test_PROSITinput_prepare_input():
 
     inst.prepare_input()
 
-    assert type(inst.sequences.array_int32) == np.ndarray
+    assert type(inst.sequences.array) == np.ndarray
     assert type(inst.charges.array) == np.ndarray
     assert type(inst.collision_energies.array) == np.ndarray
 
@@ -47,10 +47,10 @@ def test_expand_matrices():
     inst.prepare_input()
     inst.expand_matrices(param={'AA_to_permutate': 'C', 'into': 'M(ox)', 'max_in_parallel': 2})
 
-    assert len(inst.sequences.array_int32) == len(inst.charges.array)
-    assert len(inst.sequences.array_int32) == len(inst.collision_energies.array)
+    assert len(inst.sequences.array) == len(inst.charges.array)
+    assert len(inst.sequences.array) == len(inst.collision_energies.array)
 
-    assert np.array_equal(inst.sequences.array_int32, [[ 1,  1,  1,  1],
+    assert np.array_equal(inst.sequences.array, [[ 1,  1,  1,  1],
                                                        [ 1,  1,  2,  1],
                                                        [ 1,  2,  2,  1],
                                                        [ 2,  2,  2,  1],
