@@ -5,8 +5,8 @@ import numpy as np
 
 # Output
 class PROSIToutput:
-    def __init__(self, pred_intensity, pred_irt, pred_proteotyp,sequences_array, charges_array):
-        
+    def __init__(self, pred_intensity, pred_irt, pred_proteotyp, sequences_array, charges_array):
+
         if pred_intensity is not None:
             self.spectrum = PROSITspectrum(
                 pred_intensity=pred_intensity,
@@ -21,7 +21,8 @@ class PROSIToutput:
             self.irt = None
 
         if pred_proteotyp is not None:
-            self.proteotypicity = PROSITproteotypicity(pred_proteotyp=pred_proteotyp)
+            self.proteotypicity = PROSITproteotypicity(
+                pred_proteotyp=pred_proteotyp)
         else:
             self.proteotypicity = None
 
@@ -40,7 +41,6 @@ class PROSIToutput:
 
     def assemble_dictionary(self):
         return_dictionary = {}
-
 
         if self.proteotypicity is not None:
             return_dictionary["proteotypicity"] = self.proteotypicity.raw
@@ -77,20 +77,23 @@ class PROSITirt:
         if type(self.raw) == np.ndarray:
             self.normalize()
 
+
 class PROSITspectrum:
     def __init__(self, pred_intensity, sequences_array, charges_array):
         self.intensity = PROSITintensity(pred_intensity)
 
         fragment_mz_raw = np.array(
             [U.compute_ion_masses(sequences_array[i], charges_array[i])
-            for i in range(len(sequences_array))])
-
+             for i in range(len(sequences_array))])
 
         self.mz = PROSITfragmentmz(fragment_mz_raw)
 
-        annot_raw_charge = np.array([C.ANNOTATION[1] for _ in range(len(sequences_array))])
-        annot_raw_number = np.array([C.ANNOTATION[2] for _ in range(len(sequences_array))])
-        annot_raw_type = np.array([C.ANNOTATION[0] for _ in range(len(sequences_array))])
+        annot_raw_charge = np.array([C.ANNOTATION[1]
+                                     for _ in range(len(sequences_array))])
+        annot_raw_number = np.array([C.ANNOTATION[2]
+                                     for _ in range(len(sequences_array))])
+        annot_raw_type = np.array([C.ANNOTATION[0]
+                                   for _ in range(len(sequences_array))])
 
         shape = (len(sequences_array), C.VEC_LENGTH)
 
@@ -99,8 +102,8 @@ class PROSITspectrum:
         annot_raw_type.shape = shape
 
         self.annotation = PROSITfragmentannotation(
-            raw_charge=annot_raw_charge, 
-            raw_number=annot_raw_number, 
+            raw_charge=annot_raw_charge,
+            raw_number=annot_raw_number,
             raw_type=annot_raw_type)
 
         self.mask = None
@@ -120,7 +123,8 @@ class PROSITspectrum:
 
         assert len(charges_array) == len(sequences_lengths)
 
-        mask = np.ones(shape=(len(charges_array), C.VEC_LENGTH), dtype=np.int32)
+        mask = np.ones(shape=(len(charges_array),
+                              C.VEC_LENGTH), dtype=np.int32)
 
         for i in range(len(charges_array)):
             charge_one_hot = charges_array[i]
@@ -134,7 +138,8 @@ class PROSITspectrum:
                 m[invalid_indexes] = -1
 
             elif np.array_equal(charge_one_hot, [0, 1, 0, 0, 0, 0]):
-                invalid_indexes = [x * 3 + 2 for x in range((C.SEQ_LEN - 1) * 2)]
+                invalid_indexes = [
+                    x * 3 + 2 for x in range((C.SEQ_LEN - 1) * 2)]
                 m[invalid_indexes] = -1
 
             if len_seq < C.SEQ_LEN:
@@ -173,14 +178,17 @@ class PROSITspectrum:
         self.annotation.filtered_number = []
         self.annotation.filtered_type = []
 
-
         for i in range(len(self.filter)):
-            self.intensity.filtered.append(self.intensity.normalized[i][self.filter[i]])
+            self.intensity.filtered.append(
+                self.intensity.normalized[i][self.filter[i]])
             self.mz.filtered.append(self.mz.masked[i][self.filter[i]])
 
-            self.annotation.filtered_number.append(self.annotation.masked_number[i][self.filter[i]])
-            self.annotation.filtered_charge.append(self.annotation.masked_charge[i][self.filter[i]])
-            self.annotation.filtered_type.append(self.annotation.masked_type[i][self.filter[i]])
+            self.annotation.filtered_number.append(
+                self.annotation.masked_number[i][self.filter[i]])
+            self.annotation.filtered_charge.append(
+                self.annotation.masked_charge[i][self.filter[i]])
+            self.annotation.filtered_type.append(
+                self.annotation.masked_type[i][self.filter[i]])
 
     def prepare_spectrum(self, charges_array, sequences_lengths):
 

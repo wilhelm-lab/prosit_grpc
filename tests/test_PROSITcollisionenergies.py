@@ -1,9 +1,10 @@
 import numpy as np
 import prosit_grpc.inputPROSIT as prpc
 
-ce_numeric = [10,20,30,40,50]
-ce_procentual = [0.10,0.20,0.30,0.40,0.50]
+ce_numeric = [10, 20, 30, 40, 50]
+ce_procentual = [0.10, 0.20, 0.30, 0.40, 0.50]
 ce_array = np.array(ce_procentual, dtype=np.float32)
+
 
 def test_PROSITcollisionenergies_determine_type():
     # numeric
@@ -17,9 +18,10 @@ def test_PROSITcollisionenergies_determine_type():
     assert ret == "procentual"
 
     # array
-    ce = np.array([0.1, 0.2, 0.3, 0.4, 0.5], dtype= np.float32)
+    ce = np.array([0.1, 0.2, 0.3, 0.4, 0.5], dtype=np.float32)
     ret = prpc.PROSITcollisionenergies.determine_type(ce)
     assert ret == "array"
+
 
 def test_PROSITcollisionenergies_init():
     # numeric
@@ -33,6 +35,7 @@ def test_PROSITcollisionenergies_init():
     # array
     inst = prpc.PROSITcollisionenergies(ce_array)
     assert np.array_equal(inst.array, ce_array)
+
 
 def test_PROSITcollisionenergies_prepare_collisionenergies():
     inst = prpc.PROSITcollisionenergies(ce_numeric)

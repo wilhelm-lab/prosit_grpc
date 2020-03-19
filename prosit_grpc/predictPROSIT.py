@@ -25,7 +25,7 @@ class PROSITpredictor:
                  path_to_ca_certificate: str = None,
                  path_to_certificate: str = None,
                  path_to_key_certificate: str = None,
-		         keepalive_timeout_ms = 10000):
+                 keepalive_timeout_ms=10000):
         """PROSITpredictor is a class that contains all fetures to generate predictions with a Prosit server
 
         -- Non optional Parameters --
@@ -42,10 +42,10 @@ class PROSITpredictor:
         self.create_channel(path_to_ca_certificate=path_to_ca_certificate,
                             path_to_key_certificate=path_to_key_certificate,
                             path_to_certificate=path_to_certificate,
-			                keepalive_timeout_ms=keepalive_timeout_ms)
-        self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
+                            keepalive_timeout_ms=keepalive_timeout_ms)
+        self.stub = prediction_service_pb2_grpc.PredictionServiceStub(
+            self.channel)
         self.channel = None
-
 
     def create_channel(self, path_to_certificate, path_to_key_certificate, path_to_ca_certificate, keepalive_timeout_ms):
         try:
@@ -58,10 +58,12 @@ class PROSITpredictor:
                 ca_cert = f.read()
             creds = grpc.ssl_channel_credentials(ca_cert, key, cert)
             # create secure channel
-            self.channel = grpc.secure_channel(self.server, creds, options=[('grpc.keepalive_timeout_ms',keepalive_timeout_ms)])
+            self.channel = grpc.secure_channel(self.server, creds, options=[
+                                               ('grpc.keepalive_timeout_ms', keepalive_timeout_ms)])
         except:
             print("Establishing a secure channel was not possible")
-            self.channel = grpc.insecure_channel(self.server, options=[('grpc.keepalive_timeout_ms',keepalive_timeout_ms)])
+            self.channel = grpc.insecure_channel(
+                self.server, options=[('grpc.keepalive_timeout_ms', keepalive_timeout_ms)])
 
     @staticmethod
     def create_requests(model_name,
@@ -82,11 +84,14 @@ class PROSITpredictor:
             if model_type == "intensity":
                 ce_array_batch = ce_array[batch_start:batch_end]
                 charges_array_batch = charge_array[batch_start:batch_end]
-                request = U.create_request_intensity(seq_array_batch, ce_array_batch, charges_array_batch, batchsize, model_name)
+                request = U.create_request_intensity(
+                    seq_array_batch, ce_array_batch, charges_array_batch, batchsize, model_name)
             elif model_type == "iRT":
-                request = U.create_request_irt(seq_array_batch, batchsize, model_name)
+                request = U.create_request_irt(
+                    seq_array_batch, batchsize, model_name)
             elif model_type == "proteotypicity":
-                request = U.create_request_proteotypicity(seq_array_batch, batchsize, model_name)
+                request = U.create_request_proteotypicity(
+                    seq_array_batch, batchsize, model_name)
 
             requests.append(request)
             batch_start = batch_end
@@ -98,10 +103,10 @@ class PROSITpredictor:
         predictions = []
         for request in tqdm(requests):
             model_type = request.model_spec.name.split("_")[0]
-            response = self.stub.Predict.future(request, timeout).result()  # asynchronous request
+            response = self.stub.Predict.future(
+                request, timeout).result()  # asynchronous request
             prediction = U.unpack_response(response, model_type)
             predictions.append(prediction)
-
 
         predictions = np.vstack(predictions)
         return predictions
@@ -191,10 +196,11 @@ class PROSITpredictor:
             'masses_pred': self.output.spectrum.mz.masked,
             'iRT': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
 
-        hdf5_dict["collision_energy_aligned_normed"].shape = (len(hdf5_dict["collision_energy_aligned_normed"]), 1)
+        hdf5_dict["collision_energy_aligned_normed"].shape = (
+            len(hdf5_dict["collision_energy_aligned_normed"]), 1)
         hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]), 1)
-
 
         with h5py.File(path_hdf5, "w") as data_file:
             for key, data in hdf5_dict.items():
-                data_file.create_dataset(key, data=data, dtype=data.dtype, compression="gzip")
+                data_file.create_dataset(
+                    key, data=data, dtype=data.dtype, compression="gzip")
