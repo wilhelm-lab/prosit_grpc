@@ -38,3 +38,73 @@ def test_PROSITinput_prepare_input():
     assert type(inst.sequences.array_int32) == np.ndarray
     assert type(inst.charges.array) == np.ndarray
     assert type(inst.collision_energies.array) == np.ndarray
+
+def test_expand_matrices():
+    inst = prpc.PROSITinput(sequences=[[1, 1, 1, 1],[1,1,2,1],[1, 2, 2, 1],[2, 2, 2, 1],[2, 2, 2, 2]],
+                            charges=[1,2,3,4,5],
+                            collision_energies=[10,20,30,40,50])
+
+    inst.prepare_input()
+    inst.expand_matrices(param={'AA_to_permutate': 'C', 'into': 'M(ox)', 'max_in_parallel': 2})
+
+    assert len(inst.sequences.array_int32) == len(inst.sequences.array_float32)
+    assert len(inst.sequences.array_int32) == len(inst.charges.array)
+    assert len(inst.sequences.array_int32) == len(inst.collision_energies.array)
+
+    assert np.array_equal(inst.sequences.array_int32, [[ 1,  1,  1,  1],
+                                                       [ 1,  1,  2,  1],
+                                                       [ 1,  2,  2,  1],
+                                                       [ 2,  2,  2,  1],
+                                                       [ 2,  2,  2,  2],
+                                                       [ 1,  1, 21,  1],
+                                                       [ 1, 21,  2,  1],
+                                                       [ 1,  2, 21,  1],
+                                                       [ 1, 21, 21,  1],
+                                                       [21,  2,  2,  1],
+                                                       [ 2, 21,  2,  1],
+                                                       [ 2,  2, 21,  1],
+                                                       [21, 21,  2,  1],
+                                                       [21,  2, 21,  1],
+                                                       [ 2, 21, 21,  1],
+                                                       [21,  2,  2,  2],
+                                                       [ 2, 21,  2,  2],
+                                                       [ 2,  2, 21,  2],
+                                                       [ 2,  2,  2, 21],
+                                                       [21, 21,  2,  2],
+                                                       [21,  2, 21,  2],
+                                                       [21,  2,  2, 21],
+                                                       [ 2, 21, 21,  2],
+                                                       [ 2, 21,  2, 21],
+                                                       [ 2,  2, 21, 21]])
+
+    assert np.array_equal(inst.charges.array, [[1, 0, 0, 0, 0, 0],
+                                               [0, 1, 0, 0, 0, 0],
+                                               [0, 0, 1, 0, 0, 0],
+                                               [0, 0, 0, 1, 0, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 1, 0, 0, 0, 0],
+                                               [0, 0, 1, 0, 0, 0],
+                                               [0, 0, 1, 0, 0, 0],
+                                               [0, 0, 1, 0, 0, 0],
+                                               [0, 0, 0, 1, 0, 0],
+                                               [0, 0, 0, 1, 0, 0],
+                                               [0, 0, 0, 1, 0, 0],
+                                               [0, 0, 0, 1, 0, 0],
+                                               [0, 0, 0, 1, 0, 0],
+                                               [0, 0, 0, 1, 0, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 0, 0, 0, 1, 0],
+                                               [0, 0, 0, 0, 1, 0]])
+
+    assert np.array_equal(np.round(inst.collision_energies.array, 1), [0.1, 0.2, 0.3, 0.4, 0.5,
+                                                                       0.2,
+                                                                       0.3, 0.3, 0.3,
+                                                                       0.4, 0.4, 0.4, 0.4, 0.4, 0.4,
+                                                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])

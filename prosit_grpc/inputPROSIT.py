@@ -18,6 +18,34 @@ class PROSITinput:
             self.collision_energies.prepare_collisionenergies()
 
 
+    def expand_matrices(self, param):
+        """
+        Expects a list with dictionaries with 3 input parameters each
+        {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}
+        The first one is the number that should be replaced
+        The second one is the number that should be used to replace
+        The third one is the number of changes that are performed at the same time
+        """
+
+        self.sequences.array_int32, num_copies_created = U.generate_newMatrix_v2(npMatrix=self.sequences.array_int32,
+                                                                 iFromReplaceValue=C.ALPHABET[param['AA_to_permutate']],
+                                                                 iToReplaceValue=C.ALPHABET[param['into']],
+                                                                 numberAtTheSameTime=param['max_in_parallel'])
+
+        self.sequences.array_float32 = np.copy(self.sequences.array_int32)
+        self.sequences.array_float32.dtype = np.float32
+
+        for i,num in enumerate(num_copies_created):
+            array_charge = np.array([self.charges.array[i] for _ in range(num)])
+            array_charge.shape = (num, C.NUM_CHARGES_ONEHOT)
+            self.charges.array = np.vstack([self.charges.array,array_charge])
+
+            array_ce = np.array([self.collision_energies.array[i] for _ in range(num)])
+            self.collision_energies.array = np.hstack([self.collision_energies.array, array_ce])
+
+        self.charges.array.astype(dtype=np.float32)
+        self.collision_energies.array.astype(dtype=np.float32)
+
 class PROSITcharges:
     def __init__(self, charges):
         self.numeric = None
@@ -81,7 +109,7 @@ class PROSITsequences:
     def determine_type(sequences):
         if type(sequences) == np.ndarray:
             return "array"
-        elif type(sequences[1]) is str:
+        elif type(sequences[0]) is str:
             return "character"
         else:
             return "numeric"
@@ -124,14 +152,16 @@ class PROSITsequences:
                     raise ValueError("No Sequences known")
                 self.character_to_numeric()
             self.numeric_to_array()
-            self.calculate_lengths()
 
-        elif self.array_float32 is None:
-            self.array_int32 = np.copy(self.array_float32).dtype = np.int32
+        elif self.array_float32 is not None:
+            self.array_int32 = np.copy(self.array_float32)
+            self.array_int32.dtype = np.int32
 
-        elif self.array_int32 is None:
-            self.array_float32 = np.copy(self.array_int32).dtype = np.float32
+        elif self.array_int32 is not None:
+            self.array_float32 = np.copy(self.array_int32)
+            self.array_float32.dtype = np.float32
 
+        self.calculate_lengths()
 
 class PROSITcollisionenergies:
     def __init__(self, collision_energies):
@@ -155,7 +185,7 @@ class PROSITcollisionenergies:
         else:
             if type(collision_energies) == np.ndarray:
                 return "array"
-            elif collision_energies[1] < 1:
+            elif collision_energies[0] < 1:
                 return "procentual"
             else:
                 return "numeric"

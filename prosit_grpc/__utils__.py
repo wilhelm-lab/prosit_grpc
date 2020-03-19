@@ -3,6 +3,7 @@ import numpy as np
 
 import itertools
 import tensorflow as tf
+import scipy
 from sklearn.preprocessing import normalize
 from tensorflow_serving.apis import predict_pb2
 
@@ -182,11 +183,11 @@ def create_request_intensity(seq_array, ce_array, charges_array, batchsize, mode
     """
     request = create_request_scaffold(model_name=model_name)
     request.inputs['peptides_in:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
+        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.int32))
     request.inputs['collision_energy_in:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(ce_array, shape=[batchsize, 1]))
+        tf.contrib.util.make_tensor_proto(ce_array, shape=[batchsize, 1], dtype=np.float32))
     request.inputs['precursor_charge_in:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(charges_array, shape=[batchsize, C.NUM_CHARGES_ONEHOT]))
+        tf.contrib.util.make_tensor_proto(charges_array, shape=[batchsize, C.NUM_CHARGES_ONEHOT], dtype=np.float32))
     return request
 
 
@@ -198,7 +199,7 @@ def create_request_proteotypicity(seq_array, batchsize, model_name):
     """
     request = create_request_scaffold(model_name=model_name)
     request.inputs['peptides_in_1:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
+            tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.float32))
     return request
 
 
@@ -210,7 +211,7 @@ def create_request_irt(seq_array, batchsize, model_name):
     """
     request = create_request_scaffold(model_name=model_name)
     request.inputs['sequence_integer'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN]))
+        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.int32))
     return request
 
 
@@ -230,3 +231,138 @@ def unpack_response(predict_response, model_type):
         outputs_tensor_proto = predict_response.outputs["prediction/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
         return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+
+
+def generate_newMatrix_v2(
+    npMatrix, iFromReplaceValue, iToReplaceValue, numberAtTheSameTime=2
+):
+    """
+    >>> a0 = np.array([[1,1,1,1]])
+    >>> X, m = generate_newMatrix_v2(a0, 2, 21)
+    >>> X
+    array([[1, 1, 1, 1]])
+    >>> m
+    array([0])
+    >>> a1 = np.array([[1,1,2,1]])
+    >>> X, m = generate_newMatrix_v2(a1, 2, 21)
+    >>> X
+    array([[ 1,  1,  2,  1],
+           [ 1,  1, 21,  1]])
+    >>> m
+    array([1])
+    >>> a2 = np.array([[1,2,2,1]])
+    >>> X, m = generate_newMatrix_v2(a2, 2, 21)
+    >>> X
+    array([[ 1,  2,  2,  1],
+           [ 1, 21,  2,  1],
+           [ 1,  2, 21,  1],
+           [ 1, 21, 21,  1]])
+    >>> m
+    array([3])
+    >>> a2 = np.array([[1,2,2,1]])
+    >>> X, m = generate_newMatrix_v2(a2, 2, 21, 1)
+    >>> X
+    array([[ 1,  2,  2,  1],
+           [ 1, 21,  2,  1],
+           [ 1,  2, 21,  1]])
+    >>> m
+    array([2])
+    >>> a3 = np.array([[2,2,2,1]])
+    >>> X, m = generate_newMatrix_v2(a3, 2, 21)
+    >>> X
+    array([[ 2,  2,  2,  1],
+           [21,  2,  2,  1],
+           [ 2, 21,  2,  1],
+           [ 2,  2, 21,  1],
+           [21, 21,  2,  1],
+           [21,  2, 21,  1],
+           [ 2, 21, 21,  1]])
+    >>> m
+    array([6])
+    >>> a4 = np.array([[2,2,2,2]])
+    >>> X, m = generate_newMatrix_v2(a4, 2, 21)
+    >>> X
+    array([[ 2,  2,  2,  2],
+           [21,  2,  2,  2],
+           [ 2, 21,  2,  2],
+           [ 2,  2, 21,  2],
+           [ 2,  2,  2, 21],
+           [21, 21,  2,  2],
+           [21,  2, 21,  2],
+           [21,  2,  2, 21],
+           [ 2, 21, 21,  2],
+           [ 2, 21,  2, 21],
+           [ 2,  2, 21, 21]])
+    >>> m
+    array([10])
+    >>> a = np.array([a0[0], a1[0],a2[0],a3[0],a4[0]])
+    >>> X, m = generate_newMatrix_v2(a, 2, 21)
+    >>> X
+    array([[ 1,  1,  1,  1],
+           [ 1,  1,  2,  1],
+           [ 1,  2,  2,  1],
+           [ 2,  2,  2,  1],
+           [ 2,  2,  2,  2],
+           [ 1,  1, 21,  1],
+           [ 1, 21,  2,  1],
+           [ 1,  2, 21,  1],
+           [ 1, 21, 21,  1],
+           [21,  2,  2,  1],
+           [ 2, 21,  2,  1],
+           [ 2,  2, 21,  1],
+           [21, 21,  2,  1],
+           [21,  2, 21,  1],
+           [ 2, 21, 21,  1],
+           [21,  2,  2,  2],
+           [ 2, 21,  2,  2],
+           [ 2,  2, 21,  2],
+           [ 2,  2,  2, 21],
+           [21, 21,  2,  2],
+           [21,  2, 21,  2],
+           [21,  2,  2, 21],
+           [ 2, 21, 21,  2],
+           [ 2, 21,  2, 21],
+           [ 2,  2, 21, 21]])
+    >>> m
+    array([ 0,  1,  3,  6, 10])
+    """
+    # logging.info("start - concatenation of sequence integers")
+    # print("shape {}".format(npMatrix.shape))
+    vNumToBeRelaced = np.sum(npMatrix == iFromReplaceValue, 1)
+    dicRowMultiplier = {}
+    # lets hash number of possible additions to be faster
+    for num in np.unique(vNumToBeRelaced):
+        buf = 0
+        for i in range(0, numberAtTheSameTime + 1):
+            buf += scipy.special.comb(num, i)
+        dicRowMultiplier[num] = buf
+
+    dim_x_v = [int(dicRowMultiplier[i]) for i in vNumToBeRelaced]
+    dim_x = np.sum(dim_x_v)
+    # logging.info("Number of new combinations: {}".format(dim_x))
+
+    X = np.zeros((int(dim_x), np.shape(npMatrix)[1]))
+    # print("original shape {}".format(X.shape))
+    X[: np.shape(npMatrix)[0], : np.shape(npMatrix)[1]] = npMatrix
+
+    position_x = int(np.shape(npMatrix)[0])
+    for i, j in enumerate(dim_x_v):
+        j = j - 1  # -1 because we need identify lines
+        if j != 0:
+            X[position_x : position_x + j] = npMatrix[i]
+            for k in range(1, numberAtTheSameTime + 1):
+                pos = np.where(npMatrix[i] == iFromReplaceValue)[0]
+                index = np.fromiter(
+                    itertools.chain.from_iterable(itertools.combinations(pos, k)), int
+                )  # will return tuple for combinatiosn if k =2
+                index_reshaped = index.reshape((-1, k))
+                a1, a2 = index.reshape((-1, k)).shape
+                repeats = a1
+                if index.size > 0:
+                    row_pos = np.repeat(np.arange(a1), a2)
+                    X[np.add(row_pos, position_x), index] = iToReplaceValue
+                    position_x += int(row_pos.size / a2)
+
+    # logging.info("done - concatenation of sequence integers")
+    return (X.astype(np.int32), np.array(dim_x_v) - 1)
+
