@@ -158,7 +158,7 @@ def test_predict_with_matrix_expansion():
                                   intensity_model="intensity_prosit_publication",
                                   irt_model="iRT",
                                   proteotypicity_model="proteotypicity",
-                                  matrix_expansion_param=[11, 21, 2]
+                                  matrix_expansion_param={'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}
                                   )
 
     assert len(pred_dict["intensity"]) == 4

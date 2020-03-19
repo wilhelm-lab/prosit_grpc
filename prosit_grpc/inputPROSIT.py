@@ -20,17 +20,17 @@ class PROSITinput:
 
     def expand_matrices(self, param):
         """
-        Expects a list with 3 input parameters
-        [1,21,2]
+        Expects a list with dictionaries with 3 input parameters each
+        {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}
         The first one is the number that should be replaced
         The second one is the number that should be used to replace
         The third one is the number of changes that are performed at the same time
         """
 
         self.sequences.array_int32, num_copies_created = U.generate_newMatrix_v2(npMatrix=self.sequences.array_int32,
-                                                                 iFromReplaceValue=param[0],
-                                                                 iToReplaceValue=param[1],
-                                                                 numberAtTheSameTime=param[2])
+                                                                 iFromReplaceValue=C.ALPHABET[param['AA_to_permutate']],
+                                                                 iToReplaceValue=C.ALPHABET[param['into']],
+                                                                 numberAtTheSameTime=param['max_in_parallel'])
 
         self.sequences.array_float32 = np.copy(self.sequences.array_int32)
         self.sequences.array_float32.dtype = np.float32

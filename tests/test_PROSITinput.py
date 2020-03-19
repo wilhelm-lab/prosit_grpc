@@ -40,15 +40,12 @@ def test_PROSITinput_prepare_input():
     assert type(inst.collision_energies.array) == np.ndarray
 
 def test_expand_matrices():
-
-
-
     inst = prpc.PROSITinput(sequences=[[1, 1, 1, 1],[1,1,2,1],[1, 2, 2, 1],[2, 2, 2, 1],[2, 2, 2, 2]],
                             charges=[1,2,3,4,5],
                             collision_energies=[10,20,30,40,50])
 
     inst.prepare_input()
-    inst.expand_matrices(param=[2,21,2])
+    inst.expand_matrices(param={'AA_to_permutate': 'C', 'into': 'M(ox)', 'max_in_parallel': 2})
 
     assert len(inst.sequences.array_int32) == len(inst.sequences.array_float32)
     assert len(inst.sequences.array_int32) == len(inst.charges.array)

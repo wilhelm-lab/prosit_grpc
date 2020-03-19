@@ -113,7 +113,7 @@ class PROSITpredictor:
                 sequences: list = None,
                 charges: list = None,
                 collision_energies: list = None,
-                matrix_expansion_param: list = None
+                matrix_expansion_param: dict = None
                 ):
 
         self.input = PROSITinput(sequences=sequences,
