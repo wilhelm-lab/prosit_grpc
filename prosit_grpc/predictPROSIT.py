@@ -147,7 +147,7 @@ class PROSITpredictor:
 
         if proteotypicity_model is not None:
             requests = PROSITpredictor.create_requests(model_name=proteotypicity_model,
-                                                       sequences_array=self.input.sequences.array_float32,
+                                                       sequences_array=self.input.sequences.array_int32,
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )

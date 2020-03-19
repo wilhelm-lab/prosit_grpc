@@ -32,9 +32,6 @@ class PROSITinput:
                                                                  iToReplaceValue=C.ALPHABET[param['into']],
                                                                  numberAtTheSameTime=param['max_in_parallel'])
 
-        self.sequences.array_float32 = np.copy(self.sequences.array_int32)
-        self.sequences.array_float32.dtype = np.float32
-
         for i,num in enumerate(num_copies_created):
             array_charge = np.array([self.charges.array[i] for _ in range(num)])
             array_charge.shape = (num, C.NUM_CHARGES_ONEHOT)
@@ -94,7 +91,6 @@ class PROSITsequences:
         self.character = None
         self.numeric = None
         self.array_int32 = None
-        self.array_float32 = None
         self.lengths = None
 
         seq_type = PROSITsequences.determine_type(sequences)
@@ -128,7 +124,6 @@ class PROSITsequences:
 
     def numeric_to_array(self):
         self.array_int32 = np.array(self.numeric, dtype=np.int32)
-        self.array_float32 = np.array(self.numeric, dtype=np.float32)
 
     def calculate_lengths(self):
         """Calculates the length of all sequences saved in an instance of PROSITsequences
@@ -137,29 +132,16 @@ class PROSITsequences:
 
         :sets PROSITsequences.lengths
         """
-        if self.array_int32 is not None:
-            array = self.array_int32
-        elif self.array_float32 is not None:
-            array = self.array_float32
-
-        truth_array = np.in1d(array, [0], invert=True).reshape(array.shape)
+        truth_array = np.in1d(self.array_int32, [0], invert=True).reshape(self.array_int32.shape)
         self.lengths = np.sum(truth_array, axis=1)
 
     def prepare_sequences(self):
-        if self.array_float32 is None and self.array_int32 is None:
+        if self.array_int32 is None:
             if self.numeric is None:
                 if self.character is None:
                     raise ValueError("No Sequences known")
                 self.character_to_numeric()
             self.numeric_to_array()
-
-        elif self.array_float32 is not None:
-            self.array_int32 = np.copy(self.array_float32)
-            self.array_int32.dtype = np.int32
-
-        elif self.array_int32 is not None:
-            self.array_float32 = np.copy(self.array_int32)
-            self.array_float32.dtype = np.float32
 
         self.calculate_lengths()
 

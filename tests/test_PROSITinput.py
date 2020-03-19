@@ -47,7 +47,6 @@ def test_expand_matrices():
     inst.prepare_input()
     inst.expand_matrices(param={'AA_to_permutate': 'C', 'into': 'M(ox)', 'max_in_parallel': 2})
 
-    assert len(inst.sequences.array_int32) == len(inst.sequences.array_float32)
     assert len(inst.sequences.array_int32) == len(inst.charges.array)
     assert len(inst.sequences.array_int32) == len(inst.collision_energies.array)
 
