@@ -15,15 +15,16 @@ def compute_ion_masses(seq_int, charge_onehot):
     charge_one is a onehot representation of charge with 6 elems for charges 1 to 6
     """
     charge = list(charge_onehot).index(1) + 1
-    if not (charge in (1, 2, 3, 4, 5, 6) and len(charge_onehot)==6):
+    if not (charge in (1, 2, 3, 4, 5, 6) and len(charge_onehot) == 6):
         print("[ERROR] One-hot-enconded Charge is not in valid range 1 to 6")
         return
-    
+
     if not len(seq_int) == C.SEQ_LEN:
-        print("[ERROR] Sequence length {} is not desired length of {}".format(len(seq_int), C.SEQ_LEN))
-        return 
-    
-    l = list(seq_int).index(0) if 0 in seq_int else C.SEQ_LEN 
+        print("[ERROR] Sequence length {} is not desired length of {}".format(
+            len(seq_int), C.SEQ_LEN))
+        return
+
+    l = list(seq_int).index(0) if 0 in seq_int else C.SEQ_LEN
     masses = np.ones((C.SEQ_LEN-1)*2*3)*-1
     mass_b = 0
     mass_y = 0
@@ -31,38 +32,42 @@ def compute_ion_masses(seq_int, charge_onehot):
 
     # Iterate over sequence, sequence should have length 30
     for i in range(l-1):  # only 29 possible ios
-        j = i*6 # index for masses array at position 
+        j = i*6  # index for masses array at position
 
-        #### MASS FOR Y IONS
+        # MASS FOR Y IONS
         # print("Addded", C.VEC_MZ[seq_int[l-1-i]])
         mass_y += C.VEC_MZ[seq_int[l-1-i]]
-        
 
         # Compute charge +1
-        masses[j] = (mass_y + 1*C.MASSES["PROTON"] + C.MASSES["C_TERMINUS"] + C.MASSES["H"])/1.0 
+        masses[j] = (mass_y + 1*C.MASSES["PROTON"] +
+                     C.MASSES["C_TERMINUS"] + C.MASSES["H"])/1.0
         # Compute charge +2
-        masses[j+1] = (mass_y + 2*C.MASSES["PROTON"] + C.MASSES["C_TERMINUS"] + C.MASSES["H"])/2.0 if charge>=2 else -1.0
+        masses[j+1] = (mass_y + 2*C.MASSES["PROTON"] + C.MASSES["C_TERMINUS"] +
+                       C.MASSES["H"])/2.0 if charge >= 2 else -1.0
         # Compute charge +3
-        masses[j+2] = (mass_y + 3*C.MASSES["PROTON"] + C.MASSES["C_TERMINUS"] + C.MASSES["H"])/3.0 if charge>= 3.0 else -1.0
+        masses[j+2] = (mass_y + 3*C.MASSES["PROTON"] + C.MASSES["C_TERMINUS"] +
+                       C.MASSES["H"])/3.0 if charge >= 3.0 else -1.0
 
-
-        ### MASS FOR B IONS 
+        # MASS FOR B IONS
         mass_b += C.VEC_MZ[seq_int[i]]
 
         # Compute charge +1
-        masses[j+3] = (mass_b + 1*C.MASSES["PROTON"] + C.MASSES["N_TERMINUS"] - C.MASSES["H"])/1.0 
+        masses[j+3] = (mass_b + 1*C.MASSES["PROTON"] +
+                       C.MASSES["N_TERMINUS"] - C.MASSES["H"])/1.0
         # Compute charge +2
-        masses[j+4] = (mass_b + 2*C.MASSES["PROTON"] + C.MASSES["N_TERMINUS"] - C.MASSES["H"])/2.0 if charge>=2 else -1.0
+        masses[j+4] = (mass_b + 2*C.MASSES["PROTON"] + C.MASSES["N_TERMINUS"] -
+                       C.MASSES["H"])/2.0 if charge >= 2 else -1.0
         # Compute charge +3
-        masses[j+5] = (mass_b + 3*C.MASSES["PROTON"] + C.MASSES["N_TERMINUS"] - C.MASSES["H"])/3.0 if charge>= 3.0 else -1.0
-    
+        masses[j+5] = (mass_b + 3*C.MASSES["PROTON"] + C.MASSES["N_TERMINUS"] -
+                       C.MASSES["H"])/3.0 if charge >= 3.0 else -1.0
+
     return masses
 
 
 def normalize_intensities(x, norm="max"):
     """
     This function normalizes the given intensity array of shape (num_seq, num_peaks)
-    
+
     """
     return normalize(x, axis=1, norm=norm)
 
@@ -72,39 +77,39 @@ def map_peptide_to_numbers(seq):
     Map string of peptide sequence to numeric list based on dictionary ALPHABET
     """
     nums = []
-    i = 0        
+    i = 0
     seq = seq.replace(" ", "")
     l = len(seq)
-    while i<l:
+    while i < l:
         # Special Cases: CaC, OxM, M(ox), M(O), PhS, PhT, PhY, (Cam)
-        if (i+3)<l and seq[i:i+3] == "Cac": 
+        if (i+3) < l and seq[i:i+3] == "Cac":
             nums.append(C.ALPHABET["Cac"])
             i += 3
-        elif (i+3)<l and seq[i:i+3] == "PhS": 
+        elif (i+3) < l and seq[i:i+3] == "PhS":
             nums.append(C.ALPHABET["PhS"])
             i += 3
-        elif (i+3)<l and seq[i:i+3] == "PhT": 
+        elif (i+3) < l and seq[i:i+3] == "PhT":
             nums.append(C.ALPHABET["PhT"])
             i += 3
-        elif (i+3)<l and seq[i:i+3] == "PhY": 
+        elif (i+3) < l and seq[i:i+3] == "PhY":
             nums.append(C.ALPHABET["PhY"])
             i += 3
-        elif (i+3)<l and seq[i:i+3] == "OxM": 
+        elif (i+3) < l and seq[i:i+3] == "OxM":
             nums.append(C.ALPHABET["OxM"])
             i += 3
-        elif (i+4)<l and seq[i:i+4] == "M(O)": 
+        elif (i+4) < l and seq[i:i+4] == "M(O)":
             nums.append(C.ALPHABET["M(O)"])
             i += 4
-        elif (i+5)<l and seq[i:i+5] == "M(ox)": 
+        elif (i+5) < l and seq[i:i+5] == "M(ox)":
             nums.append(C.ALPHABET["M(ox)"])
             i += 5
-        elif (i+5)<l and seq[i:i+5] == "(Cam)": 
+        elif (i+5) < l and seq[i:i+5] == "(Cam)":
             nums.append(C.ALPHABET["(Cam)"])
             i += 5
         # Single char is in ALPHABET
         elif seq[i] in C.ALPHABET:
             nums.append(C.ALPHABET[seq[i]])
-            i +=1
+            i += 1
         else:
             print("Char {} not found in sequence {}".format(seq[i], seq))
             nums.append(-1)
@@ -124,7 +129,7 @@ def indices_to_one_hot(data, nb_classes):
     Convert an iterable of indices to one-hot encoded labels.
     :param data: charge, int between 1 and 6
     """
-    targets = np.array([data-1])  # -1 for 0 indexing 
+    targets = np.array([data-1])  # -1 for 0 indexing
     return np.int_((np.eye(nb_classes)[targets])).tolist()[0]
 
 
@@ -199,7 +204,7 @@ def create_request_proteotypicity(seq_array, batchsize, model_name):
     """
     request = create_request_scaffold(model_name=model_name)
     request.inputs['peptides_in_1:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.float32))
+        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.float32))
     return request
 
 
@@ -349,11 +354,12 @@ def generate_newMatrix_v2(
     for i, j in enumerate(dim_x_v):
         j = j - 1  # -1 because we need identify lines
         if j != 0:
-            X[position_x : position_x + j] = npMatrix[i]
+            X[position_x: position_x + j] = npMatrix[i]
             for k in range(1, numberAtTheSameTime + 1):
                 pos = np.where(npMatrix[i] == iFromReplaceValue)[0]
                 index = np.fromiter(
-                    itertools.chain.from_iterable(itertools.combinations(pos, k)), int
+                    itertools.chain.from_iterable(
+                        itertools.combinations(pos, k)), int
                 )  # will return tuple for combinatiosn if k =2
                 index_reshaped = index.reshape((-1, k))
                 a1, a2 = index.reshape((-1, k)).shape
@@ -365,4 +371,3 @@ def generate_newMatrix_v2(
 
     # logging.info("done - concatenation of sequence integers")
     return (X.astype(np.int32), np.array(dim_x_v) - 1)
-

@@ -119,7 +119,8 @@ def test_batching():
 
     output_dict = predictor.predict(sequences=[sequences[1] for _ in range(10000)],
                                     charges=[charge[1] for _ in range(10000)],
-                                    collision_energies=[ce[1] for _ in range(10000)],
+                                    collision_energies=[ce[1]
+                                                        for _ in range(10000)],
                                     intensity_model="intensity_prosit_publication",
                                     irt_model="iRT",
                                     proteotypicity_model="proteotypicity")
@@ -158,10 +159,12 @@ def test_predict_with_matrix_expansion():
                                   intensity_model="intensity_prosit_publication",
                                   irt_model="iRT",
                                   proteotypicity_model="proteotypicity",
-                                  matrix_expansion_param=[{'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}]
+                                  matrix_expansion_param=[
+                                      {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}]
                                   )
 
     assert len(pred_dict["intensity"]) == 4
+
 
 def test_predict_with_repeated_matrix_expansion():
 
@@ -171,10 +174,10 @@ def test_predict_with_repeated_matrix_expansion():
                                      path_to_key_certificate=key,
                                      )
 
-    mexp =[{'AA_to_permutate': 'C', 'into': 'M(ox)', 'max_in_parallel': 1},
-           {'AA_to_permutate': 'A', 'into': 'PhS', 'max_in_parallel': 1},
-           {'AA_to_permutate': 'D', 'into': 'PhT', 'max_in_parallel': 1},
-           {'AA_to_permutate': 'E', 'into': 'PhY', 'max_in_parallel': 1}]
+    mexp = [{'AA_to_permutate': 'C', 'into': 'M(ox)', 'max_in_parallel': 1},
+            {'AA_to_permutate': 'A', 'into': 'PhS', 'max_in_parallel': 1},
+            {'AA_to_permutate': 'D', 'into': 'PhT', 'max_in_parallel': 1},
+            {'AA_to_permutate': 'E', 'into': 'PhY', 'max_in_parallel': 1}]
 
     pred_dict = predictor.predict(sequences=["ACDEFGH"],
                                   charges=[2],

@@ -3,8 +3,8 @@ from collections import OrderedDict as ODict
 
 ALPHABET_UNMOD = {
     "A": 1,
-    "(Cam)":2,
-    "Cac":2,
+    "(Cam)": 2,
+    "Cac": 2,
     "C": 2,
     "D": 3,
     "E": 4,
@@ -32,16 +32,16 @@ ALPHABET_MOD = {
     "M(ox)": 21,
     "M(O)":  21,
     "OxM":   21,
-    
-    'PhS':   24, 
+
+    'PhS':   24,
     "S(ph)": 24,
-    
+
     "PhT":   25,
     "T(ph)": 25,
-    
+
     "PhY":   26,
     "Y(ph)": 26,
-    
+
     "R(ci)": 27,
     "K(gl)": 28,
     "T(gl)": 29,
@@ -73,7 +73,7 @@ AMINO_ACIDS_MASS = ODict(
         "N": 114.042927,
         "Y": 163.063329,
         "E": 129.042593,
-        "C": 103.009185 + 57.0214637236 ,  # feynmann
+        "C": 103.009185 + 57.0214637236,  # feynmann
         "(Cam)":  103.009185 + 57.0214637236,
         "Cac":  103.009185 + 57.0214637236,
         "F": 147.068414,
@@ -84,13 +84,13 @@ AMINO_ACIDS_MASS = ODict(
         "H": 137.058912,
         "D": 115.026943,
         "K": 128.094963,
-        "U": 168.064, # NEW
-        "O": 255.313, # NEW
+        "U": 168.064,  # NEW
+        "O": 255.313,  # NEW
         # Mods
         "M(ox)": 131.040485 + 15.99491,
         "M(O)":  131.040485 + 15.99491,
         "OxM":   131.040485 + 15.99491
-        
+
     }
 )
 
@@ -111,14 +111,14 @@ MASSES = ODict(
     }
 )
 MASSES["N_TERMINUS"] = MASSES["H"]
-MASSES["C_TERMINUS"] = MASSES["O"] +MASSES["H"]
+MASSES["C_TERMINUS"] = MASSES["O"] + MASSES["H"]
 MASSES["CO"] = MASSES["C"] + MASSES["O"]
 MASSES["CHO"] = MASSES["C"] + MASSES["H"] + MASSES["O"]
-MASSES["NH2"] = MASSES["N"] + MASSES["H"] *2
+MASSES["NH2"] = MASSES["N"] + MASSES["H"] * 2
 MASSES["H2O"] = MASSES["H"] * 2 + MASSES["O"]
 MASSES["NH3"] = MASSES["N"] + MASSES["H"] * 3
 
-SEQ_LEN = 30 # Sequence length for prosit
+SEQ_LEN = 30  # Sequence length for prosit
 NUM_CHARGES_ONEHOT = 6
 MAX_CHARGE = 6
 BATCH_SIZE = 6000
@@ -126,7 +126,8 @@ VEC_LENGTH = 174
 
 IONS = ['y', 'b']
 CHARGES = [1, 2, 3]
-POSITIONS = [1, 2, 3, 4, 5, 6,7, 8, 9, 10,11, 12, 13, 14, 15, 16, 17, 18, 19,20,21, 22, 23, 24, 25, 26, 27, 28, 29]
+POSITIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+             15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
 
 ANNOTATION_FRAGMENT_TYPE = []
 ANNOTATION_FRAGMENT_CHARGE = []
@@ -138,4 +139,5 @@ for pos in POSITIONS:
             ANNOTATION_FRAGMENT_CHARGE.append(charge)
             ANNOTATION_FRAGMENT_NUMBER.append(pos)
 
-ANNOTATION = [ANNOTATION_FRAGMENT_TYPE,ANNOTATION_FRAGMENT_CHARGE,ANNOTATION_FRAGMENT_NUMBER]
+ANNOTATION = [ANNOTATION_FRAGMENT_TYPE,
+              ANNOTATION_FRAGMENT_CHARGE, ANNOTATION_FRAGMENT_NUMBER]

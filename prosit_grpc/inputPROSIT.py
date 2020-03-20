@@ -3,6 +3,7 @@ from tqdm import tqdm
 from . import __constants__ as C  # For constants
 from . import __utils__ as U  # Utility/Static functions
 
+
 class PROSITinput:
     def __init__(self, sequences=None, charges=None, collision_energies=None):
         self.sequences = PROSITsequences(sequences)
@@ -17,7 +18,6 @@ class PROSITinput:
         if self.collision_energies is not None:
             self.collision_energies.prepare_collisionenergies()
 
-
     def expand_matrices(self, param):
         """
         Expects a list with dictionaries with 3 input parameters each
@@ -27,24 +27,26 @@ class PROSITinput:
         The third one is the number of changes that are performed at the same time
         """
 
-        self.sequences.array_int32, num_copies_created = U.generate_newMatrix_v2(npMatrix=self.sequences.array_int32,
-                                                                 iFromReplaceValue=C.ALPHABET[param['AA_to_permutate']],
-                                                                 iToReplaceValue=C.ALPHABET[param['into']],
-                                                                 numberAtTheSameTime=param['max_in_parallel'])
+        self.sequences.array, num_copies_created = U.generate_newMatrix_v2(npMatrix=self.sequences.array,
+                                                                           iFromReplaceValue=C.ALPHABET[
+                                                                               param['AA_to_permutate']],
+                                                                           iToReplaceValue=C.ALPHABET[param['into']],
+                                                                           numberAtTheSameTime=param['max_in_parallel'])
 
-        self.sequences.array_float32 = np.copy(self.sequences.array_int32)
-        self.sequences.array_float32.dtype = np.float32
-
-        for i,num in enumerate(num_copies_created):
-            array_charge = np.array([self.charges.array[i] for _ in range(num)])
+        for i, num in enumerate(num_copies_created):
+            array_charge = np.array([self.charges.array[i]
+                                     for _ in range(num)])
             array_charge.shape = (num, C.NUM_CHARGES_ONEHOT)
-            self.charges.array = np.vstack([self.charges.array,array_charge])
+            self.charges.array = np.vstack([self.charges.array, array_charge])
 
-            array_ce = np.array([self.collision_energies.array[i] for _ in range(num)])
-            self.collision_energies.array = np.hstack([self.collision_energies.array, array_ce])
+            array_ce = np.array([self.collision_energies.array[i]
+                                 for _ in range(num)])
+            self.collision_energies.array = np.hstack(
+                [self.collision_energies.array, array_ce])
 
         self.charges.array.astype(dtype=np.float32)
         self.collision_energies.array.astype(dtype=np.float32)
+
 
 class PROSITcharges:
     def __init__(self, charges):
@@ -74,7 +76,8 @@ class PROSITcharges:
                 return "numeric"
 
     def numeric_to_onehot(self):
-        self.onehot = [U.indices_to_one_hot(x, C.MAX_CHARGE) for x in self.numeric]
+        self.onehot = [U.indices_to_one_hot(
+            x, C.MAX_CHARGE) for x in self.numeric]
 
     def onehot_to_array(self):
         self.array = np.array(self.onehot, dtype=np.float32)
@@ -93,8 +96,7 @@ class PROSITsequences:
 
         self.character = None
         self.numeric = None
-        self.array_int32 = None
-        self.array_float32 = None
+        self.array = None
         self.lengths = None
 
         seq_type = PROSITsequences.determine_type(sequences)
@@ -127,8 +129,7 @@ class PROSITsequences:
             self.numeric.append(num_seq)
 
     def numeric_to_array(self):
-        self.array_int32 = np.array(self.numeric, dtype=np.int32)
-        self.array_float32 = np.array(self.numeric, dtype=np.float32)
+        self.array = np.array(self.numeric, dtype=np.int32)
 
     def calculate_lengths(self):
         """Calculates the length of all sequences saved in an instance of PROSITsequences
@@ -137,31 +138,20 @@ class PROSITsequences:
 
         :sets PROSITsequences.lengths
         """
-        if self.array_int32 is not None:
-            array = self.array_int32
-        elif self.array_float32 is not None:
-            array = self.array_float32
-
-        truth_array = np.in1d(array, [0], invert=True).reshape(array.shape)
+        truth_array = np.in1d(
+            self.array, [0], invert=True).reshape(self.array.shape)
         self.lengths = np.sum(truth_array, axis=1)
 
     def prepare_sequences(self):
-        if self.array_float32 is None and self.array_int32 is None:
+        if self.array is None:
             if self.numeric is None:
                 if self.character is None:
                     raise ValueError("No Sequences known")
                 self.character_to_numeric()
             self.numeric_to_array()
 
-        elif self.array_float32 is not None:
-            self.array_int32 = np.copy(self.array_float32)
-            self.array_int32.dtype = np.int32
-
-        elif self.array_int32 is not None:
-            self.array_float32 = np.copy(self.array_int32)
-            self.array_float32.dtype = np.float32
-
         self.calculate_lengths()
+
 
 class PROSITcollisionenergies:
     def __init__(self, collision_energies):
@@ -179,7 +169,7 @@ class PROSITcollisionenergies:
 
     @staticmethod
     def determine_type(collision_energies):
-        
+
         if collision_energies is None:
             return None
         else:
