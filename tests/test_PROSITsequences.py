@@ -7,10 +7,12 @@ sequences_character = ["KKVCQGTSNKLTQLGTFE",
                        "LTQLGTFEDHFLSLQR",
                        "FRDEATCKDTCPPLMLYNPTTQMDVNPEGK",
                        "RDEATCKDTCPPLM(ox)LNPTTYQMDVNPEGK",
+                       "RDEATCKDTCPPLM(Oxidation (M))LNPTTYQMDVNPEGK",
                        "FRDEATKDTCPPLMM(O)YNPTTYQMDVNPEGK",
                        "ANKEILDEAYVMASVDNPHVCR",
                        "FRDEATCKDT(Cam)PPLLYNPTTYQMDVNPEGK",
-                       "FRDEATCKDTCacPPLMYNPTTYQMDVNPEGK"]
+                       "FRDEATCKDTCacPPLMYNPTTYQMDVNPEGK",
+                       "M(Oxidation (M))M(Oxidation (M))M(Oxidation (M))M(Oxidation (M))M(Oxidation (M))M(Oxidation (M))"]
 sequences_numeric = [[9, 9, 18, 2, 14, 6, 17, 16, 12, 9, 10, 17, 14, 10, 6, 17, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                      [6, 12, 11, 20, 20, 4, 12, 16, 20, 1, 10, 1, 18, 10, 16,
                          12, 20, 3, 1, 12, 9, 17, 6, 10, 9, 0, 0, 0, 0, 0],
@@ -20,13 +22,16 @@ sequences_numeric = [[9, 9, 18, 2, 14, 6, 17, 16, 12, 9, 10, 17, 14, 10, 6, 17, 
                          20, 12, 13, 17, 17, 14, 11, 3, 18, 12, 13, 4, 6, 9],
                      [15, 3, 4, 1, 17, 2, 9, 3, 17, 2, 13, 13, 10, 21, 10, 12,
                          13, 17, 17, 20, 14, 11, 3, 18, 12, 13, 4, 6, 9, 0],
+                     [15, 3, 4, 1, 17, 2, 9, 3, 17, 2, 13, 13, 10, 21, 10, 12,
+                         13, 17, 17, 20, 14, 11, 3, 18, 12, 13, 4, 6, 9, 0],
                      [5, 15, 3, 4, 1, 17, 9, 3, 17, 2, 13, 13, 10, 11, 21, 20,
                          12, 13, 17, 17, 20, 14, 11, 3, 18, 12, 13, 4, 6, 9],
                      [1, 12, 9, 4, 8, 10, 3, 4, 1, 20, 18, 11, 1, 16, 18,
                          3, 12, 13, 7, 18, 2, 15, 0, 0, 0, 0, 0, 0, 0, 0],
                      [5, 15, 3, 4, 1, 17, 2, 9, 3, 17, 2, 13, 13, 10, 10, 20,
                          12, 13, 17, 17, 20, 14, 11, 3, 18, 12, 13, 4, 6, 9],
-                     [5, 15, 3, 4, 1, 17, 2, 9, 3, 17, 2, 13, 13, 10, 11, 20, 12, 13, 17, 17, 20, 14, 11, 3, 18, 12, 13, 4, 6, 9]]
+                     [5, 15, 3, 4, 1, 17, 2, 9, 3, 17, 2, 13, 13, 10, 11, 20, 12, 13, 17, 17, 20, 14, 11, 3, 18, 12, 13, 4, 6, 9],
+                     [21, 21, 21, 21, 21, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
 sequences_array = np.array(sequences_numeric, dtype=np.int32)
 
