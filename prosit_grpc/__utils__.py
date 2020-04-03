@@ -76,34 +76,37 @@ def map_peptide_to_numbers(seq):
     """
     Map string of peptide sequence to numeric list based on dictionary ALPHABET
     """
+    # dirty hack to support new maxquant modstrings
+    seq = seq.replace("M(Oxidation (M))", "M(O)")
+
     nums = []
     i = 0
     seq = seq.replace(" ", "")
     l = len(seq)
     while i < l:
         # Special Cases: CaC, OxM, M(ox), M(O), PhS, PhT, PhY, (Cam)
-        if (i+3) < l and seq[i:i+3] == "Cac":
+        if seq[i:i+3] == "Cac":
             nums.append(C.ALPHABET["Cac"])
             i += 3
-        elif (i+3) < l and seq[i:i+3] == "PhS":
+        elif seq[i:i+3] == "PhS":
             nums.append(C.ALPHABET["PhS"])
             i += 3
-        elif (i+3) < l and seq[i:i+3] == "PhT":
+        elif seq[i:i+3] == "PhT":
             nums.append(C.ALPHABET["PhT"])
             i += 3
-        elif (i+3) < l and seq[i:i+3] == "PhY":
+        elif seq[i:i+3] == "PhY":
             nums.append(C.ALPHABET["PhY"])
             i += 3
-        elif (i+3) < l and seq[i:i+3] == "OxM":
+        elif seq[i:i+3] == "OxM":
             nums.append(C.ALPHABET["OxM"])
             i += 3
-        elif (i+4) < l and seq[i:i+4] == "M(O)":
+        elif seq[i:i+4] == "M(O)":
             nums.append(C.ALPHABET["M(O)"])
             i += 4
-        elif (i+5) < l and seq[i:i+5] == "M(ox)":
+        elif seq[i:i+5] == "M(ox)":
             nums.append(C.ALPHABET["M(ox)"])
             i += 5
-        elif (i+5) < l and seq[i:i+5] == "(Cam)":
+        elif seq[i:i+5] == "(Cam)":
             nums.append(C.ALPHABET["(Cam)"])
             i += 5
         # Single char is in ALPHABET
