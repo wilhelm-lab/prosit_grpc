@@ -194,7 +194,7 @@ class PROSITpredictor:
             "collision_energy_aligned_normed": np.array([np.array(el).astype(np.float32) for el in self.input.collision_energies.array]).astype(np.float32),
             'intensities_pred': self.output.spectrum.intensity.normalized,
             'masses_pred': self.output.spectrum.mz.masked,
-            'irt': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
+            'iRT': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
 
         hdf5_dict["collision_energy_aligned_normed"].shape = (
             len(hdf5_dict["collision_energy_aligned_normed"]), 1)
