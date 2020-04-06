@@ -198,7 +198,7 @@ class PROSITpredictor:
 
         hdf5_dict["collision_energy_aligned_normed"].shape = (
             len(hdf5_dict["collision_energy_aligned_normed"]), 1)
-        hdf5_dict["irt"].shape = (len(hdf5_dict["irt"]), 1)
+        hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]), 1)
 
         with h5py.File(path_hdf5, "w") as data_file:
             for key, data in hdf5_dict.items():
