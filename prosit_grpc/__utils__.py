@@ -171,10 +171,10 @@ def create_request_general(seq_array, ce_array, charges_array, batchsize, model_
     model_name      specify the model that should be used to predict
     return:         request ready to be sent ther server
     """
-    model_type = model_name.split("_")[0]
+    model_type = model_name.split("_")[2]
     if model_type == "intensity":
         return create_request_intensity(seq_array, ce_array, charges_array, batchsize, model_name)
-    elif model_type == "iRT":
+    elif model_type == "irt":
         return create_request_irt(seq_array, batchsize, model_name)
     elif model_type == "proteotypicity":
         return create_request_proteotypicity(seq_array, batchsize, model_name)
@@ -235,7 +235,7 @@ def unpack_response(predict_response, model_type):
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
         return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
 
-    elif model_type == "iRT":
+    elif model_type == "irt":
         outputs_tensor_proto = predict_response.outputs["prediction/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
         return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
