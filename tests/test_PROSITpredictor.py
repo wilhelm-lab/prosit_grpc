@@ -11,6 +11,11 @@ ca_cert = "cert/Proteomicsdb-Prosit.crt"
 cert = "cert/ci-pipeline.crt"
 key = "cert/ci-pipeline.key"
 
+test_int_model = "Prosit_2019_intensity"
+test_irt_model = "Prosit_2019_irt"
+test_prot_model = "Prosit_2020_proteotypicity"
+
+
 with h5py.File("tests/data.hdf5", 'r') as f:
     intensities = list(f["intensities_pred"])
     irt = list(f["iRT"])
@@ -39,9 +44,9 @@ def test_prediction():
     output_dict = predictor.predict(sequences=sequences,
                                     charges=charge,
                                     collision_energies=ce,
-                                    intensity_model="intensity_prosit_publication",
-                                    irt_model="iRT",
-                                    proteotypicity_model="proteotypicity")
+                                    intensity_model=test_int_model,
+                                    irt_model=test_irt_model,
+                                    proteotypicity_model=test_prot_model)
 
     # test spectrum prediction
     my_int = predictor.output.spectrum.intensity.normalized
@@ -75,7 +80,7 @@ def test_seperate_prediction():
     dict_intensity = predictor.predict(sequences=sequences,
                                        charges=charge,
                                        collision_energies=ce,
-                                       intensity_model="intensity_prosit_publication")
+                                       intensity_model=test_int_model)
 
     assert len(dict_intensity) == 5
 
@@ -93,7 +98,7 @@ def test_seperate_prediction():
         assert round(pearson_correlation_masses, 15) == 1
 
     dict_irt = predictor.predict(sequences=sequences,
-                                 irt_model="iRT")
+                                 irt_model=test_irt_model)
 
     assert len(dict_irt) == 1
 
@@ -106,7 +111,7 @@ def test_seperate_prediction():
         assert round(float(my_irt[i]), 3) == round(float(irt[i]), 3)
 
     dict_proteotyp = predictor.predict(sequences=sequences,
-                                       proteotypicity_model="proteotypicity")
+                                       proteotypicity_model=test_prot_model)
     assert len(dict_proteotyp) == 1
 
 
@@ -121,9 +126,9 @@ def test_batching():
                                     charges=[charge[1] for _ in range(10000)],
                                     collision_energies=[ce[1]
                                                         for _ in range(10000)],
-                                    intensity_model="intensity_prosit_publication",
-                                    irt_model="iRT",
-                                    proteotypicity_model="proteotypicity")
+                                    intensity_model=test_int_model,
+                                    irt_model=test_irt_model,
+                                    proteotypicity_model=test_prot_model)
 
     for output in output_dict.values():
         assert len(output) == 10000
@@ -138,8 +143,8 @@ def test_predict_to_hdf5():
     predictor.predict_to_hdf5(sequences=sequences,
                               charges=charge,
                               collision_energies=ce,
-                              intensity_model="intensity_prosit_publication",
-                              irt_model="iRT",
+                              intensity_model=test_int_model,
+                              irt_model=test_irt_model,
                               path_hdf5="tests/output.hdf5")
 
     os.remove("tests/output.hdf5")
@@ -156,9 +161,9 @@ def test_predict_with_matrix_expansion():
     pred_dict = predictor.predict(sequences=["AAAAMK", "AAAAMK"],
                                   charges=[2, 3],
                                   collision_energies=[20, 30],
-                                  intensity_model="intensity_prosit_publication",
-                                  irt_model="iRT",
-                                  proteotypicity_model="proteotypicity",
+                                  intensity_model=test_int_model,
+                                  irt_model=test_irt_model,
+                                  proteotypicity_model=test_prot_model,
                                   matrix_expansion_param=[
                                       {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}]
                                   )
@@ -182,9 +187,9 @@ def test_predict_with_repeated_matrix_expansion():
     pred_dict = predictor.predict(sequences=["ACDEFGH"],
                                   charges=[2],
                                   collision_energies=[20],
-                                  intensity_model="intensity_prosit_publication",
-                                  irt_model="iRT",
-                                  proteotypicity_model="proteotypicity",
+                                  intensity_model=test_int_model,
+                                  irt_model=test_irt_model,
+                                  proteotypicity_model=test_prot_model,
                                   matrix_expansion_param=mexp
                                   )
 

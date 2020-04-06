@@ -78,7 +78,7 @@ class PROSITpredictor:
             batch_end = batch_start + C.BATCH_SIZE
             batch_end = min(num_seq, batch_end)
             batchsize = batch_end - batch_start
-            model_type = model_name.split("_")[0]
+            model_type = model_name.split("_")[2]
             seq_array_batch = sequences_array[batch_start:batch_end]
 
             if model_type == "intensity":
@@ -86,7 +86,7 @@ class PROSITpredictor:
                 charges_array_batch = charge_array[batch_start:batch_end]
                 request = U.create_request_intensity(
                     seq_array_batch, ce_array_batch, charges_array_batch, batchsize, model_name)
-            elif model_type == "iRT":
+            elif model_type == "irt":
                 request = U.create_request_irt(
                     seq_array_batch, batchsize, model_name)
             elif model_type == "proteotypicity":
@@ -102,7 +102,7 @@ class PROSITpredictor:
 
         predictions = []
         for request in tqdm(requests):
-            model_type = request.model_spec.name.split("_")[0]
+            model_type = request.model_spec.name.split("_")[2]
             response = self.stub.Predict.future(
                 request, timeout).result()  # asynchronous request
             prediction = U.unpack_response(response, model_type)
@@ -194,11 +194,11 @@ class PROSITpredictor:
             "collision_energy_aligned_normed": np.array([np.array(el).astype(np.float32) for el in self.input.collision_energies.array]).astype(np.float32),
             'intensities_pred': self.output.spectrum.intensity.normalized,
             'masses_pred': self.output.spectrum.mz.masked,
-            'iRT': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
+            'irt': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
 
         hdf5_dict["collision_energy_aligned_normed"].shape = (
             len(hdf5_dict["collision_energy_aligned_normed"]), 1)
-        hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]), 1)
+        hdf5_dict["irt"].shape = (len(hdf5_dict["irt"]), 1)
 
         with h5py.File(path_hdf5, "w") as data_file:
             for key, data in hdf5_dict.items():
