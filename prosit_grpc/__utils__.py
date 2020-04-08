@@ -76,9 +76,6 @@ def map_peptide_to_numbers(seq):
     """
     Map string of peptide sequence to numeric list based on dictionary ALPHABET
     """
-    # dirty hack to support new maxquant modstrings
-    seq = seq.replace("M(Oxidation (M))", "M(O)")
-
     nums = []
     i = 0
     seq = seq.replace(" ", "")
