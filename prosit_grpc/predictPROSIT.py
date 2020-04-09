@@ -101,7 +101,7 @@ class PROSITpredictor:
         timeout = 5  # in seconds
 
         predictions = []
-        for request in tqdm(requests, flag_disable_progress_bar):
+        for request in tqdm(requests, disable=flag_disable_progress_bar):
             model_type = request.model_spec.name.split("_")[2]
             response = self.stub.Predict.future(
                 request, timeout).result()  # asynchronous request
