@@ -66,7 +66,7 @@ def test_PROSITsequences_init():  # test instanciation
 
 def test_PROSITsequences_prepare_sequences():
     inst = prpc.PROSITsequences(sequences_character)
-    inst.prepare_sequences()
+    inst.prepare_sequences(flag_disable_progress_bar=False)
 
     assert inst.character == sequences_character
     assert inst.numeric == sequences_numeric

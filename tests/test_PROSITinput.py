@@ -35,7 +35,7 @@ def test_PROSITinput_prepare_input():
                             charges=charges_numeric,
                             collision_energies=ce_numeric)
 
-    inst.prepare_input()
+    inst.prepare_input(flag_disable_progress_bar = False)
 
     assert type(inst.sequences.array) == np.ndarray
     assert type(inst.charges.array) == np.ndarray
@@ -47,7 +47,7 @@ def test_expand_matrices():
                             charges=[1, 2, 3, 4, 5],
                             collision_energies=[10, 20, 30, 40, 50])
 
-    inst.prepare_input()
+    inst.prepare_input(flag_disable_progress_bar=False)
     inst.expand_matrices(
         param={'AA_to_permutate': 'C', 'into': 'M(ox)', 'max_in_parallel': 2})
 

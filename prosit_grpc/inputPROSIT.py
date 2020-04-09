@@ -10,9 +10,9 @@ class PROSITinput:
         self.charges = PROSITcharges(charges)
         self.collision_energies = PROSITcollisionenergies(collision_energies)
 
-    def prepare_input(self):
+    def prepare_input(self, flag_disable_progress_bar):
         if self.sequences is not None:
-            self.sequences.prepare_sequences()
+            self.sequences.prepare_sequences(flag_disable_progress_bar)
         if self.charges is not None:
             self.charges.prepare_charges()
         if self.collision_energies is not None:
@@ -116,9 +116,9 @@ class PROSITsequences:
         else:
             return "numeric"
 
-    def character_to_numeric(self):
+    def character_to_numeric(self, flag_disable_progress_bar):
         self.numeric = []
-        for i, sequence in tqdm(enumerate(self.character)):
+        for i, sequence in tqdm(enumerate(self.character), disable=flag_disable_progress_bar):
             num_seq = U.map_peptide_to_numbers(sequence)
             if len(num_seq) > C.SEQ_LEN:
                 raise Exception(f"The Sequence {sequence}, has {i} Amino Acids."
@@ -142,12 +142,12 @@ class PROSITsequences:
             self.array, [0], invert=True).reshape(self.array.shape)
         self.lengths = np.sum(truth_array, axis=1)
 
-    def prepare_sequences(self):
+    def prepare_sequences(self, flag_disable_progress_bar):
         if self.array is None:
             if self.numeric is None:
                 if self.character is None:
                     raise ValueError("No Sequences known")
-                self.character_to_numeric()
+                self.character_to_numeric(flag_disable_progress_bar)
             self.numeric_to_array()
 
         self.calculate_lengths()
