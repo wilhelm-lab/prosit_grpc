@@ -97,11 +97,11 @@ class PROSITpredictor:
             batch_start = batch_end
         return requests
 
-    def send_requests(self, requests):
+    def send_requests(self, requests, flag_disable_progress_bar):
         timeout = 5  # in seconds
 
         predictions = []
-        for request in tqdm(requests):
+        for request in tqdm(requests, flag_disable_progress_bar):
             model_type = request.model_spec.name.split("_")[2]
             response = self.stub.Predict.future(
                 request, timeout).result()  # asynchronous request
@@ -118,14 +118,15 @@ class PROSITpredictor:
                 sequences: list = None,
                 charges: list = None,
                 collision_energies: list = None,
-                matrix_expansion_param: list = []
+                matrix_expansion_param: list = [],
+                flag_disable_progress_bar = False
                 ):
 
         self.input = PROSITinput(sequences=sequences,
                                  charges=charges,
                                  collision_energies=collision_energies)
 
-        self.input.prepare_input()
+        self.input.prepare_input(flag_disable_progress_bar)
         for paramset in matrix_expansion_param:
             self.input.expand_matrices(param=paramset)
         self.input.sequences.calculate_lengths()
@@ -140,7 +141,7 @@ class PROSITpredictor:
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )
-            predictions_irt = self.send_requests(requests)
+            predictions_irt = self.send_requests(requests, flag_disable_progress_bar)
 
         if intensity_model is not None:
             requests = PROSITpredictor.create_requests(model_name=intensity_model,
@@ -148,7 +149,7 @@ class PROSITpredictor:
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )
-            predictions_intensity = np.array(self.send_requests(requests))
+            predictions_intensity = np.array(self.send_requests(requests, flag_disable_progress_bar))
 
         if proteotypicity_model is not None:
             requests = PROSITpredictor.create_requests(model_name=proteotypicity_model,
@@ -156,7 +157,7 @@ class PROSITpredictor:
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )
-            predictions_proteotypicity = self.send_requests(requests)
+            predictions_proteotypicity = self.send_requests(requests, flag_disable_progress_bar)
 
         # initialize output
         self.output = PROSIToutput(
@@ -178,14 +179,16 @@ class PROSITpredictor:
                         intensity_model: str = None,
                         sequences: list = None,
                         charges: list = None,
-                        collision_energies: list = None):
+                        collision_energies: list = None,
+                        flag_disable_progress_bar=False):
         import h5py
 
         self.predict(irt_model=irt_model,
                      intensity_model=intensity_model,
                      sequences=sequences,
                      charges=charges,
-                     collision_energies=collision_energies)
+                     collision_energies=collision_energies,
+                     flag_disable_progress_bar=flag_disable_progress_bar)
 
         # weird formating of ce and irt is due to compatibility with converter tool
         hdf5_dict = {
