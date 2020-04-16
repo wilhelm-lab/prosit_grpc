@@ -71,51 +71,30 @@ def normalize_intensities(x, norm="max"):
     """
     return normalize(x, axis=1, norm=norm)
 
+def parse_modstrings(sequences, alphabet, translate=False):
+    """
+    :param sequences: List of strings
+    :param ALPHABET: dictionary where the keys correspond to all possible 'Elements' that can occur in the string
+    :param translate: boolean to determine if the Elements should be translated to the corresponding values of ALPHABET
+    :return: generator that yields a list of sequence 'Elements' or the translated sequence "Elements"
+    """
+    import re
+    from itertools import repeat
 
-def map_peptide_to_numbers(seq):
-    """
-    Map string of peptide sequence to numeric list based on dictionary ALPHABET
-    """
-    nums = []
-    i = 0
-    seq = seq.replace(" ", "")
-    l = len(seq)
-    while i < l:
-        # Special Cases: CaC, OxM, M(ox), M(O), PhS, PhT, PhY, (Cam)
-        if seq[i:i+3] == "Cac":
-            nums.append(C.ALPHABET["Cac"])
-            i += 3
-        elif seq[i:i+3] == "PhS":
-            nums.append(C.ALPHABET["PhS"])
-            i += 3
-        elif seq[i:i+3] == "PhT":
-            nums.append(C.ALPHABET["PhT"])
-            i += 3
-        elif seq[i:i+3] == "PhY":
-            nums.append(C.ALPHABET["PhY"])
-            i += 3
-        elif seq[i:i+3] == "OxM":
-            nums.append(C.ALPHABET["OxM"])
-            i += 3
-        elif seq[i:i+4] == "M(O)":
-            nums.append(C.ALPHABET["M(O)"])
-            i += 4
-        elif seq[i:i+5] == "M(ox)":
-            nums.append(C.ALPHABET["M(ox)"])
-            i += 5
-        elif seq[i:i+5] == "(Cam)":
-            nums.append(C.ALPHABET["(Cam)"])
-            i += 5
-        # Single char is in ALPHABET
-        elif seq[i] in C.ALPHABET:
-            nums.append(C.ALPHABET[seq[i]])
-            i += 1
+    def split_modstring(sequence, r_pattern):
+        split_seq = r_pattern.findall(sequence)
+        if "".join(split_seq) == sequence:
+            if translate:
+                return [alphabet[aa] for aa in split_seq]
+            elif not translate:
+                return split_seq
         else:
-            print("Char {} not found in sequence {}".format(seq[i], seq))
-            nums.append(-1)
-            i += 1
-    return nums
+            raise ValueError(f"Unknown Element in string: {sequence}. Found Elements: {x}")
 
+    pattern = sorted(alphabet, key=len, reverse=True)
+    pattern = [re.escape(i) for i in pattern]
+    regex_pattern = re.compile("|".join(pattern))
+    return map(split_modstring, sequences, repeat(regex_pattern))
 
 def flatten_list(l_2d):
     """ 
