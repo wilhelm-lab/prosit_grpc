@@ -79,7 +79,7 @@ def test_expand_matrices():
                                                  [2, 21, 21,  2],
                                                  [2, 21,  2, 21],
                                                  [2,  2, 21, 21]])
-
+    # copies created = [0, 1, 3, 6, 10]
     assert np.array_equal(inst.charges.array, [[1, 0, 0, 0, 0, 0],
                                                [0, 1, 0, 0, 0, 0],
                                                [0, 0, 1, 0, 0, 0],
@@ -106,8 +106,11 @@ def test_expand_matrices():
                                                [0, 0, 0, 0, 1, 0],
                                                [0, 0, 0, 0, 1, 0]])
 
-    assert np.array_equal(np.round(inst.collision_energies.array, 1), [0.1, 0.2, 0.3, 0.4, 0.5,
-                                                                       0.2,
-                                                                       0.3, 0.3, 0.3,
-                                                                       0.4, 0.4, 0.4, 0.4, 0.4, 0.4,
-                                                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
+    collision_energies_arry = np.round(inst.collision_energies.array, 1)
+    truth = np.array([0.1, 0.2, 0.3, 0.4, 0.5,
+                      0.2,
+                      0.3, 0.3, 0.3,
+                      0.4, 0.4, 0.4, 0.4, 0.4, 0.4,
+                      0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                     dtype=np.float32)
+    assert np.array_equal(collision_energies_arry, truth)

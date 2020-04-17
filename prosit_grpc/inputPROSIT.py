@@ -33,19 +33,11 @@ class PROSITinput:
                                                                            iToReplaceValue=C.ALPHABET[param['into']],
                                                                            numberAtTheSameTime=param['max_in_parallel'])
 
-        for i, num in enumerate(num_copies_created):
-            array_charge = np.array([self.charges.array[i]
-                                     for _ in range(num)])
-            array_charge.shape = (num, C.NUM_CHARGES_ONEHOT)
-            self.charges.array = np.vstack([self.charges.array, array_charge])
+        charges_array = np.repeat(self.charges.array, num_copies_created, 0)
+        collision_energies_array = np.repeat(self.collision_energies.array, num_copies_created, 0)
 
-            array_ce = np.array([self.collision_energies.array[i]
-                                 for _ in range(num)])
-            self.collision_energies.array = np.hstack(
-                [self.collision_energies.array, array_ce])
-
-        self.charges.array.astype(dtype=np.float32)
-        self.collision_energies.array.astype(dtype=np.float32)
+        self.charges.array = np.vstack([self.charges.array, charges_array])
+        self.collision_energies.array = np.hstack([self.collision_energies.array, collision_energies_array])
 
 
 class PROSITcharges:
