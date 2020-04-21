@@ -11,11 +11,11 @@
 ## 1. Simple installation by pip
 We provide **tagged** versions of our package pointing to the latest tested master releases but can give you also direct access to new features if requested. The correctness is indicated by the green=good or red=wrong flags above. 
 ```bash
-pip install -e git+https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc.git@v1.1.0#egg=prosit_grpc
+pip install -e git+https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc.git@v1.2.0#egg=prosit_grpc
 ```
 ### If you deployed an ssh key
 ```bash
-pip install -e git+git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git@v1.1.0#egg=prosit_grpc
+pip install -e git+git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git@v1.2.0#egg=prosit_grpc
 ```
 ## 2. Ask Ludwig for certificates
 You are using a special access to our GPUs and are therefore required to identify against our server. Ludwig Lautenbacher will provide you with certificates that are valid for a limited time but can be renewed. Do not share those certificates with people outside of our group.
@@ -34,9 +34,9 @@ predictor = PROSITpredictor(server="proteomicsdb.org:8500",
 predictor.predict_to_hdf5(sequences=["AAAAAKAK","AAAAAA"],
                           charges=[1,2],
                           collision_energies=[25,25],
-                          intensity_model="intensity_prosit_publication",
-                          irt_model="iRT",
-                          path_hdf5="tests/output.hdf5")
+                          intensity_model="Prosit_2019_intensity",
+                          irt_model="Prosit_2019_irt",
+                          path_hdf5="output.hdf5")
 ```
 
 ### Alternative: get predictions as dictionary in python
@@ -54,9 +54,9 @@ predictor = PROSITpredictor(server="proteomicsdb.org:8500",
 output_dict = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
                                 charges=[1,2],
                                 collision_energies=[25,25],
-                                intensity_model="intensity_prosit_publication",
-                                irt_model="iRT",
-                                proteotypicity_model="proteotypicity"
+                                intensity_model="Prosit_2019_intensity",
+                                irt_model="Prosit_2019_irt",
+                                proteotypicity_model="Prosit_2020_proteotypicity"
                                 )
 ```
 
@@ -72,19 +72,19 @@ predictor = PROSITpredictor(server="proteomicsdb.org:8500",
 
 # predicts ONLY iRT
 output_dict_irt = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
-                                    irt_model="iRT",
+                                    irt_model="Prosit_2019_irt",
                                     )
 
 # predicts ONLY proteotypicity
 output_dict_proteotypicity = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
-                                              proteotypicity_model="proteotypicity",
+                                              proteotypicity_model="Prosit_2020_proteotypicity",
                                               )
 
 # predicts ONLY intensity/spectra
 output_dict_intensity = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
                                           charges=[1,2],
                                           collision_energies=[25,25],
-                                          intensity_model="intensity_prosit_publication",
+                                          intensity_model="Prosit_2020_intensity",
                                           )
 ```
 

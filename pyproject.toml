@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "prosit_grpc"
-version = "1.1.0"
+version = "1.2.0"
 description = "A Client to access Prosit via GRPC"
 authors = ["Daniela Andrade Salazar <danial.andrade@tum.de>"]
 
