@@ -7,6 +7,7 @@ __email__ = "Ludwig.Lautenbacher@tum.de"
 
 import numpy as np
 import grpc
+from tqdm import tqdm
 from tensorflow_serving.apis import prediction_service_pb2_grpc
 
 from . import __constants__ as C  # For constants
@@ -23,7 +24,8 @@ class PROSITpredictor:
                  server: str = "proteomicsdb.org:8500",
                  path_to_ca_certificate: str = None,
                  path_to_certificate: str = None,
-                 path_to_key_certificate: str = None):
+                 path_to_key_certificate: str = None,
+                 keepalive_timeout_ms=10000):
         """PROSITpredictor is a class that contains all fetures to generate predictions with a Prosit server
 
         -- Non optional Parameters --
@@ -33,16 +35,19 @@ class PROSITpredictor:
         :param path_to_certificate
         :param path_to_key_certificate
         :param path_to_ca_certificate
+        :param
 
         """
         self.server = server
         self.create_channel(path_to_ca_certificate=path_to_ca_certificate,
                             path_to_key_certificate=path_to_key_certificate,
-                            path_to_certificate=path_to_certificate)
-        self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
+                            path_to_certificate=path_to_certificate,
+                            keepalive_timeout_ms=keepalive_timeout_ms)
+        self.stub = prediction_service_pb2_grpc.PredictionServiceStub(
+            self.channel)
         self.channel = None
 
-    def create_channel(self, path_to_certificate, path_to_key_certificate, path_to_ca_certificate):
+    def create_channel(self, path_to_certificate, path_to_key_certificate, path_to_ca_certificate, keepalive_timeout_ms):
         try:
             # read certificates and create credentials
             with open(path_to_certificate, "rb") as f:
@@ -53,10 +58,12 @@ class PROSITpredictor:
                 ca_cert = f.read()
             creds = grpc.ssl_channel_credentials(ca_cert, key, cert)
             # create secure channel
-            self.channel = grpc.secure_channel(self.server, creds)
+            self.channel = grpc.secure_channel(self.server, creds, options=[
+                                               ('grpc.keepalive_timeout_ms', keepalive_timeout_ms)])
         except:
             print("Establishing a secure channel was not possible")
-            self.channel = grpc.insecure_channel(self.server)
+            self.channel = grpc.insecure_channel(
+                self.server, options=[('grpc.keepalive_timeout_ms', keepalive_timeout_ms)])
 
     @staticmethod
     def create_requests(model_name,
@@ -70,26 +77,34 @@ class PROSITpredictor:
         while batch_start < num_seq:
             batch_end = batch_start + C.BATCH_SIZE
             batch_end = min(num_seq, batch_end)
+            batchsize = batch_end - batch_start
+            model_type = model_name.split("_")[2]
+            seq_array_batch = sequences_array[batch_start:batch_end]
 
-            request = U.create_request_general(
-                seq_array=sequences_array[batch_start:batch_end],
-                ce_array=ce_array[batch_start:batch_end],
-                charges_array=charge_array[batch_start:batch_end],
-                model_name=model_name,
-                batchsize=(batch_end - batch_start))
+            if model_type == "intensity":
+                ce_array_batch = ce_array[batch_start:batch_end]
+                charges_array_batch = charge_array[batch_start:batch_end]
+                request = U.create_request_intensity(
+                    seq_array_batch, ce_array_batch, charges_array_batch, batchsize, model_name)
+            elif model_type == "irt":
+                request = U.create_request_irt(
+                    seq_array_batch, batchsize, model_name)
+            elif model_type == "proteotypicity":
+                request = U.create_request_proteotypicity(
+                    seq_array_batch, batchsize, model_name)
+
             requests.append(request)
             batch_start = batch_end
-
         return requests
 
-    def send_requests(self, requests):
+    def send_requests(self, requests, flag_disable_progress_bar):
         timeout = 5  # in seconds
 
         predictions = []
-        while len(requests) > 0:
-            request = requests.pop()
-            model_type = request.model_spec.name.split("_")[0]
-            response = self.stub.Predict.future(request, timeout).result()  # asynchronous request
+        for request in tqdm(requests, disable=flag_disable_progress_bar):
+            model_type = request.model_spec.name.split("_")[2]
+            response = self.stub.Predict.future(
+                request, timeout).result()  # asynchronous request
             prediction = U.unpack_response(response, model_type)
             predictions.append(prediction)
 
@@ -103,13 +118,18 @@ class PROSITpredictor:
                 sequences: list = None,
                 charges: list = None,
                 collision_energies: list = None,
+                matrix_expansion_param: list = [],
+                flag_disable_progress_bar = False
                 ):
 
         self.input = PROSITinput(sequences=sequences,
-                                charges=charges,
-                                collision_energies=collision_energies)
+                                 charges=charges,
+                                 collision_energies=collision_energies)
 
-        self.input.prepare_input()
+        self.input.prepare_input(flag_disable_progress_bar)
+        for paramset in matrix_expansion_param:
+            self.input.expand_matrices(param=paramset)
+        self.input.sequences.calculate_lengths()
 
         # actual prediction
         predictions_irt = None
@@ -117,62 +137,41 @@ class PROSITpredictor:
         predictions_proteotypicity = None
         if irt_model is not None:
             requests = PROSITpredictor.create_requests(model_name=irt_model,
-                                                       sequences_array=self.input.sequences.array_int32,
+                                                       sequences_array=self.input.sequences.array,
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )
-            predictions_irt = self.send_requests(requests)
+            predictions_irt = self.send_requests(requests, flag_disable_progress_bar)
 
         if intensity_model is not None:
             requests = PROSITpredictor.create_requests(model_name=intensity_model,
-                                                       sequences_array=self.input.sequences.array_int32,
+                                                       sequences_array=self.input.sequences.array,
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )
-            predictions_intensity = np.array(self.send_requests(requests))
+            predictions_intensity = np.array(self.send_requests(requests, flag_disable_progress_bar))
 
         if proteotypicity_model is not None:
             requests = PROSITpredictor.create_requests(model_name=proteotypicity_model,
-                                                       sequences_array=self.input.sequences.array_float32,
+                                                       sequences_array=self.input.sequences.array,
                                                        charge_array=self.input.charges.array,
                                                        ce_array=self.input.collision_energies.array
                                                        )
-            predictions_proteotypicity = self.send_requests(requests)
-
-        self.output = PROSIToutput()
+            predictions_proteotypicity = self.send_requests(requests, flag_disable_progress_bar)
 
         # initialize output
-        self.output.spectrum.intensity.raw = predictions_intensity
-        self.output.spectrum.mz.raw = np.array(
-            [U.compute_ion_masses(self.input.sequences.array_int32[i], self.input.charges.array[i]) for i in
-             range(len(self.input.sequences.array_int32))])
-        self.output.spectrum.annotation.raw_type = np.array([C.ANNOTATION[0] for _ in range(len(self.input.sequences.array_int32))])
-        self.output.spectrum.annotation.raw_charge = np.array([C.ANNOTATION[1] for _ in range(len(self.input.sequences.array_int32))])
-        self.output.spectrum.annotation.raw_number = np.array([C.ANNOTATION[2] for _ in range(len(self.input.sequences.array_int32))])
-
-        # shape annotation
-        self.output.spectrum.annotation.raw_number.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
-        self.output.spectrum.annotation.raw_charge.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
-        self.output.spectrum.annotation.raw_type.shape = (len(self.input.sequences.array_int32), C.VEC_LENGTH)
-
-        self.output.irt.raw = predictions_irt
-        self.output.proteotypicity.raw = predictions_proteotypicity
+        self.output = PROSIToutput(
+            pred_intensity=predictions_intensity,
+            pred_irt=predictions_irt,
+            pred_proteotyp=predictions_proteotypicity,
+            sequences_array=self.input.sequences.array,
+            charges_array=self.input.charges.array)
 
         # prepare output
         self.output.prepare_output(charges_array=self.input.charges.array,
                                    sequences_lengths=self.input.sequences.lengths)
 
-        return_dictionary = {
-            proteotypicity_model: self.output.proteotypicity.raw,
-            irt_model: self.output.irt.normalized,
-            intensity_model+"-intensity": self.output.spectrum.intensity.filtered,
-            intensity_model+"-fragmentmz": self.output.spectrum.mz.filtered,
-            intensity_model+"-annotation_number": self.output.spectrum.annotation.filtered_number,
-            intensity_model+"-annotation_type": self.output.spectrum.annotation.filtered_type,
-            intensity_model+"-annotation_charge": self.output.spectrum.annotation.filtered_charge
-        }
-
-        return return_dictionary
+        return self.output.assemble_dictionary()
 
     def predict_to_hdf5(self,
                         path_hdf5: str,
@@ -180,28 +179,31 @@ class PROSITpredictor:
                         intensity_model: str = None,
                         sequences: list = None,
                         charges: list = None,
-                        collision_energies: list = None):
+                        collision_energies: list = None,
+                        flag_disable_progress_bar=False):
         import h5py
 
         self.predict(irt_model=irt_model,
                      intensity_model=intensity_model,
                      sequences=sequences,
                      charges=charges,
-                     collision_energies=collision_energies)
+                     collision_energies=collision_energies,
+                     flag_disable_progress_bar=flag_disable_progress_bar)
 
         # weird formating of ce and irt is due to compatibility with converter tool
         hdf5_dict = {
-            "sequence_integer": self.input.sequences.array_int32,
+            "sequence_integer": self.input.sequences.array,
             "precursor_charge_onehot": self.input.charges.array,
             "collision_energy_aligned_normed": np.array([np.array(el).astype(np.float32) for el in self.input.collision_energies.array]).astype(np.float32),
             'intensities_pred': self.output.spectrum.intensity.normalized,
             'masses_pred': self.output.spectrum.mz.masked,
             'iRT': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
 
-        hdf5_dict["collision_energy_aligned_normed"].shape = (len(hdf5_dict["collision_energy_aligned_normed"]), 1)
+        hdf5_dict["collision_energy_aligned_normed"].shape = (
+            len(hdf5_dict["collision_energy_aligned_normed"]), 1)
         hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]), 1)
-
 
         with h5py.File(path_hdf5, "w") as data_file:
             for key, data in hdf5_dict.items():
-                data_file.create_dataset(key, data=data, dtype=data.dtype, compression="gzip")
+                data_file.create_dataset(
+                    key, data=data, dtype=data.dtype, compression="gzip")

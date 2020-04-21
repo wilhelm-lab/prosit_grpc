@@ -2,17 +2,17 @@
 from setuptools import setup
 
 packages = \
-['prosit_grpc']
+    ['prosit_grpc']
 
 package_data = \
-{'': ['*']}
+    {'': ['*']}
 
 install_requires = \
-['grpcio>=1.26.0,<2.0.0',
- 'numpy>=1.18.1,<2.0.0',
- 'scikit-learn>=0.21.3,<0.22.0',
- 'tensorflow-serving-api>=1.15.0,<2.0.0',
- 'tensorflow>=1.15.2,<2.0.0']
+    ['grpcio>=1.26.0,<2.0.0',
+     'numpy>=1.18.1,<2.0.0',
+     'scikit-learn>=0.21.3,<0.22.0',
+     'tensorflow-serving-api>=1.15.0,<2.0.0',
+     'tensorflow>=1.15.2,<2.0.0']
 
 setup_kwargs = {
     'name': 'prosit-grpc',

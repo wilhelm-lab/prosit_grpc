@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "prosit_grpc"
-version = "1.1.0"
+version = "1.2.0"
 description = "A Client to access Prosit via GRPC"
 authors = ["Daniela Andrade Salazar <danial.andrade@tum.de>"]
 
@@ -11,6 +11,8 @@ scikit-learn = "^0.21.3"
 tensorflow = "^1.15.2"
 tensorflow-serving-api = "^1.15.0"
 grpcio = "^1.26.0"
+tqdm = "^4.43.0"
+autopep8 = "^1.5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.3.4"

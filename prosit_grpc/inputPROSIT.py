@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 from . import __constants__ as C  # For constants
 from . import __utils__ as U  # Utility/Static functions
 
@@ -9,13 +10,34 @@ class PROSITinput:
         self.charges = PROSITcharges(charges)
         self.collision_energies = PROSITcollisionenergies(collision_energies)
 
-    def prepare_input(self):
+    def prepare_input(self, flag_disable_progress_bar):
         if self.sequences is not None:
-            self.sequences.prepare_sequences()
+            self.sequences.prepare_sequences(flag_disable_progress_bar)
         if self.charges is not None:
             self.charges.prepare_charges()
         if self.collision_energies is not None:
             self.collision_energies.prepare_collisionenergies()
+
+    def expand_matrices(self, param):
+        """
+        Expects a list with dictionaries with 3 input parameters each
+        {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}
+        The first one is the number that should be replaced
+        The second one is the number that should be used to replace
+        The third one is the number of changes that are performed at the same time
+        """
+
+        self.sequences.array, num_copies_created = U.generate_newMatrix_v2(npMatrix=self.sequences.array,
+                                                                           iFromReplaceValue=C.ALPHABET[
+                                                                               param['AA_to_permutate']],
+                                                                           iToReplaceValue=C.ALPHABET[param['into']],
+                                                                           numberAtTheSameTime=param['max_in_parallel'])
+
+        charges_array = np.repeat(self.charges.array, num_copies_created, 0)
+        collision_energies_array = np.repeat(self.collision_energies.array, num_copies_created, 0)
+
+        self.charges.array = np.vstack([self.charges.array, charges_array])
+        self.collision_energies.array = np.hstack([self.collision_energies.array, collision_energies_array])
 
 
 class PROSITcharges:
@@ -34,15 +56,20 @@ class PROSITcharges:
 
     @staticmethod
     def determine_type(charges):
-        if type(charges) == np.ndarray:
-            return "array"
-        elif type(charges[1]) is list:
-            return "one-hot"
-        elif type(charges[1]) is int:
-            return "numeric"
+
+        if charges is None:
+            return None
+        else:
+            if type(charges) == np.ndarray:
+                return "array"
+            elif type(charges[0]) is list:
+                return "one-hot"
+            elif type(charges[0]) is int:
+                return "numeric"
 
     def numeric_to_onehot(self):
-        self.onehot = [U.indices_to_one_hot(x, C.MAX_CHARGE) for x in self.numeric]
+        self.onehot = [U.indices_to_one_hot(
+            x, C.MAX_CHARGE) for x in self.numeric]
 
     def onehot_to_array(self):
         self.array = np.array(self.onehot, dtype=np.float32)
@@ -51,7 +78,7 @@ class PROSITcharges:
         if self.array is None:
             if self.onehot is None:
                 if self.numeric is None:
-                    pass  # No charges known
+                    return  # No charges known
                 self.numeric_to_onehot()
             self.onehot_to_array()
 
@@ -61,8 +88,7 @@ class PROSITsequences:
 
         self.character = None
         self.numeric = None
-        self.array_int32 = None
-        self.array_float32 = None
+        self.array = None
         self.lengths = None
 
         seq_type = PROSITsequences.determine_type(sequences)
@@ -77,26 +103,24 @@ class PROSITsequences:
     def determine_type(sequences):
         if type(sequences) == np.ndarray:
             return "array"
-        elif type(sequences[1]) is str:
+        elif type(sequences[0]) is str:
             return "character"
         else:
             return "numeric"
 
-    def character_to_numeric(self):
+    def character_to_numeric(self, flag_disable_progress_bar):
         self.numeric = []
-        for i, sequence in enumerate(self.character):
-            num_seq = U.map_peptide_to_numbers(sequence)
-            if len(num_seq) > C.SEQ_LEN:
-                raise Exception(f"The Sequence {sequence}, has {i} Amino Acids."
+        generator_sequence_numeric = U.parse_modstrings(self.character, alphabet=C.ALPHABET, translate=True)
+        for sequence_numeric in tqdm(generator_sequence_numeric, disable=flag_disable_progress_bar):
+            if len(sequence_numeric) > C.SEQ_LEN:
+                raise Exception(f"The Sequence {sequence_numeric}, has {len(sequence_numeric)} Amino Acids."
                                 f"The maximum number of amino acids allowed is {C.SEQ_LEN}")
-
-            while len(num_seq) < C.SEQ_LEN:
-                num_seq.append(0)
-            self.numeric.append(num_seq)
+            while len(sequence_numeric) < C.SEQ_LEN:
+                sequence_numeric.append(0)
+            self.numeric.append(sequence_numeric)
 
     def numeric_to_array(self):
-        self.array_int32 = np.array(self.numeric, dtype=np.int32)
-        self.array_float32 = np.array(self.numeric, dtype=np.float32)
+        self.array = np.array(self.numeric, dtype=np.int32)
 
     def calculate_lengths(self):
         """Calculates the length of all sequences saved in an instance of PROSITsequences
@@ -105,34 +129,19 @@ class PROSITsequences:
 
         :sets PROSITsequences.lengths
         """
-        self.lengths = []
+        truth_array = np.in1d(
+            self.array, [0], invert=True).reshape(self.array.shape)
+        self.lengths = np.sum(truth_array, axis=1)
 
-        if self.array_int32 is not None:
-            array = self.array_int32
-        elif self.array_float32 is not None:
-            array = self.array_float32
-
-        for sequence in array:
-            counter = 0
-            for aa in sequence:
-                if aa != 0:
-                    counter += 1
-            self.lengths.append(counter)
-
-    def prepare_sequences(self):
-        if self.array_float32 is None and self.array_int32 is None:
+    def prepare_sequences(self, flag_disable_progress_bar):
+        if self.array is None:
             if self.numeric is None:
                 if self.character is None:
                     raise ValueError("No Sequences known")
-                self.character_to_numeric()
+                self.character_to_numeric(flag_disable_progress_bar)
             self.numeric_to_array()
-            self.calculate_lengths()
 
-        elif self.array_float32 is None:
-            self.array_int32 = np.copy(self.array_float32).dtype = np.int32
-
-        elif self.array_int32 is None:
-            self.array_float32 = np.copy(self.array_int32).dtype = np.float32
+        self.calculate_lengths()
 
 
 class PROSITcollisionenergies:
@@ -148,17 +157,19 @@ class PROSITcollisionenergies:
             self.procentual = collision_energies
         elif ce_type == "array":
             self.array = collision_energies
-        else:
-            raise ValueError("The ce_type is not known")
 
     @staticmethod
     def determine_type(collision_energies):
-        if type(collision_energies) == np.ndarray:
-            return "array"
-        elif collision_energies[1] < 1:
-            return "procentual"
+
+        if collision_energies is None:
+            return None
         else:
-            return "numeric"
+            if type(collision_energies) == np.ndarray:
+                return "array"
+            elif collision_energies[0] < 1:
+                return "procentual"
+            else:
+                return "numeric"
 
     def numeric_to_procentual(self):
         self.procentual = [i / 100 for i in self.numeric]
@@ -170,6 +181,6 @@ class PROSITcollisionenergies:
         if self.array is None:
             if self.procentual is None:
                 if self.numeric is None:
-                    pass  # No Collision Energies known
+                    return  # No Collision Energies known
                 self.numeric_to_procentual()
             self.procentual_to_array()
