@@ -14,7 +14,7 @@ key = "cert/ci-pipeline.key"
 test_int_model = "Prosit_2019_intensity"
 test_irt_model = "Prosit_2019_irt"
 test_prot_model = "Prosit_2020_proteotypicity"
-
+test_charge_model = "Prosit_2020_charge"
 
 with h5py.File("tests/data.hdf5", 'r') as f:
     intensities = list(f["intensities_pred"])
@@ -114,6 +114,18 @@ def test_seperate_prediction():
                                        proteotypicity_model=test_prot_model)
     assert len(dict_proteotyp) == 1
 
+def test_charge_prediction():
+    predictor = prpc.PROSITpredictor(server=test_server,
+                                     path_to_ca_certificate=ca_cert,
+                                     path_to_certificate=cert,
+                                     path_to_key_certificate=key,
+                                     )
+    dict_intensity = predictor.predict(sequences=sequences,
+                                       charges=charge,
+                                       collision_energies=ce,
+                                       charge_model=test_charge_model,
+                                       )
+    assert dict_intensity["predicted_precursor_chargestate"].shape == (120, 6)
 
 def test_batching():
     predictor = prpc.PROSITpredictor(server=test_server,
@@ -122,16 +134,18 @@ def test_batching():
                                      path_to_key_certificate=key,
                                      )
 
-    output_dict = predictor.predict(sequences=[sequences[1] for _ in range(10000)],
-                                    charges=[charge[1] for _ in range(10000)],
-                                    collision_energies=[ce[1]
-                                                        for _ in range(10000)],
+    l = 100
+
+    output_dict = predictor.predict(sequences=[x for x in sequences for _ in range(l)],
+                                    charges=[x for x in charge for _ in range(l)],
+                                    collision_energies=[x for x in ce for _ in range(l)],
                                     intensity_model=test_int_model,
                                     irt_model=test_irt_model,
-                                    proteotypicity_model=test_prot_model)
+                                    proteotypicity_model=test_prot_model,
+                                    charge_model=test_charge_model)
 
     for output in output_dict.values():
-        assert len(output) == 10000
+        assert len(output) == l*len(sequences)
 
 
 def test_predict_to_hdf5():

@@ -154,6 +154,8 @@ def create_request_general(seq_array, ce_array, charges_array, batchsize, model_
         return create_request_irt(seq_array, batchsize, model_name)
     elif model_type == "proteotypicity":
         return create_request_proteotypicity(seq_array, batchsize, model_name)
+    elif model_type == "charge":
+        return create_request_charge(seq_array, batchsize, model_name)
 
 
 def create_request_intensity(seq_array, ce_array, charges_array, batchsize, model_name):
@@ -186,6 +188,16 @@ def create_request_proteotypicity(seq_array, batchsize, model_name):
         tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.float32))
     return request
 
+def create_request_charge(seq_array, batchsize, model_name):
+    """
+    seq array
+    batchsize
+    model_name  specify the model used for prediction
+    """
+    request = create_request_scaffold(model_name=model_name)
+    request.inputs['peptides_in_1:0'].CopyFrom(
+        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.float32))
+    return request
 
 def create_request_irt(seq_array, batchsize, model_name):
     """
@@ -213,6 +225,11 @@ def unpack_response(predict_response, model_type):
 
     elif model_type == "irt":
         outputs_tensor_proto = predict_response.outputs["prediction/BiasAdd:0"]
+        shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
+        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+
+    elif model_type == "charge":
+        outputs_tensor_proto = predict_response.outputs["softmax/Softmax:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
         return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
 

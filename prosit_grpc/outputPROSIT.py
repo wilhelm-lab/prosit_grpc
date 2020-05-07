@@ -5,7 +5,7 @@ import numpy as np
 
 # Output
 class PROSIToutput:
-    def __init__(self, pred_intensity, pred_irt, pred_proteotyp, sequences_array, charges_array):
+    def __init__(self, pred_intensity=None, pred_irt=None, pred_proteotyp=None, pred_charge=None, sequences_array=None, charges_array=None):
 
         if pred_intensity is not None:
             self.spectrum = PROSITspectrum(
@@ -26,6 +26,11 @@ class PROSIToutput:
         else:
             self.proteotypicity = None
 
+        if pred_charge is not None:
+            self.charge = PROSITcharge(pred_charge=pred_charge)
+        else:
+            self.charge = None
+
     def prepare_output(self, charges_array, sequences_lengths):
         # prepare spectrum
         if self.spectrum is not None:
@@ -36,8 +41,7 @@ class PROSIToutput:
         if self.irt is not None:
             self.irt.prepare_irt()
 
-        # prepare proteotypicity
-        # nothing to prepare proteotypicity is only reported raw
+        # nothing to prepare for proteotypicity and charge they are reported raw
 
     def assemble_dictionary(self):
         return_dictionary = {}
@@ -55,6 +59,9 @@ class PROSIToutput:
             return_dictionary["annotation_type"] = self.spectrum.annotation.filtered_type
             return_dictionary["annotation_charge"] = self.spectrum.annotation.filtered_charge
 
+        if self.charge is not None:
+            return_dictionary["predicted_precursor_chargestate"] = self.charge.raw
+
         return return_dictionary
 
 
@@ -62,7 +69,12 @@ class PROSITproteotypicity:
     def __init__(self, pred_proteotyp):
         self.raw = pred_proteotyp
 
+class PROSITcharge:
+    def __init__(self, pred_charge):
+        self.raw = pred_charge
 
+    # TODO:
+    #   add function to revert one hot encoding
 class PROSITirt:
     def __init__(self, pred_irt):
         self.raw = pred_irt
