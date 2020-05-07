@@ -92,6 +92,9 @@ class PROSITpredictor:
             elif model_type == "proteotypicity":
                 request = U.create_request_proteotypicity(
                     seq_array_batch, batchsize, model_name)
+            elif model_type == "charge":
+                request = U.create_request_charge(
+                    seq_array_batch, batchsize, model_name)
 
             requests.append(request)
             batch_start = batch_end
@@ -115,6 +118,7 @@ class PROSITpredictor:
                 irt_model: str = None,
                 intensity_model: str = None,
                 proteotypicity_model: str = None,
+                charge_model: str = None,
                 sequences: list = None,
                 charges: list = None,
                 collision_energies: list = None,
@@ -135,6 +139,7 @@ class PROSITpredictor:
         predictions_irt = None
         predictions_intensity = None
         predictions_proteotypicity = None
+        predictions_charge = None
         if irt_model is not None:
             requests = PROSITpredictor.create_requests(model_name=irt_model,
                                                        sequences_array=self.input.sequences.array,
@@ -159,11 +164,21 @@ class PROSITpredictor:
                                                        )
             predictions_proteotypicity = self.send_requests(requests, flag_disable_progress_bar)
 
+        if charge_model is not None:
+            requests = PROSITpredictor.create_requests(model_name=charge_model,
+                                                       sequences_array=self.input.sequences.array,
+                                                       charge_array=self.input.charges.array,
+                                                       ce_array=self.input.collision_energies.array
+                                                       )
+            predictions_charge = self.send_requests(requests, flag_disable_progress_bar)
+
+
         # initialize output
         self.output = PROSIToutput(
             pred_intensity=predictions_intensity,
             pred_irt=predictions_irt,
             pred_proteotyp=predictions_proteotypicity,
+            pred_charge=predictions_charge,
             sequences_array=self.input.sequences.array,
             charges_array=self.input.charges.array)
 
