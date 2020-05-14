@@ -1,13 +1,14 @@
 import numpy as np
 import tqdm
 from . import __constants__ as C  # For constants
+from . import __utils__ as U
 from tensorflow_serving.apis import predict_pb2
 import tensorflow as tf
 
 
-class PredObjectBase:
+class Base:
     """
-    PredObjectBase is the base class for all PredObject.
+    Base is the base class for all PredObject.
     The subclasses should each implement the methods:
         create_request
         unpack_response
@@ -15,10 +16,10 @@ class PredObjectBase:
         prepare_output
     The remaining methods will most likely stay the same.
     """
-    def __init__(self, stub, model_name, PROSITinput):
+    def __init__(self, stub, model_name, input):
         self.model_name = model_name
         self.stub = stub
-        self.PROSITinput = PROSITinput
+        self.input = input
         self.predictions = None  # overwritten in predict function
 
     @staticmethod
@@ -67,11 +68,11 @@ class PredObjectBase:
             batch_end: int = batch_start + C.BATCH_SIZE
             batch_end: int = min(num_seq, batch_end)
             batchsize: int = batch_end - batch_start
-            batch_start: int = batch_end
 
             inputs_batch = {}
             for key, value in inputs.items():
                 inputs_batch[key] = value[batch_start:batch_end]
+            batch_start: int = batch_end
 
             yield self.create_request(model_name, inputs_batch, batchsize)
 
@@ -91,7 +92,8 @@ class PredObjectBase:
         timeout = 5  # in seconds
 
         predictions = []
-        for request in tqdm(requests, disable=disable_progress_bar):
+        # for request in tqdm(requests, disable=disable_progress_bar):
+        for request in requests:
             prediction = self.send_request(request=request,timeout=timeout)
             predictions.append(prediction)
 
@@ -112,7 +114,7 @@ class PredObjectBase:
         pass
 
 
-class PredObjectIntensity(PredObjectBase):
+class Intensity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['peptides_in:0'].CopyFrom(
@@ -142,23 +144,145 @@ class PredObjectIntensity(PredObjectBase):
 
     def prepare_input(self):
         in_dic = {
-            "seq_array": self.PROSITinput.sequences.array,
-            "ce_array": self.PROSITinput.collision_energies.array,
-            "charge_array": self.PROSITinput.charges.array
+            "seq_array": self.input.sequences.array,
+            "ce_array": self.input.collision_energies.array,
+            "charges_array": self.input.charges.array
         }
         return in_dic
 
+    @staticmethod
+    def create_masking(charges_array, sequences_lengths):
+        """
+        assume reshaped output of prosit, shape sould be (num_seq, 174)
+        set filtered output where not allowed positions are set to -1
+        prosit output has the form:
+        y1+1     y1+2 y1+3     b1+1     b1+2 b1+3     y2+1     y2+2 y2+3     b2+1     b2+2 b2+3
+        if charge >= 3: all allowed
+        if charge == 2: all +3 invalid
+        if charge == 1: all +2 & +3 invalid
+        """
+
+        assert len(charges_array) == len(sequences_lengths)
+
+        mask = np.ones(shape=(len(charges_array),
+                              C.VEC_LENGTH), dtype=np.int32)
+
+        for i in range(len(charges_array)):
+            charge_one_hot = charges_array[i]
+            len_seq = sequences_lengths[i]
+            m = mask[i]
+
+            # filter according to peptide charge
+            if np.array_equal(charge_one_hot, [1, 0, 0, 0, 0, 0]):
+                invalid_indexes = [(x * 3 + 1) for x in range((C.SEQ_LEN - 1) * 2)] + [(x * 3 + 2) for x in
+                                                                                       range((C.SEQ_LEN - 1) * 2)]
+                m[invalid_indexes] = -1
+
+            elif np.array_equal(charge_one_hot, [0, 1, 0, 0, 0, 0]):
+                invalid_indexes = [
+                    x * 3 + 2 for x in range((C.SEQ_LEN - 1) * 2)]
+                m[invalid_indexes] = -1
+
+            if len_seq < C.SEQ_LEN:
+                invalid_indexes = range((len_seq - 1) * 6, C.VEC_LENGTH)
+                m[invalid_indexes] = -1
+
+        return mask
+
+    def apply_masking(self):
+
+        invalid_indices = self.mask == -1
+
+        self.intensity["masked"] = np.copy(self.intensity["raw"])
+        self.intensity["masked"][invalid_indices] = -1
+
+        self.mz["masked"] = np.copy(self.mz["raw"])
+        self.mz["masked"][invalid_indices] = -1
+
+        self.annotation["masked"] = {}
+        for key, value in self.annotation["raw"].items():
+            self.annotation["masked"][key] = np.copy(self.annotation["raw"][key])
+            if key == "type":
+                self.annotation["masked"][key][invalid_indices] = None
+            else:
+                self.annotation["masked"][key][invalid_indices] = -1
+
+    def create_filter(self):
+        self.filter = self.intensity["normalized"] != -1
+
+    def apply_filter(self):
+
+        self.intensity["filtered"] = []
+        self.mz["filtered"] = []
+
+        self.annotation["filtered"] = {
+            "charge": [],
+            "number": [],
+            "type": []
+        }
+
+        for i in range(len(self.filter)):
+            self.intensity["filtered"].append(self.intensity["normalized"][i][self.filter[i]])
+            self.mz["filtered"].append(self.mz["masked"][i][self.filter[i]])
+
+            self.annotation["filtered"]["number"].append(self.annotation["masked"]["number"][i][self.filter[i]])
+            self.annotation["filtered"]["charge"].append(self.annotation["masked"]["number"][i][self.filter[i]])
+            self.annotation["filtered"]["type"].append(self.annotation["masked"]["number"][i][self.filter[i]])
+
+    def normalize_intensity(self):
+        self.intensity["normalized"] = U.normalize_intensities(self.intensity["masked"])
+        self.intensity["normalized"][self.intensity["normalized"] < 0] = 0
+        self.intensity["normalized"][self.intensity["masked"] == -1] = -1
+
     def prepare_output(self):
-        pass
+
+        n_seq = len(self.predictions)
+
+        # prepare raw state of spectrum
+        self.intensity = {
+            "raw": self.predictions
+        }
+
+        self.mz = {
+            "raw": np.array([U.compute_ion_masses(self.input.sequences.array[i],
+                                                  self.input.charges.array[i])
+                             for i in range(n_seq)])
+        }
+
+        self.annotation = {
+            "raw": {
+                "charge": np.array([C.ANNOTATION[1] for _ in range(n_seq)]),
+                "number": np.array([C.ANNOTATION[2] for _ in range(n_seq)]),
+                "type": np.array([C.ANNOTATION[0] for _ in range(n_seq)])
+            }
+        }
+
+        # create and apply masking
+        self.mask = self.create_masking(charges_array=self.input.charges.array,
+                                        sequences_lengths=self.input.sequences.lengths)
+        self.apply_masking()
+
+        # normalize intensities
+        self.normalize_intensity()
+
+        # create and apply filter for masses with -1
+        self.create_filter()
+        self.apply_filter()
+
+        self.output = {
+            "intensity": self.intensity,
+            "fragmentmz": self.mz,
+            "annotation": self.annotation
+        }
 
 
-class PredObjectIrt(PredObjectBase):
+class Irt(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
-        request.inputs['peptides_in_1:0'].CopyFrom(
+        request.inputs['sequence_integer'].CopyFrom(
             tf.contrib.util.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
-                                              dtype=np.float32))
+                                              dtype=np.int32))
         return request
 
     @staticmethod
@@ -172,15 +296,17 @@ class PredObjectIrt(PredObjectBase):
 
     def prepare_input(self):
         in_dic = {
-            "seq_array": self.PROSITinput.sequences.array
+            "seq_array": self.input.sequences.array
         }
         return in_dic
 
     def prepare_output(self):
-        pass
+        self.output = {
+            "raw": self.predictions,
+            "normalized": (self.predictions*43.39373 + 56.35363441)
+        }
 
-
-class PredObjectProteotypicity(PredObjectBase):
+class Proteotypicity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['peptides_in_1:0'].CopyFrom(
@@ -200,14 +326,14 @@ class PredObjectProteotypicity(PredObjectBase):
 
     def prepare_input(self):
         in_dic = {
-            "seq_array": self.PROSITinput.sequences.array
+            "seq_array": self.input.sequences.array
         }
         return in_dic
 
     def prepare_output(self):
-        pass
+        self.output = self.predictions
 
-class PredObjectCharge(PredObjectBase):
+class Charge(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['peptides_in_1:0'].CopyFrom(
@@ -227,9 +353,9 @@ class PredObjectCharge(PredObjectBase):
 
     def prepare_input(self):
         in_dic = {
-            "seq_array": self.PROSITinput.sequences.array
+            "seq_array": self.input.sequences.array
         }
         return in_dic
 
     def prepare_output(self):
-        pass
+        self.output = self.predictions

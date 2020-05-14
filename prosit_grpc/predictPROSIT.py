@@ -14,7 +14,7 @@ from . import __constants__ as C  # For constants
 from . import __utils__ as U  # Utility/Static functions
 from .inputPROSIT import PROSITinput
 from .outputPROSIT import PROSIToutput
-
+from . import PredObject
 
 class PROSITpredictor:
     """PROSITpredictor is a class that contains all fetures to generate predictions with a Prosit server
@@ -26,7 +26,7 @@ class PROSITpredictor:
                  path_to_certificate: str = None,
                  path_to_key_certificate: str = None,
                  keepalive_timeout_ms=10000):
-        """PROSITpredictor is a class that contains all fetures to generate predictions with a Prosit server
+        """PROSITpredictor is a class that contains all features to generate predictions with a Prosit server
 
         -- Non optional Parameters --
         :param server
@@ -65,128 +65,74 @@ class PROSITpredictor:
             self.channel = grpc.insecure_channel(
                 self.server, options=[('grpc.keepalive_timeout_ms', keepalive_timeout_ms)])
 
-    @staticmethod
-    def create_requests(model_name,
-                        sequences_array,
-                        charge_array=None,
-                        ce_array=None,
-                        ):
-        batch_start = 0
-        num_seq = len(sequences_array)
-        requests = []
-        while batch_start < num_seq:
-            batch_end = batch_start + C.BATCH_SIZE
-            batch_end = min(num_seq, batch_end)
-            batchsize = batch_end - batch_start
-            model_type = model_name.split("_")[2]
-            seq_array_batch = sequences_array[batch_start:batch_end]
+    def pred_object_factory(self, model):
+        model_type = model.split("_")[2]
+        if model_type == "intensity":
+            return PredObject.Intensity(stub=self.stub,
+                                        model_name=model,
+                                        input=self.input)
 
-            if model_type == "intensity":
-                ce_array_batch = ce_array[batch_start:batch_end]
-                charges_array_batch = charge_array[batch_start:batch_end]
-                request = U.create_request_intensity(
-                    seq_array_batch, ce_array_batch, charges_array_batch, batchsize, model_name)
-            elif model_type == "irt":
-                request = U.create_request_irt(
-                    seq_array_batch, batchsize, model_name)
-            elif model_type == "proteotypicity":
-                request = U.create_request_proteotypicity(
-                    seq_array_batch, batchsize, model_name)
-            elif model_type == "charge":
-                request = U.create_request_charge(
-                    seq_array_batch, batchsize, model_name)
+        elif model_type == "irt":
+            return PredObject.Irt(stub=self.stub,
+                                  model_name=model,
+                                  input=self.input)
 
-            requests.append(request)
-            batch_start = batch_end
-        return requests
+        elif model_type == "proteotypicity":
+            return PredObject.Proteotypicity(stub=self.stub,
+                                             model_name=model,
+                                             input=self.input)
 
-    def send_requests(self, requests, flag_disable_progress_bar):
-        timeout = 5  # in seconds
+        elif model_type == "charge":
+            return PredObject.Charge(stub=self.stub,
+                                     model_name=model,
+                                     input=self.input)
 
-        predictions = []
-        for request in tqdm(requests, disable=flag_disable_progress_bar):
-            model_type = request.model_spec.name.split("_")[2]
-            response = self.stub.Predict.future(
-                request, timeout).result()  # asynchronous request
-            prediction = U.unpack_response(response, model_type)
-            predictions.append(prediction)
-
-        predictions = np.vstack(predictions)
-        return predictions
+        else:
+            raise ValueError("The model type is not yet implemented in the Prosit GRPC cient.")
 
     def predict(self,
-                irt_model: str = None,
-                intensity_model: str = None,
-                proteotypicity_model: str = None,
-                charge_model: str = None,
-                sequences: list = None,
-                charges: list = None,
-                collision_energies: list = None,
+                models: list,
+                sequences = None,
+                charges = None,
+                collision_energies = None,
                 matrix_expansion_param: list = [],
-                flag_disable_progress_bar = False
+                disable_progress_bar = False
                 ):
 
         self.input = PROSITinput(sequences=sequences,
                                  charges=charges,
                                  collision_energies=collision_energies)
 
-        self.input.prepare_input(flag_disable_progress_bar)
+        self.input.prepare_input(disable_progress_bar)
         for paramset in matrix_expansion_param:
             self.input.expand_matrices(param=paramset)
         self.input.sequences.calculate_lengths()
 
-        # actual prediction
-        predictions_irt = None
-        predictions_intensity = None
-        predictions_proteotypicity = None
-        predictions_charge = None
-        if irt_model is not None:
-            requests = PROSITpredictor.create_requests(model_name=irt_model,
-                                                       sequences_array=self.input.sequences.array,
-                                                       charge_array=self.input.charges.array,
-                                                       ce_array=self.input.collision_energies.array
-                                                       )
-            predictions_irt = self.send_requests(requests, flag_disable_progress_bar)
+        pred_objects = {}
+        predictions = {}
+        for model in models:
+            print(f"Predicting for model: {model}")
+            pred_objects[model] =  self.pred_object_factory(model=model)
+            pred_objects[model].prepare_input()
+            pred_objects[model].predict()
+            pred_objects[model].prepare_output()
+            predictions[model] = pred_objects[model].output
 
-        if intensity_model is not None:
-            requests = PROSITpredictor.create_requests(model_name=intensity_model,
-                                                       sequences_array=self.input.sequences.array,
-                                                       charge_array=self.input.charges.array,
-                                                       ce_array=self.input.collision_energies.array
-                                                       )
-            predictions_intensity = np.array(self.send_requests(requests, flag_disable_progress_bar))
-
-        if proteotypicity_model is not None:
-            requests = PROSITpredictor.create_requests(model_name=proteotypicity_model,
-                                                       sequences_array=self.input.sequences.array,
-                                                       charge_array=self.input.charges.array,
-                                                       ce_array=self.input.collision_energies.array
-                                                       )
-            predictions_proteotypicity = self.send_requests(requests, flag_disable_progress_bar)
-
-        if charge_model is not None:
-            requests = PROSITpredictor.create_requests(model_name=charge_model,
-                                                       sequences_array=self.input.sequences.array,
-                                                       charge_array=self.input.charges.array,
-                                                       ce_array=self.input.collision_energies.array
-                                                       )
-            predictions_charge = self.send_requests(requests, flag_disable_progress_bar)
-
-
-        # initialize output
-        self.output = PROSIToutput(
-            pred_intensity=predictions_intensity,
-            pred_irt=predictions_irt,
-            pred_proteotyp=predictions_proteotypicity,
-            pred_charge=predictions_charge,
-            sequences_array=self.input.sequences.array,
-            charges_array=self.input.charges.array)
-
-        # prepare output
-        self.output.prepare_output(charges_array=self.input.charges.array,
-                                   sequences_lengths=self.input.sequences.lengths)
-
-        return self.output.assemble_dictionary()
+        # # initialize output
+        # self.output = PROSIToutput(
+        #     pred_intensity=predictions_intensity,
+        #     pred_irt=predictions_irt,
+        #     pred_proteotyp=predictions_proteotypicity,
+        #     pred_charge=predictions_charge,
+        #     sequences_array=self.input.sequences.array,
+        #     charges_array=self.input.charges.array)
+        #
+        # # prepare output
+        # self.output.prepare_output(charges_array=self.input.charges.array,
+        #                            sequences_lengths=self.input.sequences.lengths)
+        #
+        # return self.output.assemble_dictionary()
+        return predictions
 
     def predict_to_hdf5(self,
                         path_hdf5: str,
@@ -195,7 +141,7 @@ class PROSITpredictor:
                         sequences: list = None,
                         charges: list = None,
                         collision_energies: list = None,
-                        flag_disable_progress_bar=False):
+                        disable_progress_bar=False):
         import h5py
 
         self.predict(irt_model=irt_model,
@@ -203,7 +149,7 @@ class PROSITpredictor:
                      sequences=sequences,
                      charges=charges,
                      collision_energies=collision_energies,
-                     flag_disable_progress_bar=flag_disable_progress_bar)
+                     disable_progress_bar=disable_progress_bar)
 
         # weird formating of ce and irt is due to compatibility with converter tool
         hdf5_dict = {
