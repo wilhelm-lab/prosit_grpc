@@ -1,10 +1,12 @@
 import numpy as np
-import tqdm
+from tqdm import tqdm
 from . import __constants__ as C  # For constants
 from . import __utils__ as U
 from tensorflow_serving.apis import predict_pb2
 import tensorflow as tf
 
+# surpresses tensorflow deprecation warning that would otherwise cause buggy behaviour of the tqdm progess bar
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 class Base:
     """
@@ -92,9 +94,12 @@ class Base:
         timeout = 5  # in seconds
 
         predictions = []
-        # for request in tqdm(requests, disable=disable_progress_bar):
-        for request in requests:
-            prediction = self.send_request(request=request,timeout=timeout)
+        n_batches = max(1, len(self.input.sequences.array)/C.BATCH_SIZE)
+        for request in tqdm(requests,
+                            disable=disable_progress_bar,
+                            total=n_batches):
+        # for request in requests:
+            prediction = self.send_request(request=request, timeout=timeout)
             predictions.append(prediction)
 
         predictions = np.vstack(predictions)
