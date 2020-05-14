@@ -6,6 +6,9 @@ import tensorflow as tf
 import scipy
 from sklearn.preprocessing import normalize
 from tensorflow_serving.apis import predict_pb2
+from tensorflow_serving.apis import get_model_status_pb2
+from google.protobuf.json_format import MessageToJson
+import json
 
 
 def compute_ion_masses(seq_int, charge_onehot):
@@ -233,6 +236,12 @@ def unpack_response(predict_response, model_type):
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
         return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
 
+
+def checkModelAvailability(stub, model):
+    request = get_model_status_pb2.GetModelStatusRequest()
+    request.model_spec.name = model
+    result = stub.GetModelStatus(request, 5) # 5 secs timeout
+    return json.loads(MessageToJson(result))["model_version_status"][0]["state"] == "AVAILABLE"
 
 def generate_newMatrix_v2(
     npMatrix, iFromReplaceValue, iToReplaceValue, numberAtTheSameTime=2
