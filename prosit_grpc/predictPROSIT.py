@@ -7,13 +7,9 @@ __email__ = "Ludwig.Lautenbacher@tum.de"
 
 import numpy as np
 import grpc
-from tqdm import tqdm
 from tensorflow_serving.apis import prediction_service_pb2_grpc
 
-from . import __constants__ as C  # For constants
-from . import __utils__ as U  # Utility/Static functions
 from .inputPROSIT import PROSITinput
-from .outputPROSIT import PROSIToutput
 from . import PredObject
 from tensorflow_serving.apis import get_model_status_pb2
 from google.protobuf.json_format import MessageToJson
