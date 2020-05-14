@@ -111,7 +111,9 @@ class PROSITsequences:
     def character_to_numeric(self, flag_disable_progress_bar):
         self.numeric = []
         generator_sequence_numeric = U.parse_modstrings(self.character, alphabet=C.ALPHABET, translate=True)
-        for sequence_numeric in tqdm(generator_sequence_numeric, disable=flag_disable_progress_bar):
+        for sequence_numeric in tqdm(generator_sequence_numeric,
+                                     disable=flag_disable_progress_bar,
+                                     total=len(self.character)):
             if len(sequence_numeric) > C.SEQ_LEN:
                 raise Exception(f"The Sequence {sequence_numeric}, has {len(sequence_numeric)} Amino Acids."
                                 f"The maximum number of amino acids allowed is {C.SEQ_LEN}")
