@@ -15,6 +15,11 @@ from . import __utils__ as U  # Utility/Static functions
 from .inputPROSIT import PROSITinput
 from .outputPROSIT import PROSIToutput
 from . import PredObject
+from tensorflow_serving.apis import get_model_status_pb2
+from google.protobuf.json_format import MessageToJson
+from tensorflow_serving.apis import model_service_pb2_grpc
+import json
+
 
 class PROSITpredictor:
     """PROSITpredictor is a class that contains all fetures to generate predictions with a Prosit server
@@ -45,7 +50,18 @@ class PROSITpredictor:
                             keepalive_timeout_ms=keepalive_timeout_ms)
         self.stub = prediction_service_pb2_grpc.PredictionServiceStub(
             self.channel)
-        self.channel = None
+
+    @staticmethod
+    def checkModelAvailability(channel, model):
+        try:
+            stub = model_service_pb2_grpc.ModelServiceStub(channel)
+            request = get_model_status_pb2.GetModelStatusRequest()
+            request.model_spec.name = model
+            result = stub.GetModelStatus(request, 5)  # 5 secs timeout
+            assert json.loads(MessageToJson(result))["model_version_status"][0]["state"] == "AVAILABLE"
+            return True
+        except:
+             return False
 
     def create_channel(self, path_to_certificate, path_to_key_certificate, path_to_ca_certificate, keepalive_timeout_ms):
         try:
@@ -99,6 +115,11 @@ class PROSITpredictor:
                 disable_progress_bar = False
                 ):
 
+        models_not_available = [not self.checkModelAvailability(self.channel, model=mo) for mo in models]
+        models_not_available = [model for model, not_available in zip(models, models_not_available) if not_available]
+        if len(models_not_available) > 0:
+            raise ValueError(f"The models {models_not_available} are not available at the Prosit server")
+
         self.input = PROSITinput(sequences=sequences,
                                  charges=charges,
                                  collision_energies=collision_energies)
@@ -118,20 +139,6 @@ class PROSITpredictor:
             pred_objects[model].prepare_output()
             predictions[model] = pred_objects[model].output
 
-        # # initialize output
-        # self.output = PROSIToutput(
-        #     pred_intensity=predictions_intensity,
-        #     pred_irt=predictions_irt,
-        #     pred_proteotyp=predictions_proteotypicity,
-        #     pred_charge=predictions_charge,
-        #     sequences_array=self.input.sequences.array,
-        #     charges_array=self.input.charges.array)
-        #
-        # # prepare output
-        # self.output.prepare_output(charges_array=self.input.charges.array,
-        #                            sequences_lengths=self.input.sequences.lengths)
-        #
-        # return self.output.assemble_dictionary()
         return predictions
 
     def predict_to_hdf5(self,
