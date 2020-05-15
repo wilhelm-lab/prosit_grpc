@@ -147,21 +147,20 @@ class PROSITpredictor:
                         disable_progress_bar=False):
         import h5py
 
-        self.predict(irt_model=irt_model,
-                     intensity_model=intensity_model,
-                     sequences=sequences,
-                     charges=charges,
-                     collision_energies=collision_energies,
-                     disable_progress_bar=disable_progress_bar)
+        out_dict = self.predict(sequences=sequences,
+                                charges=charges,
+                                collision_energies=collision_energies,
+                                disable_progress_bar=disable_progress_bar,
+                                models=[irt_model, intensity_model])
 
         # weird formating of ce and irt is due to compatibility with converter tool
         hdf5_dict = {
             "sequence_integer": self.input.sequences.array,
             "precursor_charge_onehot": self.input.charges.array,
             "collision_energy_aligned_normed": np.array([np.array(el).astype(np.float32) for el in self.input.collision_energies.array]).astype(np.float32),
-            'intensities_pred': self.output.spectrum.intensity.normalized,
-            'masses_pred': self.output.spectrum.mz.masked,
-            'iRT': np.array([np.array(el).astype(np.float32) for el in self.output.irt.normalized]).astype(np.float32)}
+            'intensities_pred': out_dict[intensity_model]["normalized"]["intensity"],
+            'masses_pred': out_dict[intensity_model]["masked"]["fragmentmz"],
+            'iRT': np.array([np.array(el).astype(np.float32) for el in out_dict[irt_model]["normalized"]]).astype(np.float32)}
 
         hdf5_dict["collision_energy_aligned_normed"].shape = (
             len(hdf5_dict["collision_energy_aligned_normed"]), 1)
