@@ -147,9 +147,19 @@ def test_batching():
                                     collision_energies=[x for x in ce for _ in range(l)],
                                     models=[test_int_model, test_irt_model, test_prot_model, test_charge_model])
 
-    for _, output in output_dict.values():
-        assert len(output) == l*len(sequences)
+    assert len(output_dict[test_int_model]["raw"]["intensity"]) == l*len(sequences)
+    assert len(output_dict[test_irt_model]["raw"]) == l*len(sequences)
+    assert len(output_dict[test_prot_model]) == l*len(sequences)
+    assert len(output_dict[test_charge_model]) == l*len(sequences)
 
+    # ensure the predictions are not shuffeled
+    truth_irt = [x for x in irt for _ in range(l)]
+    pred_irt = output_dict[test_irt_model]["normalized"]
+    assert len(truth_irt) == len(pred_irt)
+    for x, y in zip(truth_irt, pred_irt):
+        # converting them to float because:
+        # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
+        assert round(float(x), 3) == round(float(y), 3)
 
 def test_predict_to_hdf5():
     predictor = prpc.PROSITpredictor(server=test_server,
