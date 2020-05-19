@@ -129,7 +129,7 @@ class PROSITpredictor:
         predictions = {}
         for model in models:
             print(f"Predicting for model: {model}")
-            pred_objects[model] =  self.pred_object_factory(model=model)
+            pred_objects[model] = self.pred_object_factory(model=model)
             pred_objects[model].prepare_input()
             pred_objects[model].predict()
             pred_objects[model].prepare_output()

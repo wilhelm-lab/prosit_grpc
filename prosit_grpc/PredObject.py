@@ -91,7 +91,7 @@ class Base:
         return self.unpack_response(response)
 
     def send_requests(self, requests, disable_progress_bar: bool):
-        timeout = 5  # in seconds
+        timeout = 10  # in seconds
 
         predictions = []
         n_batches = max(1, len(self.input.sequences.array)/C.BATCH_SIZE)
