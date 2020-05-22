@@ -4,6 +4,7 @@ from . import __constants__ as C  # For constants
 from . import __utils__ as U
 from tensorflow_serving.apis import predict_pb2
 import tensorflow as tf
+from math import ceil
 
 # surpresses tensorflow deprecation warning that would otherwise cause buggy behaviour of the tqdm progess bar
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -94,7 +95,7 @@ class Base:
         timeout = 10  # in seconds
 
         predictions = []
-        n_batches = max(1, len(self.input.sequences.array)/C.BATCH_SIZE)
+        n_batches = ceil(len(self.input.sequences.array)/C.BATCH_SIZE)
         for request in tqdm(requests,
                             disable=disable_progress_bar,
                             total=n_batches):
@@ -145,7 +146,7 @@ class Intensity(Base):
         """
         outputs_tensor_proto = response.outputs["out/Reshape:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, dtype=np.float32).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {
@@ -297,7 +298,7 @@ class Irt(Base):
         """
         outputs_tensor_proto = response.outputs["prediction/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, np.float32).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {
@@ -324,7 +325,7 @@ class Proteotypicity(Base):
         """
         outputs_tensor_proto = response.outputs["pep_dense4/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, dtype=np.float16).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {
@@ -351,7 +352,7 @@ class Charge(Base):
         """
         outputs_tensor_proto = response.outputs["softmax/Softmax:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, dtype=np.float16).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {
