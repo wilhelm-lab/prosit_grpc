@@ -221,11 +221,13 @@ class Intensity(Base):
             "intensity": self.predictions,
             "fragmentmz": np.array([U.compute_ion_masses(self.input.sequences.array[i],
                                                          self.input.charges.array[i])
-                                                         for i in range(n_seq)]),
+                                                         for i in range(n_seq)],
+                                   dtype=np.float32),
             "annotation": {
-                "charge": np.array([C.ANNOTATION[1] for _ in range(n_seq)]),
-                "number": np.array([C.ANNOTATION[2] for _ in range(n_seq)]),
-                "type": np.array([C.ANNOTATION[0] for _ in range(n_seq)])
+                "charge": np.array([C.ANNOTATION[1] for _ in range(n_seq)], dtype=np.uint8),
+                "number": np.array([C.ANNOTATION[2] for _ in range(n_seq)], dtype=np.uint8),
+                # limited to single character unicode string
+                "type": np.array([C.ANNOTATION[0] for _ in range(n_seq)], dtype=np.dtype('U1'))
             }
         }
 
