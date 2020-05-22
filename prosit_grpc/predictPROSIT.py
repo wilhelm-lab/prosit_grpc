@@ -125,15 +125,14 @@ class PROSITpredictor:
             self.input.expand_matrices(param=paramset)
         self.input.sequences.calculate_lengths()
 
-        pred_objects = {}
         predictions = {}
         for model in models:
             print(f"Predicting for model: {model}")
-            pred_objects[model] = self.pred_object_factory(model=model)
-            pred_objects[model].prepare_input()
-            pred_objects[model].predict()
-            pred_objects[model].prepare_output()
-            predictions[model] = pred_objects[model].output
+            pred_object = self.pred_object_factory(model=model)
+            pred_object.prepare_input()
+            pred_object.predict()
+            pred_object.prepare_output()
+            predictions[model] = pred_object.output
 
         return predictions
 
