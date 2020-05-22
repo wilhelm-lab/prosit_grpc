@@ -48,8 +48,8 @@ def test_bundled_prediction():
                                     )
 
     # test spectrum prediction
-    my_int = output_dict[test_int_model]["normalized"]["intensity"]
-    my_masses = output_dict[test_int_model]["masked"]["fragmentmz"]
+    my_int = output_dict[test_int_model]["intensity"]
+    my_masses = output_dict[test_int_model]["fragmentmz"]
     assert len(intensities) == len(my_int)
     assert len(masses) == len(my_masses)
     assert len(my_int) == len(my_masses)
@@ -61,7 +61,7 @@ def test_bundled_prediction():
         assert round(pearson_correlation_masses, 15) == 1
 
     # test irt prediction
-    my_irt = output_dict[test_irt_model]["normalized"]
+    my_irt = output_dict[test_irt_model]
     assert len(my_irt) == len(irt)
     for i in range(len(irt)):
         # converting them to float because:
@@ -81,11 +81,10 @@ def test_intensity_prediction():
                                        collision_energies=ce,
                                        models=[test_int_model])
 
-    assert len(dict_intensity[test_int_model]) == 4
-
+    assert len(dict_intensity[test_int_model]) == 3
     # test spectrum prediction
-    my_int = dict_intensity[test_int_model]["normalized"]["intensity"]
-    my_masses = dict_intensity[test_int_model]["masked"]["fragmentmz"]
+    my_int = dict_intensity[test_int_model]["intensity"]
+    my_masses = dict_intensity[test_int_model]["fragmentmz"]
     assert len(intensities) == len(my_int)
     assert len(masses) == len(my_masses)
     assert len(my_int) == len(my_masses)
@@ -110,7 +109,7 @@ def test_irt_prediction():
     assert len(dict_irt) == 1
 
     # test irt prediction
-    my_irt = dict_irt[test_irt_model]["normalized"]
+    my_irt = dict_irt[test_irt_model]
     assert len(my_irt) == len(irt)
     for i in range(len(irt)):
         # converting them to float because:
@@ -147,14 +146,14 @@ def test_batching():
                                     collision_energies=[x for x in ce for _ in range(l)],
                                     models=[test_int_model, test_irt_model, test_prot_model, test_charge_model])
 
-    assert len(output_dict[test_int_model]["raw"]["intensity"]) == l*len(sequences)
-    assert len(output_dict[test_irt_model]["raw"]) == l*len(sequences)
+    assert len(output_dict[test_int_model]["intensity"]) == l*len(sequences)
+    assert len(output_dict[test_irt_model]) == l*len(sequences)
     assert len(output_dict[test_prot_model]) == l*len(sequences)
     assert len(output_dict[test_charge_model]) == l*len(sequences)
 
     # ensure the predictions are not shuffeled
     truth_irt = [x for x in irt for _ in range(l)]
-    pred_irt = output_dict[test_irt_model]["normalized"]
+    pred_irt = output_dict[test_irt_model]
     assert len(truth_irt) == len(pred_irt)
     for x, y in zip(truth_irt, pred_irt):
         # converting them to float because:
@@ -193,7 +192,7 @@ def test_predict_with_matrix_expansion():
                                       {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}]
                                   )
 
-    assert len(pred_dict[test_int_model]) == 4
+    assert len(pred_dict[test_int_model]) == 3
 
 
 def test_predict_with_repeated_matrix_expansion():
@@ -212,9 +211,9 @@ def test_predict_with_repeated_matrix_expansion():
     pred_dict = predictor.predict(sequences=["ACDEFGH"],
                                   charges=[2],
                                   collision_energies=[20],
-                                  models=[test_irt_model],
+                                  models=[test_irt_model, test_prot_model, test_charge_model],
                                   matrix_expansion_param=mexp
                                   )
 
     for model_dict in pred_dict.values():
-        assert len(model_dict["raw"]) == 16
+        assert len(model_dict) == 16

@@ -158,9 +158,9 @@ class PROSITpredictor:
             "sequence_integer": self.input.sequences.array,
             "precursor_charge_onehot": self.input.charges.array,
             "collision_energy_aligned_normed": np.array([np.array(el).astype(np.float32) for el in self.input.collision_energies.array]).astype(np.float32),
-            'intensities_pred': out_dict[intensity_model]["normalized"]["intensity"],
-            'masses_pred': out_dict[intensity_model]["masked"]["fragmentmz"],
-            'iRT': np.array([np.array(el).astype(np.float32) for el in out_dict[irt_model]["normalized"]]).astype(np.float32)}
+            'intensities_pred': out_dict[intensity_model]["intensity"],
+            'masses_pred': out_dict[intensity_model]["fragmentmz"],
+            'iRT': np.array([np.array(el).astype(np.float32) for el in out_dict[irt_model]]).astype(np.float32)}
 
         hdf5_dict["collision_energy_aligned_normed"].shape = (
             len(hdf5_dict["collision_energy_aligned_normed"]), 1)

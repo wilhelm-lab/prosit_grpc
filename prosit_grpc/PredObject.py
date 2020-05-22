@@ -215,32 +215,34 @@ class Intensity(Base):
             else:
                 self.data["masked"]["annotation"][key][invalid_indices] = -1
 
-    def create_filter(self):
-        self.filter = self.data["normalized"]["intensity"] != -1
-
-    def apply_filter(self):
-
-        self.data["filtered"] = {
-            "intensity": [],
-            "fragmentmz": [],
-            "annotation": {
-                "charge": [],
-                "number": [],
-                "type": []
-            }
-        }
-
-        for i in range(len(self.filter)):
-            self.data["filtered"]["intensity"].append(self.data["normalized"]["intensity"][i][self.filter[i]])
-            self.data["filtered"]["fragmentmz"].append(self.data["masked"]["fragmentmz"][i][self.filter[i]])
-
-            self.data["filtered"]["annotation"]["number"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
-            self.data["filtered"]["annotation"]["charge"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
-            self.data["filtered"]["annotation"]["type"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
+    # def create_filter(self):
+    #     self.filter = self.data["normalized"]["intensity"] != -1
+    #
+    # def apply_filter(self):
+    #
+    #     self.data["filtered"] = {
+    #         "intensity": [],
+    #         "fragmentmz": [],
+    #         "annotation": {
+    #             "charge": [],
+    #             "number": [],
+    #             "type": []
+    #         }
+    #     }
+    #
+    #     for i in range(len(self.filter)):
+    #         self.data["filtered"]["intensity"].append(self.data["normalized"]["intensity"][i][self.filter[i]])
+    #         self.data["filtered"]["fragmentmz"].append(self.data["masked"]["fragmentmz"][i][self.filter[i]])
+    #
+    #         self.data["filtered"]["annotation"]["number"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
+    #         self.data["filtered"]["annotation"]["charge"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
+    #         self.data["filtered"]["annotation"]["type"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
 
     def normalize_intensity(self):
         self.data["normalized"] = {
-            "intensity": U.normalize_intensities(self.data["masked"]["intensity"])
+            "intensity": U.normalize_intensities(self.data["masked"]["intensity"]),
+            "fragmentmz": self.data["masked"]["fragmentmz"],
+            "annotation": self.data["masked"]["annotation"],
         }
 
         self.data["normalized"]["intensity"][self.data["normalized"]["intensity"] < 0] = 0
@@ -251,7 +253,6 @@ class Intensity(Base):
         n_seq = len(self.predictions)
 
         # prepare raw state of spectrum
-
         self.data = {
             "raw": {
                 "intensity": self.predictions,
@@ -274,11 +275,11 @@ class Intensity(Base):
         # normalize intensities
         self.normalize_intensity()
 
-        # create and apply filter for masses with -1
-        self.create_filter()
-        self.apply_filter()
+        # # create and apply filter for masses with -1
+        # self.create_filter()
+        # self.apply_filter()
 
-        self.output = self.data
+        self.output = self.data["normalized"]
 
 class Irt(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
@@ -305,10 +306,7 @@ class Irt(Base):
         return in_dic
 
     def prepare_output(self):
-        self.output = {
-            "raw": self.predictions,
-            "normalized": (self.predictions*43.39373 + 56.35363441)
-        }
+        self.output = (self.predictions*43.39373 + 56.35363441)
 
 class Proteotypicity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
