@@ -1,12 +1,8 @@
 from . import __constants__ as C
 import numpy as np
-
 import itertools
-import tensorflow as tf
 import scipy
 from sklearn.preprocessing import normalize
-from tensorflow_serving.apis import predict_pb2
-
 
 def compute_ion_masses(seq_int, charge_onehot):
     """ 
@@ -96,13 +92,6 @@ def parse_modstrings(sequences, alphabet, translate=False):
     regex_pattern = re.compile("|".join(pattern))
     return map(split_modstring, sequences, repeat(regex_pattern))
 
-def flatten_list(l_2d):
-    """ 
-    Concatenate lists into one
-    """
-    return list(itertools.chain(*l_2d))
-
-
 def indices_to_one_hot(data, nb_classes):
     """
     Convert an iterable of indices to one-hot encoded labels.
@@ -110,129 +99,6 @@ def indices_to_one_hot(data, nb_classes):
     """
     targets = np.array([data-1])  # -1 for 0 indexing
     return np.int_((np.eye(nb_classes)[targets])).tolist()[0]
-
-
-def fill_zeros(x, fixed_length):
-    """
-    Fillzeros in an array to match desired fixed length
-    """
-    res = np.zeros(fixed_length)
-    _l = min(fixed_length, len(x))
-    res[:_l] = x[:_l]
-    return list(np.int_(res))
-
-
-# Creating requests functions
-def create_request_scaffold(model_name, signature_name="serving_default"):
-    """
-    :param model_name: Model name (taken from PROSIT)
-    :param signature_name: Signature Name for the estimator (serving_default is by default set with custom tf estimator)
-    :return created request
-    """
-    # Create Request
-    request = predict_pb2.PredictRequest()
-    # Model and Signature Name
-    request.model_spec.name = model_name
-    request.model_spec.signature_name = signature_name
-    # print("[INFO] Set model and signature name")
-    return request
-
-
-def create_request_general(seq_array, ce_array, charges_array, batchsize, model_name):
-    """
-    seq_array
-    ce_array
-    charges_array
-    batchsize       size of the created request
-    model_name      specify the model that should be used to predict
-    return:         request ready to be sent ther server
-    """
-    model_type = model_name.split("_")[2]
-    if model_type == "intensity":
-        return create_request_intensity(seq_array, ce_array, charges_array, batchsize, model_name)
-    elif model_type == "irt":
-        return create_request_irt(seq_array, batchsize, model_name)
-    elif model_type == "proteotypicity":
-        return create_request_proteotypicity(seq_array, batchsize, model_name)
-    elif model_type == "charge":
-        return create_request_charge(seq_array, batchsize, model_name)
-
-
-def create_request_intensity(seq_array, ce_array, charges_array, batchsize, model_name):
-    """
-    seq_array
-    ce_array
-    charges_array
-    batchsize       size of the created request
-    model_name      specify the model that should be used to predict
-    return:         request ready to be sent ther server
-    """
-    request = create_request_scaffold(model_name=model_name)
-    request.inputs['peptides_in:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.int32))
-    request.inputs['collision_energy_in:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(ce_array, shape=[batchsize, 1], dtype=np.float32))
-    request.inputs['precursor_charge_in:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(charges_array, shape=[batchsize, C.NUM_CHARGES_ONEHOT], dtype=np.float32))
-    return request
-
-
-def create_request_proteotypicity(seq_array, batchsize, model_name):
-    """
-    seq array
-    batchsize
-    model_name  specify the model used for prediction
-    """
-    request = create_request_scaffold(model_name=model_name)
-    request.inputs['peptides_in_1:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.float32))
-    return request
-
-def create_request_charge(seq_array, batchsize, model_name):
-    """
-    seq array
-    batchsize
-    model_name  specify the model used for prediction
-    """
-    request = create_request_scaffold(model_name=model_name)
-    request.inputs['peptides_in_1:0'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.float32))
-    return request
-
-def create_request_irt(seq_array, batchsize, model_name):
-    """
-    seq array
-    batchsize
-    model_name  specify the model used for prediction
-    """
-    request = create_request_scaffold(model_name=model_name)
-    request.inputs['sequence_integer'].CopyFrom(
-        tf.contrib.util.make_tensor_proto(seq_array, shape=[batchsize, C.SEQ_LEN], dtype=np.int32))
-    return request
-
-
-# unpack response function
-def unpack_response(predict_response, model_type):
-    if model_type == "intensity":
-        outputs_tensor_proto = predict_response.outputs["out/Reshape:0"]
-        shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
-
-    elif model_type == "proteotypicity":
-        outputs_tensor_proto = predict_response.outputs["pep_dense4/BiasAdd:0"]
-        shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
-
-    elif model_type == "irt":
-        outputs_tensor_proto = predict_response.outputs["prediction/BiasAdd:0"]
-        shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
-
-    elif model_type == "charge":
-        outputs_tensor_proto = predict_response.outputs["softmax/Softmax:0"]
-        shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
-
 
 def generate_newMatrix_v2(
     npMatrix, iFromReplaceValue, iToReplaceValue, numberAtTheSameTime=2
