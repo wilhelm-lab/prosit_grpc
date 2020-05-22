@@ -199,55 +199,18 @@ class Intensity(Base):
 
         invalid_indices = self.mask == -1
 
-        self.data["masked"] = {
-            "intensity": np.copy(self.data["raw"]["intensity"]),
-            "fragmentmz": np.copy(self.data["raw"]["fragmentmz"]),
-            "annotation": {}
-        }
+        self.data["intensity"][invalid_indices] = -1
+        self.data["fragmentmz"][invalid_indices] = -1
 
-        self.data["masked"]["intensity"][invalid_indices] = -1
-
-        self.data["masked"]["fragmentmz"][invalid_indices] = -1
-
-        for key, value in self.data["raw"]["annotation"].items():
-            self.data["masked"]["annotation"][key] = np.copy(self.data["raw"]["annotation"][key])
-            if key == "type":
-                self.data["masked"]["annotation"][key][invalid_indices] = None
-            else:
-                self.data["masked"]["annotation"][key][invalid_indices] = -1
-
-    # def create_filter(self):
-    #     self.filter = self.data["normalized"]["intensity"] != -1
-    #
-    # def apply_filter(self):
-    #
-    #     self.data["filtered"] = {
-    #         "intensity": [],
-    #         "fragmentmz": [],
-    #         "annotation": {
-    #             "charge": [],
-    #             "number": [],
-    #             "type": []
-    #         }
-    #     }
-    #
-    #     for i in range(len(self.filter)):
-    #         self.data["filtered"]["intensity"].append(self.data["normalized"]["intensity"][i][self.filter[i]])
-    #         self.data["filtered"]["fragmentmz"].append(self.data["masked"]["fragmentmz"][i][self.filter[i]])
-    #
-    #         self.data["filtered"]["annotation"]["number"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
-    #         self.data["filtered"]["annotation"]["charge"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
-    #         self.data["filtered"]["annotation"]["type"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
+        self.data["annotation"]["charge"][invalid_indices] = -1
+        self.data["annotation"]["number"][invalid_indices] = -1
+        self.data["annotation"]["type"][invalid_indices] = None
 
     def normalize_intensity(self):
-        self.data["normalized"] = {
-            "intensity": U.normalize_intensities(self.data["masked"]["intensity"]),
-            "fragmentmz": self.data["masked"]["fragmentmz"],
-            "annotation": self.data["masked"]["annotation"],
-        }
+        self.data["intensity"] = U.normalize_intensities(self.data["intensity"])
 
-        self.data["normalized"]["intensity"][self.data["normalized"]["intensity"] < 0] = 0
-        self.data["normalized"]["intensity"][self.data["masked"]["intensity"] == -1] = -1
+        self.data["intensity"][self.data["intensity"] < 0] = 0
+        self.data["intensity"][self.mask == -1] = -1
 
     def prepare_output(self):
 
@@ -255,16 +218,14 @@ class Intensity(Base):
 
         # prepare raw state of spectrum
         self.data = {
-            "raw": {
-                "intensity": self.predictions,
-                "fragmentmz": np.array([U.compute_ion_masses(self.input.sequences.array[i],
-                                                             self.input.charges.array[i])
-                                                             for i in range(n_seq)]),
-                "annotation": {
-                    "charge": np.array([C.ANNOTATION[1] for _ in range(n_seq)]),
-                    "number": np.array([C.ANNOTATION[2] for _ in range(n_seq)]),
-                    "type": np.array([C.ANNOTATION[0] for _ in range(n_seq)])
-                }
+            "intensity": self.predictions,
+            "fragmentmz": np.array([U.compute_ion_masses(self.input.sequences.array[i],
+                                                         self.input.charges.array[i])
+                                                         for i in range(n_seq)]),
+            "annotation": {
+                "charge": np.array([C.ANNOTATION[1] for _ in range(n_seq)]),
+                "number": np.array([C.ANNOTATION[2] for _ in range(n_seq)]),
+                "type": np.array([C.ANNOTATION[0] for _ in range(n_seq)])
             }
         }
 
@@ -280,7 +241,7 @@ class Intensity(Base):
         # self.create_filter()
         # self.apply_filter()
 
-        self.output = self.data["normalized"]
+        self.output = self.data
 
 class Irt(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
