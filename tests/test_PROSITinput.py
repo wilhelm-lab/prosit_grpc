@@ -113,4 +113,6 @@ def test_expand_matrices():
                       0.4, 0.4, 0.4, 0.4, 0.4, 0.4,
                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
                      dtype=np.float32)
+    truth.shape = (25, 1)
+
     assert np.array_equal(collision_energies_arry, truth)

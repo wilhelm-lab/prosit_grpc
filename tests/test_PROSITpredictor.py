@@ -161,6 +161,9 @@ def test_batching():
         assert round(float(x), 3) == round(float(y), 3)
 
 def test_predict_to_hdf5():
+
+    pred_hdf5 = "tests/pred.hdf5"
+
     predictor = prpc.PROSITpredictor(server=test_server,
                                      path_to_ca_certificate=ca_cert,
                                      path_to_certificate=cert,
@@ -171,9 +174,13 @@ def test_predict_to_hdf5():
                               collision_energies=ce,
                               intensity_model=test_int_model,
                               irt_model=test_irt_model,
-                              path_hdf5="tests/output.hdf5")
+                              path_hdf5=pred_hdf5)
 
-    os.remove("tests/output.hdf5")
+    with h5py.File("tests/data.hdf5", 'r') as truth:
+        with h5py.File(pred_hdf5, 'r') as pred:
+            for i in ["intensities_pred", "iRT", "masses_pred", "collision_energy_aligned_normed", "precursor_charge_onehot", "sequence_integer"]:
+                assert np.array(truth[i]).shape == np.array(pred[i]).shape
+    os.remove(pred_hdf5)
 
 
 def test_predict_with_matrix_expansion():

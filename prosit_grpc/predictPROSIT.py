@@ -152,18 +152,17 @@ class PROSITpredictor:
                                 disable_progress_bar=disable_progress_bar,
                                 models=[irt_model, intensity_model])
 
-        # weird formating of ce and irt is due to compatibility with converter tool
         hdf5_dict = {
             "sequence_integer": self.input.sequences.array,
             "precursor_charge_onehot": self.input.charges.array,
-            "collision_energy_aligned_normed": np.array([np.array(el).astype(np.float32) for el in self.input.collision_energies.array]).astype(np.float32),
+            "collision_energy_aligned_normed": self.input.collision_energies.array,
             'intensities_pred': out_dict[intensity_model]["intensity"],
             'masses_pred': out_dict[intensity_model]["fragmentmz"],
-            'iRT': np.array([np.array(el).astype(np.float32) for el in out_dict[irt_model]]).astype(np.float32)}
+            'iRT': out_dict[irt_model]}
 
         hdf5_dict["collision_energy_aligned_normed"].shape = (
             len(hdf5_dict["collision_energy_aligned_normed"]), 1)
-        hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]), 1)
+        # hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]),)
 
         with h5py.File(path_hdf5, "w") as data_file:
             for key, data in hdf5_dict.items():

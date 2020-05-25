@@ -4,7 +4,7 @@ import prosit_grpc.inputPROSIT as prpc
 ce_numeric = [10, 20, 30, 40, 50]
 ce_procentual = [0.10, 0.20, 0.30, 0.40, 0.50]
 ce_array = np.array(ce_procentual, dtype=np.float32)
-
+ce_array.shape = (5,1)
 
 def test_PROSITcollisionenergies_determine_type():
     # numeric

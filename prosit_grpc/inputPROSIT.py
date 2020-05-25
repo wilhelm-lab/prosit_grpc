@@ -37,7 +37,7 @@ class PROSITinput:
         collision_energies_array = np.repeat(self.collision_energies.array, num_copies_created, 0)
 
         self.charges.array = np.vstack([self.charges.array, charges_array])
-        self.collision_energies.array = np.hstack([self.collision_energies.array, collision_energies_array])
+        self.collision_energies.array = np.vstack([self.collision_energies.array, collision_energies_array])
 
 
 class PROSITcharges:
@@ -178,6 +178,7 @@ class PROSITcollisionenergies:
 
     def procentual_to_array(self):
         self.array = np.array(self.procentual, dtype=np.float32)
+        self.array = self.array.reshape(len(self.array), 1)
 
     def prepare_collisionenergies(self):
         if self.array is None:
