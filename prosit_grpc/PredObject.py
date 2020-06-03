@@ -109,11 +109,11 @@ class Base:
     def prepare_input(self):
         pass
 
-    def predict(self):
+    def predict(self, disable_progress_bar):
         input_dict = self.prepare_input()
         requests = self.create_requests(model_name=self.model_name, inputs=input_dict)
         predictions = self.send_requests(requests=requests,
-                                         disable_progress_bar=False)
+                                         disable_progress_bar=disable_progress_bar)
         self.predictions = predictions
 
     def prepare_output(self):
