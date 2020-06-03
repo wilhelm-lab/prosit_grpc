@@ -130,7 +130,7 @@ class PROSITpredictor:
             print(f"Predicting for model: {model}")
             pred_object = self.pred_object_factory(model=model)
             pred_object.prepare_input()
-            pred_object.predict()
+            pred_object.predict(disable_progress_bar)
             pred_object.prepare_output()
             predictions[model] = pred_object.output
 
