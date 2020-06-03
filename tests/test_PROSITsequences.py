@@ -69,5 +69,13 @@ def test_PROSITsequences_prepare_sequences():
     inst.prepare_sequences(flag_disable_progress_bar=False)
 
     assert inst.character == sequences_character
+    assert inst.numeric is None
+    assert np.array_equal(inst.array, sequences_array)
+
+    inst = prpc.PROSITsequences(sequences_numeric)
+    inst.prepare_sequences(flag_disable_progress_bar=False)
+
+    assert inst.character is None
     assert inst.numeric == sequences_numeric
     assert np.array_equal(inst.array, sequences_array)
+

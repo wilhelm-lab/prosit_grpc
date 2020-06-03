@@ -124,9 +124,9 @@ MAX_CHARGE = 6
 BATCH_SIZE = 6000
 VEC_LENGTH = 174
 
-IONS = ['y', 'b']
-CHARGES = [1, 2, 3]
-POSITIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+IONS = ['y', 'b']  # limited to single character unicode string when array is created
+CHARGES = [1, 2, 3]  # limited to uint8 (0-255) when array is created
+POSITIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, # limited to uint8 (0-255) when array is created
              15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
 
 ANNOTATION_FRAGMENT_TYPE = []

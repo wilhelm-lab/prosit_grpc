@@ -21,7 +21,7 @@ def compute_ion_masses(seq_int, charge_onehot):
         return
 
     l = list(seq_int).index(0) if 0 in seq_int else C.SEQ_LEN
-    masses = np.ones((C.SEQ_LEN-1)*2*3)*-1
+    masses = np.ones((C.SEQ_LEN-1)*2*3, dtype=np.float32)*-1
     mass_b = 0
     mass_y = 0
     j = 0  # iterate over masses

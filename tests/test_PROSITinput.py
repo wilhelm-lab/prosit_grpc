@@ -43,7 +43,7 @@ def test_PROSITinput_prepare_input():
 
 
 def test_expand_matrices():
-    inst = prpc.PROSITinput(sequences=[[1, 1, 1, 1], [1, 1, 2, 1], [1, 2, 2, 1], [2, 2, 2, 1], [2, 2, 2, 2]],
+    inst = prpc.PROSITinput(sequences=np.array([[1, 1, 1, 1], [1, 1, 2, 1], [1, 2, 2, 1], [2, 2, 2, 1], [2, 2, 2, 2]]),
                             charges=[1, 2, 3, 4, 5],
                             collision_energies=[10, 20, 30, 40, 50])
 
@@ -113,4 +113,6 @@ def test_expand_matrices():
                       0.4, 0.4, 0.4, 0.4, 0.4, 0.4,
                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
                      dtype=np.float32)
+    truth.shape = (25, 1)
+
     assert np.array_equal(collision_energies_arry, truth)

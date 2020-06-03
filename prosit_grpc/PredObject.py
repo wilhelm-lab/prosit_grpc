@@ -4,6 +4,7 @@ from . import __constants__ as C  # For constants
 from . import __utils__ as U
 from tensorflow_serving.apis import predict_pb2
 import tensorflow as tf
+from math import ceil
 
 # surpresses tensorflow deprecation warning that would otherwise cause buggy behaviour of the tqdm progess bar
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -94,7 +95,7 @@ class Base:
         timeout = 10  # in seconds
 
         predictions = []
-        n_batches = max(1, len(self.input.sequences.array)/C.BATCH_SIZE)
+        n_batches = ceil(len(self.input.sequences.array)/C.BATCH_SIZE)
         for request in tqdm(requests,
                             disable=disable_progress_bar,
                             total=n_batches):
@@ -145,7 +146,7 @@ class Intensity(Base):
         """
         outputs_tensor_proto = response.outputs["out/Reshape:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, dtype=np.float32).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {
@@ -198,71 +199,35 @@ class Intensity(Base):
 
         invalid_indices = self.mask == -1
 
-        self.data["masked"] = {
-            "intensity": np.copy(self.data["raw"]["intensity"]),
-            "fragmentmz": np.copy(self.data["raw"]["fragmentmz"]),
-            "annotation": {}
-        }
+        self.data["intensity"][invalid_indices] = -1
+        self.data["fragmentmz"][invalid_indices] = -1
 
-        self.data["masked"]["intensity"][invalid_indices] = -1
-
-        self.data["masked"]["fragmentmz"][invalid_indices] = -1
-
-        for key, value in self.data["raw"]["annotation"].items():
-            self.data["masked"]["annotation"][key] = np.copy(self.data["raw"]["annotation"][key])
-            if key == "type":
-                self.data["masked"]["annotation"][key][invalid_indices] = None
-            else:
-                self.data["masked"]["annotation"][key][invalid_indices] = -1
-
-    def create_filter(self):
-        self.filter = self.data["normalized"]["intensity"] != -1
-
-    def apply_filter(self):
-
-        self.data["filtered"] = {
-            "intensity": [],
-            "fragmentmz": [],
-            "annotation": {
-                "charge": [],
-                "number": [],
-                "type": []
-            }
-        }
-
-        for i in range(len(self.filter)):
-            self.data["filtered"]["intensity"].append(self.data["normalized"]["intensity"][i][self.filter[i]])
-            self.data["filtered"]["fragmentmz"].append(self.data["masked"]["fragmentmz"][i][self.filter[i]])
-
-            self.data["filtered"]["annotation"]["number"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
-            self.data["filtered"]["annotation"]["charge"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
-            self.data["filtered"]["annotation"]["type"].append(self.data["masked"]["annotation"]["number"][i][self.filter[i]])
+        self.data["annotation"]["charge"][invalid_indices] = -1
+        self.data["annotation"]["number"][invalid_indices] = -1
+        self.data["annotation"]["type"][invalid_indices] = None
 
     def normalize_intensity(self):
-        self.data["normalized"] = {
-            "intensity": U.normalize_intensities(self.data["masked"]["intensity"])
-        }
+        self.data["intensity"] = U.normalize_intensities(self.data["intensity"])
 
-        self.data["normalized"]["intensity"][self.data["normalized"]["intensity"] < 0] = 0
-        self.data["normalized"]["intensity"][self.data["masked"]["intensity"] == -1] = -1
+        self.data["intensity"][self.data["intensity"] < 0] = 0
+        self.data["intensity"][self.mask == -1] = -1
 
     def prepare_output(self):
 
         n_seq = len(self.predictions)
 
         # prepare raw state of spectrum
-
         self.data = {
-            "raw": {
-                "intensity": self.predictions,
-                "fragmentmz": np.array([U.compute_ion_masses(self.input.sequences.array[i],
-                                                             self.input.charges.array[i])
-                                                             for i in range(n_seq)]),
-                "annotation": {
-                    "charge": np.array([C.ANNOTATION[1] for _ in range(n_seq)]),
-                    "number": np.array([C.ANNOTATION[2] for _ in range(n_seq)]),
-                    "type": np.array([C.ANNOTATION[0] for _ in range(n_seq)])
-                }
+            "intensity": self.predictions,
+            "fragmentmz": np.array([U.compute_ion_masses(self.input.sequences.array[i],
+                                                         self.input.charges.array[i])
+                                                         for i in range(n_seq)],
+                                   dtype=np.float32),
+            "annotation": {
+                "charge": np.array([C.ANNOTATION[1] for _ in range(n_seq)], dtype=np.uint8),
+                "number": np.array([C.ANNOTATION[2] for _ in range(n_seq)], dtype=np.uint8),
+                # limited to single character unicode string
+                "type": np.array([C.ANNOTATION[0] for _ in range(n_seq)], dtype=np.dtype('U1'))
             }
         }
 
@@ -274,9 +239,9 @@ class Intensity(Base):
         # normalize intensities
         self.normalize_intensity()
 
-        # create and apply filter for masses with -1
-        self.create_filter()
-        self.apply_filter()
+        # # create and apply filter for masses with -1
+        # self.create_filter()
+        # self.apply_filter()
 
         self.output = self.data
 
@@ -296,7 +261,7 @@ class Irt(Base):
         """
         outputs_tensor_proto = response.outputs["prediction/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, np.float32).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {
@@ -305,10 +270,7 @@ class Irt(Base):
         return in_dic
 
     def prepare_output(self):
-        self.output = {
-            "raw": self.predictions,
-            "normalized": (self.predictions*43.39373 + 56.35363441)
-        }
+        self.output = (self.predictions*43.39373 + 56.35363441)
 
 class Proteotypicity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
@@ -326,7 +288,7 @@ class Proteotypicity(Base):
         """
         outputs_tensor_proto = response.outputs["pep_dense4/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, dtype=np.float16).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {
@@ -353,7 +315,7 @@ class Charge(Base):
         """
         outputs_tensor_proto = response.outputs["softmax/Softmax:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, dtype=np.float16).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {

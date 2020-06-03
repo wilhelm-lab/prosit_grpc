@@ -37,7 +37,7 @@ class PROSITinput:
         collision_energies_array = np.repeat(self.collision_energies.array, num_copies_created, 0)
 
         self.charges.array = np.vstack([self.charges.array, charges_array])
-        self.collision_energies.array = np.hstack([self.collision_energies.array, collision_energies_array])
+        self.collision_energies.array = np.vstack([self.collision_energies.array, collision_energies_array])
 
 
 class PROSITcharges:
@@ -108,21 +108,21 @@ class PROSITsequences:
         else:
             return "numeric"
 
-    def character_to_numeric(self, flag_disable_progress_bar):
-        self.numeric = []
+    def character_to_array(self, flag_disable_progress_bar):
+        self.array = np.zeros((len(self.character),C.SEQ_LEN), dtype=np.uint8)
         generator_sequence_numeric = U.parse_modstrings(self.character, alphabet=C.ALPHABET, translate=True)
-        for sequence_numeric in tqdm(generator_sequence_numeric,
+        enum_gen_seq_num = enumerate(generator_sequence_numeric)
+
+        for i, sequence_numeric in tqdm(enum_gen_seq_num,
                                      disable=flag_disable_progress_bar,
                                      total=len(self.character)):
             if len(sequence_numeric) > C.SEQ_LEN:
                 raise Exception(f"The Sequence {sequence_numeric}, has {len(sequence_numeric)} Amino Acids."
                                 f"The maximum number of amino acids allowed is {C.SEQ_LEN}")
-            while len(sequence_numeric) < C.SEQ_LEN:
-                sequence_numeric.append(0)
-            self.numeric.append(sequence_numeric)
+            self.array[i, 0:len(sequence_numeric)] = sequence_numeric
 
     def numeric_to_array(self):
-        self.array = np.array(self.numeric, dtype=np.int32)
+        self.array = np.array(self.numeric, dtype=np.uint8)
 
     def calculate_lengths(self):
         """Calculates the length of all sequences saved in an instance of PROSITsequences
@@ -140,9 +140,9 @@ class PROSITsequences:
             if self.numeric is None:
                 if self.character is None:
                     raise ValueError("No Sequences known")
-                self.character_to_numeric(flag_disable_progress_bar)
-            self.numeric_to_array()
-
+                self.character_to_array(flag_disable_progress_bar)
+            else:
+                self.numeric_to_array()
         self.calculate_lengths()
 
 
@@ -178,6 +178,7 @@ class PROSITcollisionenergies:
 
     def procentual_to_array(self):
         self.array = np.array(self.procentual, dtype=np.float32)
+        self.array = self.array.reshape(len(self.array), 1)
 
     def prepare_collisionenergies(self):
         if self.array is None:

@@ -125,15 +125,14 @@ class PROSITpredictor:
             self.input.expand_matrices(param=paramset)
         self.input.sequences.calculate_lengths()
 
-        pred_objects = {}
         predictions = {}
         for model in models:
             print(f"Predicting for model: {model}")
-            pred_objects[model] = self.pred_object_factory(model=model)
-            pred_objects[model].prepare_input()
-            pred_objects[model].predict()
-            pred_objects[model].prepare_output()
-            predictions[model] = pred_objects[model].output
+            pred_object = self.pred_object_factory(model=model)
+            pred_object.prepare_input()
+            pred_object.predict()
+            pred_object.prepare_output()
+            predictions[model] = pred_object.output
 
         return predictions
 
@@ -153,18 +152,17 @@ class PROSITpredictor:
                                 disable_progress_bar=disable_progress_bar,
                                 models=[irt_model, intensity_model])
 
-        # weird formating of ce and irt is due to compatibility with converter tool
         hdf5_dict = {
             "sequence_integer": self.input.sequences.array,
             "precursor_charge_onehot": self.input.charges.array,
-            "collision_energy_aligned_normed": np.array([np.array(el).astype(np.float32) for el in self.input.collision_energies.array]).astype(np.float32),
-            'intensities_pred': out_dict[intensity_model]["normalized"]["intensity"],
-            'masses_pred': out_dict[intensity_model]["masked"]["fragmentmz"],
-            'iRT': np.array([np.array(el).astype(np.float32) for el in out_dict[irt_model]["normalized"]]).astype(np.float32)}
+            "collision_energy_aligned_normed": self.input.collision_energies.array,
+            'intensities_pred': out_dict[intensity_model]["intensity"],
+            'masses_pred': out_dict[intensity_model]["fragmentmz"],
+            'iRT': out_dict[irt_model]}
 
         hdf5_dict["collision_energy_aligned_normed"].shape = (
             len(hdf5_dict["collision_energy_aligned_normed"]), 1)
-        hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]), 1)
+        # hdf5_dict["iRT"].shape = (len(hdf5_dict["iRT"]),)
 
         with h5py.File(path_hdf5, "w") as data_file:
             for key, data in hdf5_dict.items():
