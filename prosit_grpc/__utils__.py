@@ -3,6 +3,7 @@ import numpy as np
 import itertools
 import scipy
 from sklearn.preprocessing import normalize
+import difflib
 
 def compute_ion_masses(seq_int, charge_onehot):
     """ 
@@ -85,7 +86,9 @@ def parse_modstrings(sequences, alphabet, translate=False):
             elif not translate:
                 return split_seq
         else:
-            raise ValueError(f"Unknown Element in string: {sequence}. Found Elements: {x}")
+            not_parsable_elements = "".join([li[2] for li in difflib.ndiff(sequence, "".join(split_seq)) if li[0] == '-'])
+            raise ValueError(f"The element(s) [{not_parsable_elements}] "
+                             f"in the sequence [{sequence}] could not be parsed")
 
     pattern = sorted(alphabet, key=len, reverse=True)
     pattern = [re.escape(i) for i in pattern]

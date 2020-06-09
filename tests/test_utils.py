@@ -1,5 +1,7 @@
 from prosit_grpc import __utils__ as U
+from prosit_grpc import __constants__ as C
 import numpy as np
+import pytest
 
 
 def test_generate_newMatrix_v2():
@@ -85,3 +87,11 @@ def test_generate_newMatrix_v2():
                                    [2, 21, 2, 21],
                                    [2, 2, 21, 21]])
     assert np.array_equal(m, [0, 1, 3, 6, 10])
+
+def test_parse_modstrings():
+    valid_seq = "A(Cam)CacCDEFGHIKLMNPQRSTVWYM(ox)M(O)OxMPhSS(ph)PhTT(ph)PhYY(ph)R(ci)K(gl)T(gl)S(gl)Q(gl)R(me)K(me)T(ga)S(ga)K(ac)"
+    invalid_seq = "testing"
+    assert "".join((list(U.parse_modstrings([valid_seq], alphabet=C.ALPHABET)))[0]) == valid_seq
+
+    with pytest.raises(ValueError):
+        list(U.parse_modstrings([invalid_seq], alphabet=C.ALPHABET))
