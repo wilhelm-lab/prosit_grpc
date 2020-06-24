@@ -202,8 +202,8 @@ class Intensity(Base):
         self.data["intensity"][invalid_indices] = -1
         self.data["fragmentmz"][invalid_indices] = -1
 
-        self.data["annotation"]["charge"][invalid_indices] = -1
-        self.data["annotation"]["number"][invalid_indices] = -1
+        self.data["annotation"]["charge"][invalid_indices] = 0
+        self.data["annotation"]["number"][invalid_indices] = 0
         self.data["annotation"]["type"][invalid_indices] = None
 
     def normalize_intensity(self):
