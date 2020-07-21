@@ -42,11 +42,12 @@ check_code:
   - echo "$ca_cert" > "./cert/Proteomicsdb-Prosit.crt"
   - echo "$cert" > "./cert/ci-pipeline.crt"
   - echo "$key" > "./cert/ci-pipeline.key"
-  - python -m pytest tests/ --cov=prosit_grpc --junitxml=junit.xml
+  - python -m pytest tests/ --cov=prosit_grpc --junitxml=junit.xml --cov-report=xml
 
   artifacts:
     reports:
       junit: junit.xml
+      cobertura: coverage.xml
 
 
 check_simple_installation:
