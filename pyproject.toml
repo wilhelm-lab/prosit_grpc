@@ -13,6 +13,7 @@ tensorflow-serving-api = "^1.15.0"
 grpcio = "^1.26.0"
 tqdm = "^4.43.0"
 autopep8 = "^1.5"
+pyteomics = "^4.3.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.3.4"

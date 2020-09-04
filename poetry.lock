@@ -279,6 +279,22 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 version = "2.4.6"
 
 [[package]]
+category = "main"
+description = "A framework for proteomics data analysis."
+name = "pyteomics"
+optional = false
+python-versions = "*"
+version = "4.3.2"
+
+[package.extras]
+df = ["pandas"]
+graphics = ["matplotlib"]
+numpress = ["pynumpress"]
+tda = ["numpy"]
+unimod = ["lxml", "sqlalchemy"]
+xml = ["lxml", "numpy"]
+
+[[package]]
 category = "dev"
 description = "pytest: simple powerful testing with Python"
 name = "pytest"
@@ -499,7 +515,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "fea94e5a63588474f93beb43af60e30bd6834184a82ab14600afa4e13d0b7fb8"
+content-hash = "1b0131a1412a3cc1d57de78499c43ad086fc775426ebd3c3c94a8e5d76813c9c"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -732,6 +748,10 @@ pycodestyle = [
 pyparsing = [
     {file = "pyparsing-2.4.6-py2.py3-none-any.whl", hash = "sha256:c342dccb5250c08d45fd6f8b4a559613ca603b57498511740e65cd11a2e7dcec"},
     {file = "pyparsing-2.4.6.tar.gz", hash = "sha256:4c830582a84fb022400b85429791bc551f1f4871c33f23e44f353119e92f969f"},
+]
+pyteomics = [
+    {file = "pyteomics-4.3.2-py2.py3-none-any.whl", hash = "sha256:4947e1f7dbf8c6cdad9db9382e7eb5ef0288dbfbcfe5dfa2f629f3b8a5f394fb"},
+    {file = "pyteomics-4.3.2.tar.gz", hash = "sha256:b3a9590869ef990cc9f5d4f2bb3af877213c3da49ddbb0370e170b45535d9b40"},
 ]
 pytest = [
     {file = "pytest-5.3.5-py3-none-any.whl", hash = "sha256:ff615c761e25eb25df19edddc0b970302d2a9091fbce0e7213298d85fb61fef6"},
