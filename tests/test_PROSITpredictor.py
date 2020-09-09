@@ -55,7 +55,7 @@ def test_bundled_prediction():
     assert len(my_int) == len(my_masses)
     for i in range(len(my_int)):
         pearson_correlation_int = np.corrcoef(intensities[i], my_int[i])[0, 1]
-        assert round(pearson_correlation_int, 11) == 1
+        assert round(pearson_correlation_int, 10) == 1
 
         pearson_correlation_masses = np.corrcoef(masses[1], my_masses[1])[0, 1]
         assert round(pearson_correlation_masses, 10) == 1
@@ -90,7 +90,7 @@ def test_intensity_prediction():
     assert len(my_int) == len(my_masses)
     for i in range(len(my_int)):
         pearson_correlation_int = np.corrcoef(intensities[i], my_int[i])[0, 1]
-        assert round(pearson_correlation_int, 11) == 1
+        assert round(pearson_correlation_int, 10) == 1
 
         pearson_correlation_masses = np.corrcoef(masses[1], my_masses[1])[0, 1]
         assert round(pearson_correlation_masses, 10) == 1
