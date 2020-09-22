@@ -97,6 +97,3 @@ def test_PROSITsequence_filtermode():
 
     assert np.array_equal(inst.array, arr)
     assert np.array_equal(inst.lengths, arr_len)
-
-
-
