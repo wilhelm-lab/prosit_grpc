@@ -124,17 +124,17 @@ class Intensity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['peptides_in:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["seq_array"],
+            tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.int32))
 
         request.inputs['collision_energy_in:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["ce_array"],
+            tf.make_tensor_proto(inputs_batch["ce_array"],
                                               shape=[batchsize, 1],
                                               dtype=np.float32))
 
         request.inputs['precursor_charge_in:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["charges_array"],
+            tf.make_tensor_proto(inputs_batch["charges_array"],
                                               shape=[batchsize, C.NUM_CHARGES_ONEHOT],
                                               dtype=np.float32))
         return request
@@ -249,7 +249,7 @@ class Irt(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['sequence_integer'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["seq_array"],
+            tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.int32))
         return request
@@ -276,7 +276,7 @@ class Proteotypicity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['peptides_in_1:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["seq_array"],
+            tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.float32))
         return request
@@ -303,7 +303,7 @@ class Charge(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['peptides_in_1:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["seq_array"],
+            tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.float32))
         return request
