@@ -79,3 +79,24 @@ def test_PROSITsequences_prepare_sequences():
     assert inst.numeric == sequences_numeric
     assert np.array_equal(inst.array, sequences_array)
 
+def test_PROSITsequence_filtermode():
+    inst = prpc.PROSITsequences(["TESTING", "TESTING94", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "TESTING"])
+    inst.prepare_sequences(flag_disable_progress_bar=True, filter=True)
+    inst.calculate_lengths()
+
+    arr = np.array([[17,  4, 16, 17,  8, 12,  6,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+                      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                    [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+                      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                    [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+                      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                    [17,  4, 16, 17,  8, 12,  6,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+                      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]],
+                   dtype=np.uint8)
+    arr_len = np.array([7, 0, 0, 7])
+
+    assert np.array_equal(inst.array, arr)
+    assert np.array_equal(inst.lengths, arr_len)
+
+
+
