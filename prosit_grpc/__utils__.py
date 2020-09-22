@@ -68,7 +68,8 @@ def normalize_intensities(x, norm="max"):
     """
     return normalize(x, axis=1, norm=norm)
 
-def parse_modstrings(sequences, alphabet, translate=False):
+
+def parse_modstrings(sequences, alphabet, translate=False, filter=False):
     """
     :param sequences: List of strings
     :param ALPHABET: dictionary where the keys correspond to all possible 'Elements' that can occur in the string
@@ -85,6 +86,8 @@ def parse_modstrings(sequences, alphabet, translate=False):
                 return [alphabet[aa] for aa in split_seq]
             elif not translate:
                 return split_seq
+        elif filter:
+            return [0]
         else:
             not_parsable_elements = "".join([li[2] for li in difflib.ndiff(sequence, "".join(split_seq)) if li[0] == '-'])
             raise ValueError(f"The element(s) [{not_parsable_elements}] "

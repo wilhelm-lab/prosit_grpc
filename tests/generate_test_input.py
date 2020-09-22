@@ -1,8 +1,8 @@
 import random
 
-aa_unmod = ["A", "C", "D", "E", "F", "G", "H", "I", "K",
+aa_unmod = ["A", "C(U:4)", "D", "E", "F", "G", "H", "I", "K",
             "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"]
-aa_mod = {"M(ox)": "M"}  # the Prosit WEbsite only knows M(ox)
+aa_mod = {"M(U:35)": "M"}  # the Prosit WEbsite only knows M(ox)
 # last value is not included
 ce_range = [i for i in range(10, 51) if i % 10 == 0]
 charge_range = [i for i in range(1, 7)]  # last value is not included

@@ -55,10 +55,10 @@ def test_bundled_prediction():
     assert len(my_int) == len(my_masses)
     for i in range(len(my_int)):
         pearson_correlation_int = np.corrcoef(intensities[i], my_int[i])[0, 1]
-        assert round(pearson_correlation_int, 11) == 1
+        assert round(pearson_correlation_int, 10) == 1
 
         pearson_correlation_masses = np.corrcoef(masses[1], my_masses[1])[0, 1]
-        assert round(pearson_correlation_masses, 15) == 1
+        assert round(pearson_correlation_masses, 10) == 1
 
     # test irt prediction
     my_irt = output_dict[test_irt_model]
@@ -90,10 +90,10 @@ def test_intensity_prediction():
     assert len(my_int) == len(my_masses)
     for i in range(len(my_int)):
         pearson_correlation_int = np.corrcoef(intensities[i], my_int[i])[0, 1]
-        assert round(pearson_correlation_int, 11) == 1
+        assert round(pearson_correlation_int, 10) == 1
 
         pearson_correlation_masses = np.corrcoef(masses[1], my_masses[1])[0, 1]
-        assert round(pearson_correlation_masses, 15) == 1
+        assert round(pearson_correlation_masses, 10) == 1
 
 
 def test_irt_prediction():
@@ -196,7 +196,7 @@ def test_predict_with_matrix_expansion():
                                   collision_energies=[20, 30],
                                   models=[test_int_model, test_irt_model, test_prot_model],
                                   matrix_expansion_param=[
-                                      {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}]
+                                      {'AA_to_permutate': 'M', 'into': 'M(U:35)', 'max_in_parallel': 2}]
                                   )
 
     assert len(pred_dict[test_int_model]) == 3
@@ -210,10 +210,10 @@ def test_predict_with_repeated_matrix_expansion():
                                      path_to_key_certificate=key,
                                      )
 
-    mexp = [{'AA_to_permutate': 'C', 'into': 'M(ox)', 'max_in_parallel': 1},
-            {'AA_to_permutate': 'A', 'into': 'PhS', 'max_in_parallel': 1},
-            {'AA_to_permutate': 'D', 'into': 'PhT', 'max_in_parallel': 1},
-            {'AA_to_permutate': 'E', 'into': 'PhY', 'max_in_parallel': 1}]
+    mexp = [{'AA_to_permutate': 'C', 'into': 'M(U:35)', 'max_in_parallel': 1},
+            {'AA_to_permutate': 'A', 'into': 'S', 'max_in_parallel': 1},
+            {'AA_to_permutate': 'D', 'into': 'V', 'max_in_parallel': 1},
+            {'AA_to_permutate': 'E', 'into': 'K', 'max_in_parallel': 1}]
 
     pred_dict = predictor.predict(sequences=["ACDEFGH"],
                                   charges=[2],
