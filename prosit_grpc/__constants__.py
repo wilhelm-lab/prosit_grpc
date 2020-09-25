@@ -37,8 +37,6 @@ ALPHABET_UNMOD = {
     "V": 18,
     "W": 19,
     "Y": 20,
-    "U": 22,
-    "O": 23,
     "C": 24
 }
 
@@ -67,7 +65,7 @@ for key in ALPHABET_MOD.keys():
 #######################################
 
 # Array containing masses --- at index one is mass for A, etc.
-VEC_MZ = np.zeros(len(ALPHABET_MASS) + 1)
+VEC_MZ = np.zeros(max(ALPHABET.values()) + 1)
 for i, a in AMINO_ACIDS_INT.items():
     if a in ALPHABET_MASS:
         VEC_MZ[i] = ALPHABET_MASS[a]
