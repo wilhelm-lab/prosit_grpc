@@ -65,10 +65,10 @@ output_dict = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
 The peptide Sequence can only contain the following AA abbreviations:
 (Cysteine is expected to be alkylated as such all three representations are treated the same)
 
-Amino acid|accepted abbreviation
+### Amino acid|accepted abbreviation
 :-----:|:-----:
 Alanine|A
-Cysteine|C, Cac
+Cysteine|C
 Aspartic acid|D
 Glutamic acid|E
 Phenylalanine|F
@@ -79,28 +79,21 @@ Lysine|K
 Leucine|L
 Methionine|M
 Asparagine|N
-Pyrrolysine|O
 Proline|P
 Glutamine|Q
 Arginine|R
 Serine|S
 Threonine|T
-Selenocysteine|U
 Valine|V
 Tryptophan|W
 Tyrosine|Y
 
-
-
-Modified AA can be specified with:
+### Modified AA can be specified with:
 
 Modified Amino Acid|accepted abbreviation
 :-----:|:-----:
-Alkylated Cystein |C, Cac
-Oxidized Methionine|M(ox), OxM
-Phosphorylated Serine|Phs
-Phosphorylated Threonine|PhT
-Phosphorylated Tyrosine|PhY
+Carbamidomethylated Cystein |C(U:4)
+Oxidized Methionine|M(U:35)
 
 # Developer information
 ## How to use the gRPC client in my own project using the poetry package managment system?
