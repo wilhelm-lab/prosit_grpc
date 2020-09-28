@@ -8,7 +8,7 @@ def get_modstring_mass(modstring, aa_mass, unimod_connection=None):
     Uses pyteomics to calculate the mass of a modstring
     """
     mod = [int(x[0]) for x in re.findall('U:(\d+?)(,|\))', modstring)]
-    mod_mass = [unimod_connection.get(m).average_mass for m in mod]
+    mod_mass = [unimod_connection.get(m).monoisotopic_mass for m in mod]
     return(aa_mass + sum(mod_mass))
 
 
