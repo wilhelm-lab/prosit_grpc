@@ -15,6 +15,7 @@ from tensorflow_serving.apis import get_model_status_pb2
 from google.protobuf.json_format import MessageToJson
 from tensorflow_serving.apis import model_service_pb2_grpc
 import json
+import re
 
 
 class PROSITpredictor:
@@ -56,8 +57,11 @@ class PROSITpredictor:
             result = stub.GetModelStatus(request, 5)  # 5 secs timeout
             assert json.loads(MessageToJson(result))["model_version_status"][0]["state"] == "AVAILABLE"
             return True
-        except:
-             return False
+        except grpc._channel._InactiveRpcError as e:
+            if re.search("StatusCode\.NOT_FOUND", repr(e)) is not None:
+                return False
+            else:
+                raise e
 
     def create_channel(self, path_to_certificate, path_to_key_certificate, path_to_ca_certificate, keepalive_timeout_ms):
         try:
