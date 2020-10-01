@@ -109,11 +109,11 @@ class Base:
     def prepare_input(self):
         pass
 
-    def predict(self):
+    def predict(self, disable_progress_bar):
         input_dict = self.prepare_input()
         requests = self.create_requests(model_name=self.model_name, inputs=input_dict)
         predictions = self.send_requests(requests=requests,
-                                         disable_progress_bar=False)
+                                         disable_progress_bar=disable_progress_bar)
         self.predictions = predictions
 
     def prepare_output(self):
@@ -124,17 +124,17 @@ class Intensity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['peptides_in:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["seq_array"],
+            tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.int32))
 
         request.inputs['collision_energy_in:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["ce_array"],
+            tf.make_tensor_proto(inputs_batch["ce_array"],
                                               shape=[batchsize, 1],
                                               dtype=np.float32))
 
         request.inputs['precursor_charge_in:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["charges_array"],
+            tf.make_tensor_proto(inputs_batch["charges_array"],
                                               shape=[batchsize, C.NUM_CHARGES_ONEHOT],
                                               dtype=np.float32))
         return request
@@ -202,8 +202,8 @@ class Intensity(Base):
         self.data["intensity"][invalid_indices] = -1
         self.data["fragmentmz"][invalid_indices] = -1
 
-        self.data["annotation"]["charge"][invalid_indices] = -1
-        self.data["annotation"]["number"][invalid_indices] = -1
+        self.data["annotation"]["charge"][invalid_indices] = 0
+        self.data["annotation"]["number"][invalid_indices] = 0
         self.data["annotation"]["type"][invalid_indices] = None
 
     def normalize_intensity(self):
@@ -249,7 +249,7 @@ class Irt(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['sequence_integer'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["seq_array"],
+            tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.int32))
         return request
@@ -276,7 +276,7 @@ class Proteotypicity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['peptides_in_1:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["seq_array"],
+            tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.float32))
         return request
@@ -303,7 +303,7 @@ class Charge(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs['peptides_in_1:0'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(inputs_batch["seq_array"],
+            tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.float32))
         return request

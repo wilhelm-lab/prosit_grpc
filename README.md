@@ -22,15 +22,24 @@ You are using a special access to our GPUs and are therefore required to identif
 
 ## 3. How to use the gRPC Client using Python?
 
-### Write HDF5 == Get everything as file -> Input for any kind of converter
-
+### import 
 ```python
 from prosit_grpc.predictPROSIT import PROSITpredictor
+```
+
+### establish connection to server 
+```python
 predictor = PROSITpredictor(server="proteomicsdb.org:8500",
                             path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
                             path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
                             path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
                             )
+```
+
+
+### Write HDF5 == Get everything as file -> Input for any kind of converter
+
+```python
 predictor.predict_to_hdf5(sequences=["AAAAAKAK","AAAAAA"],
                           charges=[1,2],
                           collision_energies=[25,25],
@@ -44,48 +53,11 @@ predictor.predict_to_hdf5(sequences=["AAAAAKAK","AAAAAA"],
 Predictions are generated for the model you specify.
 
 ```python
-from prosit_grpc.predictPROSIT import PROSITpredictor
-predictor = PROSITpredictor(server="proteomicsdb.org:8500",
-                            path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
-                            path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
-                            path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
-                            )
 # predicts intensity, proteotypicity, iRT
 output_dict = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
                                 charges=[1,2],
                                 collision_energies=[25,25],
-                                intensity_model="Prosit_2019_intensity",
-                                irt_model="Prosit_2019_irt",
-                                proteotypicity_model="Prosit_2020_proteotypicity"
-                                )
-```
-
-If you only want specific predictions you can ignore the other models.
-
-```python
-from prosit_grpc.predictPROSIT import PROSITpredictor
-predictor = PROSITpredictor(server="proteomicsdb.org:8500",
-                            path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
-                            path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
-                            path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
-                            )
-
-# predicts ONLY iRT
-output_dict_irt = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
-                                    irt_model="Prosit_2019_irt",
-                                    )
-
-# predicts ONLY proteotypicity
-output_dict_proteotypicity = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
-                                              proteotypicity_model="Prosit_2020_proteotypicity",
-                                              )
-
-# predicts ONLY intensity/spectra
-output_dict_intensity = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
-                                          charges=[1,2],
-                                          collision_energies=[25,25],
-                                          intensity_model="Prosit_2020_intensity",
-                                          )
+                                models=["Prosit_2019_intensity", "Prosit_2019_irt", "Prosit_2020_proteotypicity"])
 ```
 
 ## Sequence Restrictions
@@ -93,10 +65,10 @@ output_dict_intensity = predictor.predict(sequences=["AAAAAKAK","AAAAAA"],
 The peptide Sequence can only contain the following AA abbreviations:
 (Cysteine is expected to be alkylated as such all three representations are treated the same)
 
-Amino acid|accepted abbreviation
+### Amino acid|accepted abbreviation
 :-----:|:-----:
 Alanine|A
-Cysteine|C, Cac
+Cysteine|C
 Aspartic acid|D
 Glutamic acid|E
 Phenylalanine|F
@@ -107,28 +79,21 @@ Lysine|K
 Leucine|L
 Methionine|M
 Asparagine|N
-Pyrrolysine|O
 Proline|P
 Glutamine|Q
 Arginine|R
 Serine|S
 Threonine|T
-Selenocysteine|U
 Valine|V
 Tryptophan|W
 Tyrosine|Y
 
-
-
-Modified AA can be specified with:
+### Modified AA can be specified with:
 
 Modified Amino Acid|accepted abbreviation
 :-----:|:-----:
-Alkylated Cystein |C, Cac
-Oxidized Methionine|M(ox), OxM
-Phosphorylated Serine|Phs
-Phosphorylated Threonine|PhT
-Phosphorylated Tyrosine|PhY
+Carbamidomethylated Cystein |C(U:4)
+Oxidized Methionine|M(U:35)
 
 # Developer information
 ## How to use the gRPC client in my own project using the poetry package managment system?

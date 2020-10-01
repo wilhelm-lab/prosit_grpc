@@ -6,11 +6,11 @@ sequences_character = ["KKVCQGTSNKLTQLGTFE",
                        "GNMYYENSYALAVLSNYDANKTGLK",
                        "LTQLGTFEDHFLSLQR",
                        "FRDEATCKDTCPPLMLYNPTTQMDVNPEGK",
-                       "RDEATCKDTCPPLM(ox)LNPTTYQMDVNPEGK",
-                       "FRDEATKDTCPPLMM(O)YNPTTYQMDVNPEGK",
+                       "RDEATCKDTCPPLM(U:35)LNPTTYQMDVNPEGK",
+                       "FRDEATKDTCPPLMM(U:35)YNPTTYQMDVNPEGK",
                        "ANKEILDEAYVMASVDNPHVCR",
-                       "FRDEATCKDT(Cam)PPLLYNPTTYQMDVNPEGK",
-                       "FRDEATCKDTCacPPLMYNPTTYQMDVNPEGK"]
+                       "FRDEATCKDTC(U:4)PPLLYNPTTYQMDVNPEGK",
+                       "FRDEATCKDTC(U:4)PPLMYNPTTYQMDVNPEGK"]
 ce_numeric = [10, 20, 30, 40, 50, 10, 20, 30, 40]
 charges_numeric = [1, 2, 3, 4, 5, 6, 1, 2, 3]
 
@@ -49,7 +49,7 @@ def test_expand_matrices():
 
     inst.prepare_input(flag_disable_progress_bar=False)
     inst.expand_matrices(
-        param={'AA_to_permutate': 'C', 'into': 'M(ox)', 'max_in_parallel': 2})
+        param={'AA_to_permutate': 'C(U:4)', 'into': 'M(U:35)', 'max_in_parallel': 2})
 
     assert len(inst.sequences.array) == len(inst.charges.array)
     assert len(inst.sequences.array) == len(inst.collision_energies.array)

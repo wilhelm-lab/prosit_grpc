@@ -108,18 +108,22 @@ class PROSITsequences:
         else:
             return "numeric"
 
-    def character_to_array(self, flag_disable_progress_bar):
+    def character_to_array(self, flag_disable_progress_bar, filter=False):
         self.array = np.zeros((len(self.character),C.SEQ_LEN), dtype=np.uint8)
-        generator_sequence_numeric = U.parse_modstrings(self.character, alphabet=C.ALPHABET, translate=True)
+        generator_sequence_numeric = U.parse_modstrings(self.character, alphabet=C.ALPHABET, translate=True, filter=filter)
         enum_gen_seq_num = enumerate(generator_sequence_numeric)
 
         for i, sequence_numeric in tqdm(enum_gen_seq_num,
                                      disable=flag_disable_progress_bar,
                                      total=len(self.character)):
             if len(sequence_numeric) > C.SEQ_LEN:
-                raise Exception(f"The Sequence {sequence_numeric}, has {len(sequence_numeric)} Amino Acids."
+                if filter:
+                    pass # don't overwrite 0 in the array that is how we can differentiate
+                else:
+                    raise Exception(f"The Sequence {sequence_numeric}, has {len(sequence_numeric)} Amino Acids."
                                 f"The maximum number of amino acids allowed is {C.SEQ_LEN}")
-            self.array[i, 0:len(sequence_numeric)] = sequence_numeric
+            else:
+                self.array[i, 0:len(sequence_numeric)] = sequence_numeric
 
     def numeric_to_array(self):
         self.array = np.array(self.numeric, dtype=np.uint8)
@@ -135,12 +139,12 @@ class PROSITsequences:
             self.array, [0], invert=True).reshape(self.array.shape)
         self.lengths = np.sum(truth_array, axis=1)
 
-    def prepare_sequences(self, flag_disable_progress_bar):
+    def prepare_sequences(self, flag_disable_progress_bar=False, filter=False):
         if self.array is None:
             if self.numeric is None:
                 if self.character is None:
                     raise ValueError("No Sequences known")
-                self.character_to_array(flag_disable_progress_bar)
+                self.character_to_array(flag_disable_progress_bar, filter=filter)
             else:
                 self.numeric_to_array()
         self.calculate_lengths()
