@@ -55,4 +55,4 @@ check_simple_installation:
   - modern
   stage: installation_pip
   script:
-  - pip install -e git+https://git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git@$CI_COMMIT_SHORT_SHA#egg=prosit_grpc
+  - pip install -v -e git+https://git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git@$CI_COMMIT_SHORT_SHA#egg=prosit_grpc
