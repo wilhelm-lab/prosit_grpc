@@ -16,11 +16,9 @@ test_irt_model = "Prosit_2019_irt"
 test_prot_model = "Prosit_2020_proteotypicity"
 test_charge_model = "Prosit_2020_charge"
 
-with h5py.File("tests/data.hdf5", 'r') as f:
-    intensities = list(f["intensities_pred"])
+with h5py.File("tests/predict_to_hdf5.hdf5", 'r') as f:
     irt = list(f["iRT"])
     irt = [i[0] for i in irt]
-    masses = list(f["masses_pred"])
 
 with open("tests/input_test.csv", "r") as csvfile:
     reader = csv.reader(csvfile, delimiter=',')
@@ -32,105 +30,6 @@ with open("tests/input_test.csv", "r") as csvfile:
         sequences.append(line[0])
         ce.append(int(line[1]))
         charge.append(int(line[2]))
-
-
-def test_bundled_prediction():
-    predictor = prpc.PROSITpredictor(server=test_server,
-                                     path_to_ca_certificate=ca_cert,
-                                     path_to_certificate=cert,
-                                     path_to_key_certificate=key,
-                                     )
-
-    output_dict = predictor.predict(sequences=sequences,
-                                    charges=charge,
-                                    collision_energies=ce,
-                                    models=[test_int_model, test_irt_model, test_prot_model]
-                                    )
-
-    # test spectrum prediction
-    my_int = output_dict[test_int_model]["intensity"]
-    my_masses = output_dict[test_int_model]["fragmentmz"]
-    assert len(intensities) == len(my_int)
-    assert len(masses) == len(my_masses)
-    assert len(my_int) == len(my_masses)
-    for i in range(len(my_int)):
-        pearson_correlation_int = np.corrcoef(intensities[i], my_int[i])[0, 1]
-        assert round(pearson_correlation_int, 10) == 1
-
-        pearson_correlation_masses = np.corrcoef(masses[1], my_masses[1])[0, 1]
-        assert round(pearson_correlation_masses, 10) == 1
-
-    # test irt prediction
-    my_irt = output_dict[test_irt_model]
-    assert len(my_irt) == len(irt)
-    for i in range(len(irt)):
-        # converting them to float because:
-        # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
-        assert round(float(my_irt[i]), 3) == round(float(irt[i]), 3)
-
-
-def test_intensity_prediction():
-    predictor = prpc.PROSITpredictor(server=test_server,
-                                     path_to_ca_certificate=ca_cert,
-                                     path_to_certificate=cert,
-                                     path_to_key_certificate=key,
-                                     )
-
-    dict_intensity = predictor.predict(sequences=sequences,
-                                       charges=charge,
-                                       collision_energies=ce,
-                                       models=[test_int_model])
-
-    assert len(dict_intensity[test_int_model]) == 3
-    # test spectrum prediction
-    my_int = dict_intensity[test_int_model]["intensity"]
-    my_masses = dict_intensity[test_int_model]["fragmentmz"]
-    assert len(intensities) == len(my_int)
-    assert len(masses) == len(my_masses)
-    assert len(my_int) == len(my_masses)
-    for i in range(len(my_int)):
-        pearson_correlation_int = np.corrcoef(intensities[i], my_int[i])[0, 1]
-        assert round(pearson_correlation_int, 10) == 1
-
-        pearson_correlation_masses = np.corrcoef(masses[1], my_masses[1])[0, 1]
-        assert round(pearson_correlation_masses, 10) == 1
-
-
-def test_irt_prediction():
-    predictor = prpc.PROSITpredictor(server=test_server,
-                                     path_to_ca_certificate=ca_cert,
-                                     path_to_certificate=cert,
-                                     path_to_key_certificate=key,
-                                     )
-
-    dict_irt = predictor.predict(sequences=sequences,
-                                 models=[test_irt_model])
-
-    assert len(dict_irt) == 1
-
-    # test irt prediction
-    my_irt = dict_irt[test_irt_model]
-    assert len(my_irt) == len(irt)
-    for i in range(len(irt)):
-        # converting them to float because:
-        # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
-        assert round(float(my_irt[i]), 3) == round(float(irt[i]), 3)
-
-    dict_proteotyp = predictor.predict(sequences=sequences,
-                                       models=[test_prot_model])
-    assert len(dict_proteotyp) == 1
-
-def test_charge_prediction():
-    predictor = prpc.PROSITpredictor(server=test_server,
-                                     path_to_ca_certificate=ca_cert,
-                                     path_to_certificate=cert,
-                                     path_to_key_certificate=key,
-                                     )
-    dict_out = predictor.predict(sequences=sequences,
-                                       charges=charge,
-                                       collision_energies=ce,
-                                       models=[test_charge_model])
-    assert dict_out[test_charge_model].shape == (120, 6)
 
 def test_batching():
     l = 100
@@ -176,7 +75,7 @@ def test_predict_to_hdf5():
                               irt_model=test_irt_model,
                               path_hdf5=pred_hdf5)
 
-    with h5py.File("tests/data.hdf5", 'r') as truth:
+    with h5py.File("tests/predict_to_hdf5.hdf5", 'r') as truth:
         with h5py.File(pred_hdf5, 'r') as pred:
             for i in ["intensities_pred", "iRT", "masses_pred", "collision_energy_aligned_normed", "precursor_charge_onehot", "sequence_integer"]:
                 assert np.array(truth[i]).shape == np.array(pred[i]).shape
@@ -224,3 +123,59 @@ def test_predict_with_repeated_matrix_expansion():
 
     for model_dict in pred_dict.values():
         assert len(model_dict) == 16
+
+
+def test_prediction_consistency():
+    predictor = prpc.PROSITpredictor(server=test_server,
+                                     path_to_ca_certificate=ca_cert,
+                                     path_to_certificate=cert,
+                                     path_to_key_certificate=key,
+                                     )
+
+    output_dict = predictor.predict(sequences=sequences,
+                                    charges=charge,
+                                    collision_energies=ce,
+                                    models=["Prosit_2019_intensity",
+                                            "Prosit_2019_irt",
+                                            "Prosit_2019_irt_supplement",
+                                            "Prosit_2020_charge",
+                                            "Prosit_2020_intensity_hla_cid",
+                                            "Prosit_2020_intensity_hla_hcd",
+                                            "Prosit_2020_intensity_preview",
+                                            "Prosit_2020_proteotypicity"])
+
+    intensity_models = ["Prosit_2019_intensity",
+                        "Prosit_2020_intensity_hla_cid",
+                        "Prosit_2020_intensity_hla_hcd",
+                        "Prosit_2020_intensity_preview"]
+
+    simple_models = ["Prosit_2019_irt",
+                     "Prosit_2019_irt_supplement",
+                     "Prosit_2020_charge",
+                     "Prosit_2020_proteotypicity"]
+
+
+    with h5py.File("tests/prediction_consistency.hdf5", 'r') as f:
+        for model in intensity_models:
+            print("Testing model consistency:", model)
+            nrow = len(output_dict[model]["intensity"])
+
+            for rowid in range(nrow):
+                pred =  np.round_(output_dict[model]["intensity"][rowid], 15)
+                true = np.round_(np.array(f[model]["intensity"][rowid]), 15)
+                assert 1 == round(np.corrcoef(pred, true)[0][1], 15)
+                pred = np.round_(output_dict[model]["fragmentmz"][rowid], 15)
+                true = np.round_(np.array(f[model]["fragmentmz"][rowid]), 15)
+                assert 1 == round(np.corrcoef(pred, true)[0][1], 15)
+
+            assert np.array_equal(output_dict[model]["annotation"]["charge"], np.array(f[model]["annotation"]["charge"]))
+            assert np.array_equal(output_dict[model]["annotation"]["number"], np.array(f[model]["annotation"]["number"]))
+            tmp = np.array(f[model]["annotation"]["type"])
+            tmp.dtype = np.dtype("U1")
+            assert np.array_equal(output_dict[model]["annotation"]["type"], tmp)
+
+        for model in simple_models:
+            print("Testing model consistency:", model)
+            pred = np.round_(output_dict[model], 15)
+            true = np.round(np.array(f[model]), 15)
+            assert np.array_equal(pred, true)
