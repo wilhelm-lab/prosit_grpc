@@ -179,8 +179,8 @@ def test_prediction_consistency():
 
         for model in irt_models:
             print("Testing model consistency:", model)
-            pred = np.round_(output_dict[model], 4)
-            true = np.round_(np.array(f[model]), 4)
+            pred = np.round_(output_dict[model], 30)
+            true = np.round_(np.array(f[model]), 30)
             assert np.array_equal(pred, true)
 
         for model in proteotypicity_models:
