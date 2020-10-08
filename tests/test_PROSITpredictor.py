@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 # constants
-test_server = "10.152.171.58:8500"
+test_server = "proteomicsdb.org:8500"
 ca_cert = "cert/Proteomicsdb-Prosit.crt"
 cert = "cert/ci-pipeline.crt"
 key = "cert/ci-pipeline.key"
