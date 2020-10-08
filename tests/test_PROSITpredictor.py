@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 # constants
-test_server = "proteomicsdb.org:8500"
+test_server = "10.152.171.58:8500"
 ca_cert = "cert/Proteomicsdb-Prosit.crt"
 cert = "cert/ci-pipeline.crt"
 key = "cert/ci-pipeline.key"
@@ -149,10 +149,13 @@ def test_prediction_consistency():
                         "Prosit_2020_intensity_hla_hcd",
                         "Prosit_2020_intensity_preview"]
 
-    simple_models = ["Prosit_2019_irt",
-                     "Prosit_2019_irt_supplement",
-                     "Prosit_2020_charge",
-                     "Prosit_2020_proteotypicity"]
+    irt_models = ["Prosit_2019_irt",
+                  "Prosit_2019_irt_supplement"]
+
+    proteotypicity_models = ["Prosit_2020_proteotypicity"]
+
+    charge_models = ["Prosit_2020_charge"]
+
 
 
     with h5py.File("tests/prediction_consistency.hdf5", 'r') as f:
@@ -161,12 +164,12 @@ def test_prediction_consistency():
             nrow = len(output_dict[model]["intensity"])
 
             for rowid in range(nrow):
-                pred =  np.round_(output_dict[model]["intensity"][rowid], 15)
-                true = np.round_(np.array(f[model]["intensity"][rowid]), 15)
-                assert 1 == round(np.corrcoef(pred, true)[0][1], 15)
-                pred = np.round_(output_dict[model]["fragmentmz"][rowid], 15)
-                true = np.round_(np.array(f[model]["fragmentmz"][rowid]), 15)
-                assert 1 == round(np.corrcoef(pred, true)[0][1], 15)
+                pred = np.round_(output_dict[model]["intensity"][rowid], 10)
+                true = np.round_(np.array(f[model]["intensity"][rowid]), 10)
+                assert 1 == round(np.corrcoef(pred, true)[0][1], 10)
+                pred = np.round_(output_dict[model]["fragmentmz"][rowid], 16)
+                true = np.round_(np.array(f[model]["fragmentmz"][rowid]), 16)
+                assert 1 == round(np.corrcoef(pred, true)[0][1], 16)
 
             assert np.array_equal(output_dict[model]["annotation"]["charge"], np.array(f[model]["annotation"]["charge"]))
             assert np.array_equal(output_dict[model]["annotation"]["number"], np.array(f[model]["annotation"]["number"]))
@@ -174,8 +177,20 @@ def test_prediction_consistency():
             tmp.dtype = np.dtype("U1")
             assert np.array_equal(output_dict[model]["annotation"]["type"], tmp)
 
-        for model in simple_models:
+        for model in irt_models:
+            print("Testing model consistency:", model)
+            pred = np.round_(output_dict[model], 4)
+            true = np.round_(np.array(f[model]), 4)
+            assert np.array_equal(pred, true)
+
+        for model in proteotypicity_models:
             print("Testing model consistency:", model)
             pred = np.round_(output_dict[model], 15)
-            true = np.round(np.array(f[model]), 15)
+            true = np.round_(np.array(f[model]), 15)
+            assert np.array_equal(pred, true)
+
+        for model in charge_models:
+            print("Testing model consistency:", model)
+            pred = np.round_(output_dict[model], 15)
+            true = np.round_(np.array(f[model]), 15)
             assert np.array_equal(pred, true)
