@@ -288,12 +288,13 @@ class Proteotypicity(Base):
         """
         outputs_tensor_proto = response.outputs["pep_dense4/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val, dtype=np.float16).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, dtype=np.float32).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {
             "seq_array": self.input.sequences.array
         }
+
         return in_dic
 
     def prepare_output(self):
@@ -315,7 +316,7 @@ class Charge(Base):
         """
         outputs_tensor_proto = response.outputs["softmax/Softmax:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
-        return np.array(outputs_tensor_proto.float_val, dtype=np.float16).reshape(shape.as_list())
+        return np.array(outputs_tensor_proto.float_val, dtype=np.float32).reshape(shape.as_list())
 
     def prepare_input(self):
         in_dic = {
