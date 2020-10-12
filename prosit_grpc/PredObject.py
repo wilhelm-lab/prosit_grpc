@@ -292,9 +292,10 @@ class Proteotypicity(Base):
 
     def prepare_input(self):
         in_dic = {
-            "seq_array": self.input.sequences.array
+            "seq_array": self.input.sequences.array.copy()
         }
         in_dic["seq_array"][in_dic["seq_array"] == 21] = 11  # map M(U:35) (Mox) --> M
+        in_dic["seq_array"][in_dic["seq_array"] == 24] = 2  # map C (Cam) --> C(U:4)
         return in_dic
 
     def prepare_output(self):
