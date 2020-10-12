@@ -186,12 +186,12 @@ def test_prediction_consistency():
 
         for model in proteotypicity_models:
             print("Testing model consistency:", model)
-            pred = np.round_(output_dict[model], 15)
-            true = np.round_(np.array(f[model]), 15)
+            pred = np.around(output_dict[model], 30)
+            true = np.around(np.array(f[model]), 30)
             assert np.array_equal(pred, true)
 
         for model in charge_models:
             print("Testing model consistency:", model)
-            pred = np.round_(output_dict[model], 15)
-            true = np.round_(np.array(f[model]), 15)
+            pred = np.round_(output_dict[model], 30)
+            true = np.round_(np.array(f[model]), 30)
             assert np.array_equal(pred, true)
