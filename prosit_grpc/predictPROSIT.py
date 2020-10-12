@@ -143,6 +143,7 @@ class PROSITpredictor:
                         path_hdf5: str,
                         irt_model: str = None,
                         intensity_model: str = None,
+                        proteotypicicty_model: str = None,
                         sequences: list = None,
                         charges: list = None,
                         collision_energies: list = None,
@@ -153,7 +154,7 @@ class PROSITpredictor:
                                 charges=charges,
                                 collision_energies=collision_energies,
                                 disable_progress_bar=disable_progress_bar,
-                                models=[irt_model, intensity_model])
+                                models=[irt_model, intensity_model, proteotypicicty_model])
 
         hdf5_dict = {
             "sequence_integer": self.input.sequences.array,
@@ -161,7 +162,8 @@ class PROSITpredictor:
             "collision_energy_aligned_normed": self.input.collision_energies.array,
             'intensities_pred': out_dict[intensity_model]["intensity"],
             'masses_pred': out_dict[intensity_model]["fragmentmz"],
-            'iRT': out_dict[irt_model]}
+            'iRT': out_dict[irt_model],
+            'proteotypicity': out_dict[proteotypicicty_model]}
 
         hdf5_dict["collision_energy_aligned_normed"].shape = (
             len(hdf5_dict["collision_energy_aligned_normed"]), 1)

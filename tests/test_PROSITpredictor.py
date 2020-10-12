@@ -73,11 +73,12 @@ def test_predict_to_hdf5():
                               collision_energies=ce,
                               intensity_model=test_int_model,
                               irt_model=test_irt_model,
+                              proteotypicicty_model=test_prot_model,
                               path_hdf5=pred_hdf5)
 
     with h5py.File("tests/predict_to_hdf5.hdf5", 'r') as truth:
         with h5py.File(pred_hdf5, 'r') as pred:
-            for i in ["intensities_pred", "iRT", "masses_pred", "collision_energy_aligned_normed", "precursor_charge_onehot", "sequence_integer"]:
+            for i in ["intensities_pred", "iRT", "masses_pred", "collision_energy_aligned_normed", "precursor_charge_onehot", "sequence_integer", "proteotypicity"]:
                 assert np.array(truth[i]).shape == np.array(pred[i]).shape
     os.remove(pred_hdf5)
 
