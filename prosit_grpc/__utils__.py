@@ -2,7 +2,6 @@ from . import __constants__ as C
 import numpy as np
 import itertools
 import scipy
-from sklearn.preprocessing import normalize
 import difflib
 
 def compute_ion_masses(seq_int, charge_onehot):
@@ -61,12 +60,12 @@ def compute_ion_masses(seq_int, charge_onehot):
     return masses
 
 
-def normalize_intensities(x, norm="max"):
+def normalize_intensities(x):
     """
     This function normalizes the given intensity array of shape (num_seq, num_peaks)
 
     """
-    return normalize(x, axis=1, norm=norm)
+    return np.transpose(np.transpose(x)/np.max(x, 1))
 
 
 def parse_modstrings(sequences, alphabet, translate=False, filter=False):
