@@ -140,14 +140,14 @@ def test_prediction_consistency():
                                             "Prosit_2019_irt",
                                             "Prosit_2019_irt_supplement",
                                             "Prosit_2020_charge",
-                                            "Prosit_2020_intensity_hla_cid",
-                                            "Prosit_2020_intensity_hla_hcd",
+                                            "Prosit_2021_intensity_cid",
+                                            "Prosit_2021_intensity_hcd",
                                             "Prosit_2020_intensity_preview",
                                             "Prosit_2020_proteotypicity"])
 
     intensity_models = ["Prosit_2019_intensity",
-                        "Prosit_2020_intensity_hla_cid",
-                        "Prosit_2020_intensity_hla_hcd",
+                        "Prosit_2021_intensity_cid",
+                        "Prosit_2021_intensity_hcd",
                         "Prosit_2020_intensity_preview"]
 
     irt_models = ["Prosit_2019_irt",
@@ -161,6 +161,7 @@ def test_prediction_consistency():
 
     with h5py.File("tests/prediction_consistency.hdf5", 'r') as f:
         for model in intensity_models:
+            print(output_dict.keys())
             print("Testing model consistency:", model)
             nrow = len(output_dict[model]["intensity"])
 
