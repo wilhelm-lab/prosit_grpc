@@ -36,6 +36,7 @@ check_code:
   - modern
   stage: test
   script:
+  - pip install -U pip
   - pip install poetry==1.1.4
   - poetry install
   - mkdir cert
