@@ -259,7 +259,6 @@ class Intensity_tmt(Intensity):
         return request
         
     def prepare_input(self):
-        tmt_array = add_tmt_flag(self.input.sequences.array)
         in_dic = {
             "seq_array": self.input.sequences.array,
             "ce_array": self.input.collision_energies.array,
