@@ -37,12 +37,15 @@ ALPHABET_UNMOD = {
     "V": 18,
     "W": 19,
     "Y": 20,
-    "C": 24
+    "C": 2,
+    "M(ox)": 21,
+    "K(tm)": 22,
 }
 
 ALPHABET_MOD = {
     "M(U:35)": 21,
-    "C(U:4)": 2
+    "K(U:737)": 22,
+    #"C(U:4)": 2
 }
 
 # ALPHABET contains all amino acid and ptm abbreviations and
