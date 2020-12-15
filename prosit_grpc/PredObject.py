@@ -247,7 +247,7 @@ class Intensity(Base):
         
 class Intensity_tmt(Intensity):
     def create_request(self, model_name, inputs_batch, batchsize):
-        request = super(self).create_request(model_name, inputs_batch, batchsize)
+        request = super().create_request(model_name, inputs_batch, batchsize)
         request.inputs['tmt_nterm_in:0'].CopyFrom(tf.make_tensor_proto(2,
                                               shape=[batchsize, 1],
                                               dtype=np.float32))
