@@ -83,6 +83,11 @@ class PROSITpredictor:
 
     def pred_object_factory(self, model):
         model_type = model.split("_")[2]
+        
+        if model_type == "intensityTMT":
+            return PredObject.Intensity_tmt(stub=self.stub,
+                                        model_name=model,
+                                        input=self.input)
         if model_type == "intensity":
             return PredObject.Intensity(stub=self.stub,
                                         model_name=model,
