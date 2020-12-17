@@ -247,10 +247,9 @@ class Intensity(Base):
         
 class Intensity_tmt(Intensity):
     def create_request(self, model_name, inputs_batch, batchsize):
-        request = super().create_request(model_name, inputs_batch, batchsize)
-          
+        request = super().create_request(model_name, inputs_batch, batchsize)  
         request.inputs['fragmentation_type_in:0'].CopyFrom(tf.make_tensor_proto(1,
-                                              shape=[batchsize, 1],
+                                              shape=[batchsize, 2],
                                               dtype=np.float32))
 
         return request
