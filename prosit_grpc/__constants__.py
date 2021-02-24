@@ -9,6 +9,10 @@ def get_modstring_mass(modstring, aa_mass, unimod_connection=None):
     """
     mod = [int(x[0]) for x in re.findall('U:(\d+?)(,|\))', modstring)]
     mod_mass = [unimod_connection.get(m).monoisotopic_mass for m in mod]
+    aa = modstring[0]
+    if(mod == 'U:21'):
+        if(aa == 'S' or aa=='T'):
+            aa_mass -= 97.976896
     return(aa_mass + sum(mod_mass))
 
 

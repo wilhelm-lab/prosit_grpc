@@ -5,7 +5,7 @@ import scipy
 from sklearn.preprocessing import normalize
 import difflib
 
-def compute_ion_masses(seq_int, charge_onehot):
+def compute_ion_masses(seq_int, charge_onehot,tmt=''):
     """ 
     Collects an integer sequence e.g. [1,2,3] with charge 2 and returns array with 174 positions for ion masses. 
     Invalid masses are set to -1
@@ -46,7 +46,10 @@ def compute_ion_masses(seq_int, charge_onehot):
                        C.MASSES["H"])/3.0 if charge >= 3.0 else -1.0
 
         # MASS FOR B IONS
-        mass_b += C.VEC_MZ[seq_int[i]]
+        if(i ==0 and tmt=='tmt'):
+            mass_b += C.VEC_MZ[seq_int[i]]+229.162932
+        else:
+            mass_b += C.VEC_MZ[seq_int[i]]
 
         # Compute charge +1
         masses[j+3] = (mass_b + 1*C.MASSES["PROTON"] +
