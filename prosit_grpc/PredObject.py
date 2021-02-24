@@ -248,10 +248,9 @@ class Intensity(Base):
 class Intensity_tmt(Intensity):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = super().create_request(model_name, inputs_batch, batchsize)  
-        request.inputs['fragmentation_type_in:0'].CopyFrom(tf.make_tensor_proto(inputs_batch["fragmentation"],
+        request.inputs['fragmentation_type_in:0'].CopyFrom(tf.make_tensor_proto(inputs_batch["fragmentation_array"],
                                               shape=[batchsize, 1],
-                                              dtype=np.int32))
-
+                                              dtype=np.float32))
         return request
         
     def prepare_input(self):
@@ -259,6 +258,7 @@ class Intensity_tmt(Intensity):
             "seq_array": self.input.sequences.array,
             "ce_array": self.input.collision_energies.array,
             "charges_array": self.input.charges.array,
+            "fragmentation_array":self.input.fragmentation.array,
         }
         return in_dic
                 

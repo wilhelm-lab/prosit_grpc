@@ -5,10 +5,11 @@ from . import __utils__ as U  # Utility/Static functions
 
 
 class PROSITinput:
-    def __init__(self, sequences=None, charges=None, collision_energies=None):
+    def __init__(self, sequences=None, charges=None, collision_energies=None, fragmentation=None):
         self.sequences = PROSITsequences(sequences)
         self.charges = PROSITcharges(charges)
         self.collision_energies = PROSITcollisionenergies(collision_energies)
+        self.fragmentation = PROSITfragmentation(fragmentation)
 
     def prepare_input(self, flag_disable_progress_bar):
         if self.sequences is not None:
@@ -17,6 +18,8 @@ class PROSITinput:
             self.charges.prepare_charges()
         if self.collision_energies is not None:
             self.collision_energies.prepare_collisionenergies()
+        if self.fragmentation is not None:
+            self.fragmentation.prepare_fragmentations()
 
     def expand_matrices(self, param):
         """
@@ -191,3 +194,9 @@ class PROSITcollisionenergies:
                     return  # No Collision Energies known
                 self.numeric_to_procentual()
             self.procentual_to_array()
+
+
+class PROSITfragmentation:
+    def __init__(self, fragmentations):
+       self.array = fragmentations
+        
