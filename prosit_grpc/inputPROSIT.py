@@ -18,9 +18,7 @@ class PROSITinput:
             self.charges.prepare_charges()
         if self.collision_energies is not None:
             self.collision_energies.prepare_collisionenergies()
-        if self.fragmentation is not None:
-            self.fragmentation.prepare_fragmentations()
-
+            
     def expand_matrices(self, param):
         """
         Expects a list with dictionaries with 3 input parameters each

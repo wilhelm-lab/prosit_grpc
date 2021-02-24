@@ -263,11 +263,15 @@ class Intensity_tmt(Intensity):
         return in_dic
         
     def prepare_output(self):
-        self.output = super().prepare_output()
+        super().prepare_output()
+        n_seq = len(self.predictions)
         self.output['fragmentmz'] = np.array([U.compute_ion_masses(self.input.sequences.array[i],
                                                          self.input.charges.array[i],'tmt')
                                                          for i in range(n_seq)],
                                    dtype=np.float32)
+        self.mask = self.create_masking(charges_array=self.input.charges.array,
+                                        sequences_lengths=self.input.sequences.lengths)
+        self.apply_masking()
 
 class Irt(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
