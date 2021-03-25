@@ -131,7 +131,8 @@ class PROSITpredictor:
 
         predictions = {}
         for model in models:
-            print(f"Predicting for model: {model}")
+            if not disable_progress_bar:
+                print(f"Predicting for model: {model}")
             pred_object = self.pred_object_factory(model=model)
             pred_object.predict(disable_progress_bar)
             pred_object.prepare_output()
