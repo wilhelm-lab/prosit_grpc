@@ -128,7 +128,7 @@ class Intensity(Base):
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.int32))
 
-        if(model_name.split('_')[-1] == 'cid':
+        if(model_name.split('_')[-1] == 'cid'):
             request.inputs['collision_energy_in:0'].CopyFrom(tf.make_tensor_proto(.35,
                                                   shape=[batchsize, 1],
                                                   dtype=np.float32))
