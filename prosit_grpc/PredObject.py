@@ -269,7 +269,7 @@ class Intensity_tmt(Intensity):
 class Irt(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
-        request.inputs['sequence_integer'].CopyFrom(
+        request.inputs['peptides_in'].CopyFrom(
             tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.int32))
