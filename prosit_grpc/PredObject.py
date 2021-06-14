@@ -291,7 +291,7 @@ class Irt(Base):
         return in_dic
 
     def prepare_output(self):
-        self.output = (self.predictions*43.39373 + 56.35363441)
+        self.output = (self.predictions)
 
 class Proteotypicity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
