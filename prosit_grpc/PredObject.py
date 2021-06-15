@@ -288,6 +288,7 @@ class Irt(Base):
         in_dic = {
             "seq_array": self.input.sequences.array
         }
+        print(self.input.sequences.array)
         return in_dic
 
     def prepare_output(self):
