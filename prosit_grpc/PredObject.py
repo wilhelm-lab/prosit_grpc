@@ -300,6 +300,7 @@ class Proteotypicity(Base):
             tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.float32))
+        print(seq_array)
         return request
 
     @staticmethod
