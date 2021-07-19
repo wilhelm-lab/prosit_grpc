@@ -128,10 +128,15 @@ class Intensity(Base):
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.int32))
 
-        request.inputs['collision_energy_in:0'].CopyFrom(
-            tf.make_tensor_proto(inputs_batch["ce_array"],
-                                              shape=[batchsize, 1],
-                                              dtype=np.float32))
+        if(model_name.split('_')[-1] == 'cid'):
+            request.inputs['collision_energy_in:0'].CopyFrom(tf.make_tensor_proto(.35,
+                                                  shape=[batchsize, 1],
+                                                  dtype=np.float32))
+        else:
+            request.inputs['collision_energy_in:0'].CopyFrom(
+                tf.make_tensor_proto(inputs_batch["ce_array"],
+                                                  shape=[batchsize, 1],
+                                                  dtype=np.float32))
 
         request.inputs['precursor_charge_in:0'].CopyFrom(
             tf.make_tensor_proto(inputs_batch["charges_array"],

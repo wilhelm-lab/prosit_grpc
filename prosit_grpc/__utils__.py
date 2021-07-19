@@ -79,6 +79,9 @@ def parse_modstrings(sequences, alphabet, translate=False, filter=False):
     from itertools import repeat
 
     def split_modstring(sequence, r_pattern):
+        # Ugly and fast fix for reading modifications as is from maxquant we should reconisder how to fix it.
+        sequence = sequence.replace('M(ox)','M(U:35)')
+        sequence = sequence.replace('C','C(U:4)')
         split_seq = r_pattern.findall(sequence)
         if "".join(split_seq) == sequence:
             if translate:
@@ -102,8 +105,14 @@ def indices_to_one_hot(data, nb_classes):
     Convert an iterable of indices to one-hot encoded labels.
     :param data: charge, int between 1 and 6
     """
-    targets = np.array([data-1])  # -1 for 0 indexing
-    return np.int_((np.eye(nb_classes)[targets])).tolist()[0]
+    #print(data)
+    targets = np.array([data])
+    targets = targets.astype(np.uint8)
+    targets = targets-1  # -1 for 0 indexing
+    try:
+        return np.int_((np.eye(nb_classes)[targets])).tolist()[0]
+    except IndexError:
+        raise IndexError('Please validate the precursor charge values are between 1 and 6')
 
 def generate_newMatrix_v2(
     npMatrix, iFromReplaceValue, iToReplaceValue, numberAtTheSameTime=2

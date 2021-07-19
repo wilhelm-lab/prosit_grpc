@@ -64,7 +64,7 @@ class PROSITcharges:
                 return "array"
             elif type(charges[0]) is list:
                 return "one-hot"
-            elif type(charges[0]) is int:
+            elif type(charges[0]) is int or type(charges[0]) is float:
                 return "numeric"
 
     def numeric_to_onehot(self):
