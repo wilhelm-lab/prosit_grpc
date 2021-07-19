@@ -1,5 +1,5 @@
 from prosit_grpc import __utils__ as U
-from prosit_grpc import __constants__ as C
+from fundamentals import constants as C
 import numpy as np
 import pytest
 

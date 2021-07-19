@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from . import __constants__ as C  # For constants
+from fundamentals import constants as C
 from . import __utils__ as U
 from tensorflow_serving.apis import predict_pb2
 import tensorflow as tf
