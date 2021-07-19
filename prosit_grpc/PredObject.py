@@ -281,7 +281,7 @@ class Intensity_tmt(Intensity):
 class Irt(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
-        request.inputs['sequence_integer'].CopyFrom(
+        request.inputs['peptides_in:0'].CopyFrom(
             tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.int32))
@@ -300,10 +300,11 @@ class Irt(Base):
         in_dic = {
             "seq_array": self.input.sequences.array
         }
+        print(self.input.sequences.array)
         return in_dic
 
     def prepare_output(self):
-        self.output = (self.predictions*43.39373 + 56.35363441)
+        self.output = (self.predictions)
 
 class Proteotypicity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
@@ -312,6 +313,7 @@ class Proteotypicity(Base):
             tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, C.SEQ_LEN],
                                               dtype=np.float32))
+        print(seq_array)
         return request
 
     @staticmethod
