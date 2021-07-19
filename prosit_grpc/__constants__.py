@@ -9,6 +9,10 @@ def get_modstring_mass(modstring, aa_mass, unimod_connection=None):
     """
     mod = [int(x[0]) for x in re.findall('U:(\d+?)(,|\))', modstring)]
     mod_mass = [unimod_connection.get(m).monoisotopic_mass for m in mod]
+    aa = modstring[0]
+    if(mod == 'U:21'):
+        if(aa == 'S' or aa=='T'):
+            aa_mass -= 97.976896
     return(aa_mass + sum(mod_mass))
 
 
@@ -37,12 +41,16 @@ ALPHABET_UNMOD = {
     "V": 18,
     "W": 19,
     "Y": 20,
-    "C": 24
+    "C": 24,
 }
 
 ALPHABET_MOD = {
     "M(U:35)": 21,
-    "C(U:4)": 2
+    "K(U:737)": 22,
+    "C(U:4)": 2,
+    "S(U:21)":25,
+    "T(U:21)":26,
+    "Y(U:21)":27,
 }
 
 # ALPHABET contains all amino acid and ptm abbreviations and

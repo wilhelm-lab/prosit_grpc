@@ -249,6 +249,34 @@ class Intensity(Base):
         # self.apply_filter()
 
         self.output = self.data
+        
+class Intensity_tmt(Intensity):
+    def create_request(self, model_name, inputs_batch, batchsize):
+        request = super().create_request(model_name, inputs_batch, batchsize)  
+        request.inputs['fragmentation_type_in:0'].CopyFrom(tf.make_tensor_proto(inputs_batch["fragmentation_array"],
+                                              shape=[batchsize, 1],
+                                              dtype=np.float32))
+        return request
+        
+    def prepare_input(self):
+        in_dic = {
+            "seq_array": self.input.sequences.array,
+            "ce_array": self.input.collision_energies.array,
+            "charges_array": self.input.charges.array,
+            "fragmentation_array":self.input.fragmentation.array,
+        }
+        return in_dic
+        
+    def prepare_output(self):
+        super().prepare_output()
+        n_seq = len(self.predictions)
+        self.output['fragmentmz'] = np.array([U.compute_ion_masses(self.input.sequences.array[i],
+                                                         self.input.charges.array[i],'tmt')
+                                                         for i in range(n_seq)],
+                                   dtype=np.float32)
+        self.mask = self.create_masking(charges_array=self.input.charges.array,
+                                        sequences_lengths=self.input.sequences.lengths)
+        self.apply_masking()
 
 class Irt(Base):
     def create_request(self, model_name, inputs_batch, batchsize):

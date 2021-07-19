@@ -83,6 +83,11 @@ class PROSITpredictor:
 
     def pred_object_factory(self, model):
         model_type = model.split("_")[2]
+        
+        if model_type == "intensityTMT":
+            return PredObject.Intensity_tmt(stub=self.stub,
+                                        model_name=model,
+                                        input=self.input)
         if model_type == "intensity":
             return PredObject.Intensity(stub=self.stub,
                                         model_name=model,
@@ -110,6 +115,7 @@ class PROSITpredictor:
                 models: list,
                 sequences = None,
                 charges = None,
+                fragmentation = None,
                 collision_energies = None,
                 matrix_expansion_param: list = [],
                 disable_progress_bar = False
@@ -122,7 +128,8 @@ class PROSITpredictor:
 
         self.input = PROSITinput(sequences=sequences,
                                  charges=charges,
-                                 collision_energies=collision_energies)
+                                 collision_energies=collision_energies,
+                                 fragmentation=fragmentation)
 
         self.input.prepare_input(disable_progress_bar)
         for paramset in matrix_expansion_param:
@@ -145,6 +152,7 @@ class PROSITpredictor:
                         irt_model: str = None,
                         intensity_model: str = None,
                         proteotypicicty_model: str = None,
+                        fragmentation: list = None,
                         sequences: list = None,
                         charges: list = None,
                         collision_energies: list = None,
@@ -155,6 +163,7 @@ class PROSITpredictor:
                                 charges=charges,
                                 collision_energies=collision_energies,
                                 disable_progress_bar=disable_progress_bar,
+                                fragmentation=fragmentation,
                                 models=[irt_model, intensity_model, proteotypicicty_model])
 
         hdf5_dict = {
