@@ -1,13 +1,12 @@
-from fundamentals import constants as C
-# from . import __constants__ as C
+from . import __constants__ as C
 import numpy as np
 import itertools
 import scipy
 import difflib
 
 def compute_ion_masses(seq_int, charge_onehot,tmt=''):
-    """ 
-    Collects an integer sequence e.g. [1,2,3] with charge 2 and returns array with 174 positions for ion masses. 
+    """
+    Collects an integer sequence e.g. [1,2,3] with charge 2 and returns array with 174 positions for ion masses.
     Invalid masses are set to -1
     charge_one is a onehot representation of charge with 6 elems for charges 1 to 6
     """
@@ -36,14 +35,14 @@ def compute_ion_masses(seq_int, charge_onehot,tmt=''):
         mass_y += C.VEC_MZ[seq_int[l-1-i]]
 
         # Compute charge +1
-        masses[j] = (mass_y + 1*C.MASSES["PROTON"] +
-                     C.MASSES["C_TERMINUS"] + C.MASSES["H"])/1.0
+        masses[j] = (mass_y + 1*C.PARTICLE_MASSES["PROTON"] +
+                     C.AA_MASSES["-[]"] + C.ATOM_MASSES["H"])/1.0
         # Compute charge +2
-        masses[j+1] = (mass_y + 2*C.MASSES["PROTON"] + C.MASSES["C_TERMINUS"] +
-                       C.MASSES["H"])/2.0 if charge >= 2 else -1.0
+        masses[j+1] = (mass_y + 2*C.PARTICLE_MASSES["PROTON"] + C.AA_MASSES["-[]"] +
+                       C.ATOM_MASSES["H"])/2.0 if charge >= 2 else -1.0
         # Compute charge +3
-        masses[j+2] = (mass_y + 3*C.MASSES["PROTON"] + C.MASSES["C_TERMINUS"] +
-                       C.MASSES["H"])/3.0 if charge >= 3.0 else -1.0
+        masses[j+2] = (mass_y + 3*C.PARTICLE_MASSES["PROTON"] + C.AA_MASSES["-[]"] +
+                       C.ATOM_MASSES["H"])/3.0 if charge >= 3.0 else -1.0
 
         # MASS FOR B IONS
         if(i ==0 and tmt=='tmt'):
@@ -52,14 +51,14 @@ def compute_ion_masses(seq_int, charge_onehot,tmt=''):
             mass_b += C.VEC_MZ[seq_int[i]]
 
         # Compute charge +1
-        masses[j+3] = (mass_b + 1*C.MASSES["PROTON"] +
-                       C.MASSES["N_TERMINUS"] - C.MASSES["H"])/1.0
+        masses[j+3] = (mass_b + 1*C.PARTICLE_MASSES["PROTON"] +
+                       C.AA_MASSES["[]-"] - C.ATOM_MASSES["H"])/1.0
         # Compute charge +2
-        masses[j+4] = (mass_b + 2*C.MASSES["PROTON"] + C.MASSES["N_TERMINUS"] -
-                       C.MASSES["H"])/2.0 if charge >= 2 else -1.0
+        masses[j+4] = (mass_b + 2*C.PARTICLE_MASSES["PROTON"] + C.AA_MASSES["[]-"] -
+                       C.ATOM_MASSES["H"])/2.0 if charge >= 2 else -1.0
         # Compute charge +3
-        masses[j+5] = (mass_b + 3*C.MASSES["PROTON"] + C.MASSES["N_TERMINUS"] -
-                       C.MASSES["H"])/3.0 if charge >= 3.0 else -1.0
+        masses[j+5] = (mass_b + 3*C.PARTICLE_MASSES["PROTON"] + C.AA_MASSES["[]-"] -
+                       C.ATOM_MASSES["H"])/3.0 if charge >= 3.0 else -1.0
 
     return masses
 
@@ -84,8 +83,8 @@ def parse_modstrings(sequences, alphabet, translate=False, filter=False):
 
     def split_modstring(sequence, r_pattern):
         # Ugly and fast fix for reading modifications as is from maxquant we should reconisder how to fix it.
-        sequence = sequence.replace('M(ox)','M(U:35)')
-        sequence = sequence.replace('C','C(U:4)')
+        # sequence = sequence.replace('M(ox)','M(U:35)')
+        # sequence = sequence.replace('C','C(U:4)')
         split_seq = r_pattern.findall(sequence)
         if "".join(split_seq) == sequence:
             if translate:

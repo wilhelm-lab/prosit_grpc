@@ -1,94 +1,7 @@
-from pyteomics.mass import calculate_mass
-from pyteomics.mass.unimod import Unimod
 import re
 import numpy as np
 
-def get_modstring_mass(modstring, aa_mass, unimod_connection=None):
-    """
-    Uses pyteomics to calculate the mass of a modstring
-    """
-    mod = [int(x[0]) for x in re.findall('U:(\d+?)(,|\))', modstring)]
-    mod_mass = [unimod_connection.get(m).monoisotopic_mass for m in mod]
-    aa = modstring[0]
-    if(mod == 'U:21'):
-        if(aa == 'S' or aa=='T'):
-            aa_mass -= 97.976896
-    return(aa_mass + sum(mod_mass))
-
-
-
-#############
-# ALPHABETS #
-#############
-
-ALPHABET_UNMOD = {
-    "A": 1,
-    "D": 3,
-    "E": 4,
-    "F": 5,
-    "G": 6,
-    "H": 7,
-    "I": 8,
-    "K": 9,
-    "L": 10,
-    "M": 11,
-    "N": 12,
-    "P": 13,
-    "Q": 14,
-    "R": 15,
-    "S": 16,
-    "T": 17,
-    "V": 18,
-    "W": 19,
-    "Y": 20,
-    "C": 24,
-}
-
-ALPHABET_MOD = {
-    "M(U:35)": 21,
-    "K(U:737)": 22,
-    "C(U:4)": 2,
-    "S(U:21)":25,
-    "T(U:21)":26,
-    "Y(U:21)":27,
-}
-
-# ALPHABET contains all amino acid and ptm abbreviations and
-ALPHABET = {**ALPHABET_UNMOD, **ALPHABET_MOD}
-AMINO_ACIDS_INT = {integer: char for char, integer in ALPHABET.items()}
-AMINO_ACIDS_INT[0] = ""
-
-ALPHABET_MASS = {}
-for a in ALPHABET_UNMOD:
-    m = calculate_mass(a) - calculate_mass("H2O")  # peptide bond loses water
-    ALPHABET_MASS[a] = m
-
-for key in ALPHABET_MOD.keys():
-    ALPHABET_MASS[key] = get_modstring_mass(key,
-                                            ALPHABET_MASS[key[0]],
-                                            unimod_connection=Unimod())
-
-#######################################
-# HELPERS FOR FRAGMENT MZ CALCULATION #
-#######################################
-
-# Array containing masses --- at index one is mass for A, etc.
-VEC_MZ = np.zeros(max(ALPHABET.values()) + 1)
-for i, a in AMINO_ACIDS_INT.items():
-    if a in ALPHABET_MASS:
-        VEC_MZ[i] = ALPHABET_MASS[a]
-
-MASSES = {
-        "PROTON": 1.007276467,
-        "ELECTRON": 0.00054858,
-        "H": 1.007825035,
-        "C": 12.0,
-        "O": 15.99491463,
-        "N": 14.003074,
-}
-
-MASSES["N_TERMINUS"] = MASSES["H"]
-MASSES["C_TERMINUS"] = MASSES["O"] + MASSES["H"]
+from fundamentals.constants import *
 
 #####################
 # GENERAL CONSTANTS #
@@ -99,6 +12,15 @@ NUM_CHARGES_ONEHOT = 6
 MAX_CHARGE = 6
 BATCH_SIZE = 6000
 VEC_LENGTH = 174
+
+#######################################
+# HELPERS FOR FRAGMENT MZ CALCULATION #
+#######################################
+
+# Array containing masses --- at index one is mass for A, etc.
+VEC_MZ = np.zeros(max(ALPHABET.values()) + 1)
+for a, i in AA_ALPHABET.items():
+    VEC_MZ[i] = AA_MASSES[a]
 
 ############################
 # GENERATION OF ANNOTATION #

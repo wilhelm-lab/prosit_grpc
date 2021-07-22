@@ -1,5 +1,5 @@
 from prosit_grpc import __utils__ as U
-from fundamentals import constants as C
+from prosit_grpc import __constants__ as C
 import numpy as np
 import pytest
 
@@ -89,7 +89,7 @@ def test_generate_newMatrix_v2():
     assert np.array_equal(m, [0, 1, 3, 6, 10])
 
 def test_parse_modstrings():
-    valid_seq = "AC(U:4)C(U:4)CDEFGHIKLMNM(U:35)PQRSTVWYM(U:35)STY"
+    valid_seq = "AC[UNIMOD:4]C[UNIMOD:4]CDEFGHIKLMNM[UNIMOD:35]PQRSTVWYM[UNIMOD:35]STY"
     invalid_seq = "testing"
     assert "".join((list(U.parse_modstrings([valid_seq], alphabet=C.ALPHABET)))[0]) == valid_seq
 

@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from fundamentals import constants as C
+from . import __constants__ as C
 from . import __utils__ as U  # Utility/Static functions
 
 
@@ -18,7 +18,7 @@ class PROSITinput:
             self.charges.prepare_charges()
         if self.collision_energies is not None:
             self.collision_energies.prepare_collisionenergies()
-            
+
     def expand_matrices(self, param):
         """
         Expects a list with dictionaries with 3 input parameters each
@@ -197,4 +197,3 @@ class PROSITcollisionenergies:
 class PROSITfragmentation:
     def __init__(self, fragmentations):
        self.array = fragmentations
-        

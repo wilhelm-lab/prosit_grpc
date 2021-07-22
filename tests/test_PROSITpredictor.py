@@ -96,7 +96,7 @@ def test_predict_with_matrix_expansion():
                                   collision_energies=[20, 30],
                                   models=[test_int_model, test_irt_model, test_prot_model],
                                   matrix_expansion_param=[
-                                      {'AA_to_permutate': 'M', 'into': 'M(U:35)', 'max_in_parallel': 2}]
+                                      {'AA_to_permutate': 'M', 'into': 'M[UNIMOD:35]', 'max_in_parallel': 2}]
                                   )
 
     assert len(pred_dict[test_int_model]) == 3
@@ -110,7 +110,7 @@ def test_predict_with_repeated_matrix_expansion():
                                      path_to_key_certificate=key,
                                      )
 
-    mexp = [{'AA_to_permutate': 'C', 'into': 'M(U:35)', 'max_in_parallel': 1},
+    mexp = [{'AA_to_permutate': 'C', 'into': 'M[UNIMOD:35]', 'max_in_parallel': 1},
             {'AA_to_permutate': 'A', 'into': 'S', 'max_in_parallel': 1},
             {'AA_to_permutate': 'D', 'into': 'V', 'max_in_parallel': 1},
             {'AA_to_permutate': 'E', 'into': 'K', 'max_in_parallel': 1}]

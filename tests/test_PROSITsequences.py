@@ -6,11 +6,12 @@ sequences_character = ["KKVCQGTSNKLTQLGTFE",
                        "GNMYYENSYALAVLSNYDANKTGLK",
                        "LTQLGTFEDHFLSLQR",
                        "FRDEATCKDTCPPLMLYNPTTQMDVNPEGK",
-                       "RDEATCKDTCPPLM(U:35)LNPTTYQMDVNPEGK",
-                       "FRDEATKDTCPPLMM(U:35)YNPTTYQMDVNPEGK",
+                       "RDEATCKDTCPPLM[UNIMOD:35]LNPTTYQMDVNPEGK",
+                       "FRDEATKDTCPPLMM[UNIMOD:35]YNPTTYQMDVNPEGK",
                        "ANKEILDEAYVMASVDNPHVCR",
-                       "FRDEATCKDTC(U:4)PPLLYNPTTYQMDVNPEGK",
-                       "FRDEATCKDTC(U:4)PPLMYNPTTYQMDVNPEGK"]
+                       "FRDEATCKDTC[UNIMOD:4]PPLLYNPTTYQMDVNPEGK",
+                       "FRDEATCKDTC[UNIMOD:4]PPLMYNPTTYQMDVNPEGK"]
+
 sequences_numeric = [[9, 9, 18, 24, 14, 6, 17, 16, 12, 9, 10, 17, 14, 10, 6, 17, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                      [6, 12, 11, 20, 20, 4, 12, 16, 20, 1, 10, 1, 18, 10, 16,
                          12, 20, 3, 1, 12, 9, 17, 6, 10, 9, 0, 0, 0, 0, 0],
