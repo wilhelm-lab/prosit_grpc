@@ -4,63 +4,7 @@ import itertools
 import scipy
 import difflib
 
-def compute_ion_masses(seq_int, charge_onehot,tmt=''):
-    """
-    Collects an integer sequence e.g. [1,2,3] with charge 2 and returns array with 174 positions for ion masses.
-    Invalid masses are set to -1
-    charge_one is a onehot representation of charge with 6 elems for charges 1 to 6
-    """
-    charge = list(charge_onehot).index(1) + 1
-    if not (charge in (1, 2, 3, 4, 5, 6) and len(charge_onehot) == 6):
-        print("[ERROR] One-hot-enconded Charge is not in valid range 1 to 6")
-        return
-
-    if not len(seq_int) == C.SEQ_LEN:
-        print("[ERROR] Sequence length {} is not desired length of {}".format(
-            len(seq_int), C.SEQ_LEN))
-        return
-
-    l = list(seq_int).index(0) if 0 in seq_int else C.SEQ_LEN
-    masses = np.ones((C.SEQ_LEN-1)*2*3, dtype=np.float32)*-1
-    mass_b = 0
-    mass_y = 0
-    j = 0  # iterate over masses
-
-    # Iterate over sequence, sequence should have length 30
-    for i in range(l-1):  # only 29 possible ios
-        j = i*6  # index for masses array at position
-
-        # MASS FOR Y IONS
-        # print("Addded", C.VEC_MZ[seq_int[l-1-i]])
-        mass_y += C.VEC_MZ[seq_int[l-1-i]]
-
-        # Compute charge +1
-        masses[j] = (mass_y + 1*C.PARTICLE_MASSES["PROTON"] +
-                     C.AA_MASSES["-[]"] + C.ATOM_MASSES["H"])/1.0
-        # Compute charge +2
-        masses[j+1] = (mass_y + 2*C.PARTICLE_MASSES["PROTON"] + C.AA_MASSES["-[]"] +
-                       C.ATOM_MASSES["H"])/2.0 if charge >= 2 else -1.0
-        # Compute charge +3
-        masses[j+2] = (mass_y + 3*C.PARTICLE_MASSES["PROTON"] + C.AA_MASSES["-[]"] +
-                       C.ATOM_MASSES["H"])/3.0 if charge >= 3.0 else -1.0
-
-        # MASS FOR B IONS
-        if(i ==0 and tmt=='tmt'):
-            mass_b += C.VEC_MZ[seq_int[i]]+229.162932
-        else:
-            mass_b += C.VEC_MZ[seq_int[i]]
-
-        # Compute charge +1
-        masses[j+3] = (mass_b + 1*C.PARTICLE_MASSES["PROTON"] +
-                       C.AA_MASSES["[]-"] - C.ATOM_MASSES["H"])/1.0
-        # Compute charge +2
-        masses[j+4] = (mass_b + 2*C.PARTICLE_MASSES["PROTON"] + C.AA_MASSES["[]-"] -
-                       C.ATOM_MASSES["H"])/2.0 if charge >= 2 else -1.0
-        # Compute charge +3
-        masses[j+5] = (mass_b + 3*C.PARTICLE_MASSES["PROTON"] + C.AA_MASSES["[]-"] -
-                       C.ATOM_MASSES["H"])/3.0 if charge >= 3.0 else -1.0
-
-    return masses
+from fundamentals.fragments import compute_ion_masses
 
 
 def normalize_intensities(x):
