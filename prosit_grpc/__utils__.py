@@ -2,10 +2,10 @@ from . import __constants__ as C
 import numpy as np
 import itertools
 import scipy
-import difflib
 
 from fundamentals.fragments import compute_ion_masses
-
+from fundamentals.mod_string import parse_modstrings
+from fundamentals.charge import indices_to_one_hot
 
 def normalize_intensities(x):
     """
@@ -13,53 +13,6 @@ def normalize_intensities(x):
 
     """
     return np.transpose(np.transpose(x)/np.max(x, 1))
-
-
-def parse_modstrings(sequences, alphabet, translate=False, filter=False):
-    """
-    :param sequences: List of strings
-    :param ALPHABET: dictionary where the keys correspond to all possible 'Elements' that can occur in the string
-    :param translate: boolean to determine if the Elements should be translated to the corresponding values of ALPHABET
-    :return: generator that yields a list of sequence 'Elements' or the translated sequence "Elements"
-    """
-    import re
-    from itertools import repeat
-
-    def split_modstring(sequence, r_pattern):
-        # Ugly and fast fix for reading modifications as is from maxquant we should reconisder how to fix it.
-        # sequence = sequence.replace('M(ox)','M(U:35)')
-        # sequence = sequence.replace('C','C(U:4)')
-        split_seq = r_pattern.findall(sequence)
-        if "".join(split_seq) == sequence:
-            if translate:
-                return [alphabet[aa] for aa in split_seq]
-            elif not translate:
-                return split_seq
-        elif filter:
-            return [0]
-        else:
-            not_parsable_elements = "".join([li[2] for li in difflib.ndiff(sequence, "".join(split_seq)) if li[0] == '-'])
-            raise ValueError(f"The element(s) [{not_parsable_elements}] "
-                             f"in the sequence [{sequence}] could not be parsed")
-
-    pattern = sorted(alphabet, key=len, reverse=True)
-    pattern = [re.escape(i) for i in pattern]
-    regex_pattern = re.compile("|".join(pattern))
-    return map(split_modstring, sequences, repeat(regex_pattern))
-
-def indices_to_one_hot(data, nb_classes):
-    """
-    Convert an iterable of indices to one-hot encoded labels.
-    :param data: charge, int between 1 and 6
-    """
-    #print(data)
-    targets = np.array([data])
-    targets = targets.astype(np.uint8)
-    targets = targets-1  # -1 for 0 indexing
-    try:
-        return np.int_((np.eye(nb_classes)[targets])).tolist()[0]
-    except IndexError:
-        raise IndexError('Please validate the precursor charge values are between 1 and 6')
 
 def generate_newMatrix_v2(
     npMatrix, iFromReplaceValue, iToReplaceValue, numberAtTheSameTime=2
