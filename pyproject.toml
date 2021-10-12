@@ -5,17 +5,16 @@ description = "A Client to access Prosit via GRPC"
 authors = ["Daniela Andrade Salazar <danial.andrade@tum.de>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.8"
 numpy = "^1.18.1"
 scipy = "^1.5.3"
-tensorflow = ">=1.15.0,<2.3.0"
-tensorflow-serving-api = ">=1.15.0,<2.3.0"
+tensorflow = "^2.3.0"
+tensorflow-serving-api = "^2.3.0"
 grpcio = "^1.26.0"
 tqdm = "^4.43.0"
 autopep8 = "^1.5"
-#pyteomics = "^4.3.2"
-#lxml = "*" # required by pyteomics
-#sqlalchemy = "*" # required by pyteomics
+fundamentals = {git = "git@gitlab.lrz.de:compmass/prosit/tools/fundamentals.git", branch="hackathon_cleanup"}
+#fundamentals = {path = "/home/matthewt/git/fundamentals"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.3.4"
