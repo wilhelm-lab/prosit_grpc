@@ -92,12 +92,15 @@ class PROSITpredictor:
             return PredObject.Intensity(stub=self.stub,
                                         model_name=model,
                                         input=self.input)
-
         elif model_type == "irt":
-            return PredObject.Irt(stub=self.stub,
+            if len(model.split('_')) ==4:
+                return PredObject.IrtTMT(stub=self.stub,
                                   model_name=model,
                                   input=self.input)
-
+            elif model_type == "irt":
+                return PredObject.Irt(stub=self.stub,
+                                      model_name=model,
+                                      input=self.input)
         elif model_type == "proteotypicity":
             return PredObject.Proteotypicity(stub=self.stub,
                                              model_name=model,
@@ -135,9 +138,11 @@ class PROSITpredictor:
         for paramset in matrix_expansion_param:
             self.input.expand_matrices(param=paramset)
         self.input.sequences.calculate_lengths()
+        #print(self.input.sequences)
 
         predictions = {}
         for model in models:
+            print(model)
             if not disable_progress_bar:
                 print(f"Predicting for model: {model}")
             pred_object = self.pred_object_factory(model=model)
@@ -145,7 +150,7 @@ class PROSITpredictor:
             pred_object.prepare_output()
             predictions[model] = pred_object.output
 
-        return predictions
+        return predictions, self.input.sequences
 
     def predict_to_hdf5(self,
                         path_hdf5: str,
