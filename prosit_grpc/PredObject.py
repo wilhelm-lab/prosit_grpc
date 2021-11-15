@@ -305,6 +305,35 @@ class Irt(Base):
     def prepare_output(self):
         self.output = (self.predictions*43.39373 + 56.35363441)
 
+class IrtTMT(Base):
+    def create_request(self, model_name, inputs_batch, batchsize):
+        request = self.create_request_scaffold(model_name=model_name)
+        request.inputs['peptides_in:0'].CopyFrom(
+            tf.make_tensor_proto(inputs_batch["seq_array"],
+                                 shape=[batchsize, C.SEQ_LEN],
+                                 dtype=np.int32))
+        return request
+
+    @staticmethod
+    def unpack_response(response):
+        """
+        :return prediction formatted as numpy array
+        """
+        outputs_tensor_proto = response.outputs["prediction/BiasAdd:0"]
+        shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
+        return np.array(outputs_tensor_proto.float_val, np.float32).reshape(shape.as_list())
+
+    def prepare_input(self):
+        in_dic = {
+            "seq_array": self.input.sequences.array
+        }
+        print(self.input.sequences.array)
+        return in_dic
+
+    def prepare_output(self):
+        self.output = (self.predictions)
+
+
 class Proteotypicity(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
