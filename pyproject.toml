@@ -13,8 +13,7 @@ tensorflow-serving-api = "^2.3.0"
 grpcio = "^1.26.0"
 tqdm = "^4.43.0"
 autopep8 = "^1.5"
-fundamentals = {git = "git@gitlab.lrz.de:compmass/prosit/tools/fundamentals.git", branch="hackathon_cleanup"}
-#fundamentals = {path = "/home/matthewt/git/fundamentals"}
+fundamentals = {git = "git@gitlab.lrz.de:compmass/prosit/tools/fundamentals.git", branch="develop"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.3.4"
