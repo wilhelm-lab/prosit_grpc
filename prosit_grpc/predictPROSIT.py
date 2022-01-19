@@ -77,30 +77,34 @@ class PROSITpredictor:
             self.channel = grpc.secure_channel(self.server, creds, options=[
                                                ('grpc.keepalive_timeout_ms', keepalive_timeout_ms)])
         except:
-            print("Establishing a secure channel was not possible")
+            #print("Establishing a secure channel was not possible")
             self.channel = grpc.insecure_channel(
                 self.server, options=[('grpc.keepalive_timeout_ms', keepalive_timeout_ms)])
 
     def pred_object_factory(self, model):
         model_type = model.split("_")[2]
-
-        if model_type == "intensityTMT":
-            return PredObject.Intensity_tmt(stub=self.stub,
-                                        model_name=model,
-                                        input=self.input)
-        if model_type == "intensity":
-            return PredObject.Intensity(stub=self.stub,
-                                        model_name=model,
-                                        input=self.input)
-        elif model_type == "irt":
-            if len(model.split('_')) ==4:
+        if 'intensity' in model:
+            if 'TMT' in model:
+                return PredObject.Intensity_tmt(stub=self.stub,
+                                                model_name=model,
+                                                input=self.input)
+            elif 'PTM' in model:
+                return PredObject.Intensity(stub=self.stub,
+                                            model_name=model,
+                                            input=self.input)
+            else:
+                return PredObject.Intensity(stub=self.stub,
+                                            model_name=model,
+                                            input=self.input)
+        elif "irt" in model:
+            if 'TMT' in model:
                 return PredObject.IrtTMT(stub=self.stub,
-                                  model_name=model,
-                                  input=self.input)
+                                         model_name=model,
+                                         input=self.input)
             elif model_type == "irt":
-                return PredObject.Irt(stub=self.stub,
-                                      model_name=model,
-                                      input=self.input)
+                PredObject.Irt(stub=self.stub,
+                               model_name=model,
+                               input=self.input)
         elif model_type == "proteotypicity":
             return PredObject.Proteotypicity(stub=self.stub,
                                              model_name=model,
@@ -142,7 +146,6 @@ class PROSITpredictor:
 
         predictions = {}
         for model in models:
-            print(model)
             if not disable_progress_bar:
                 print(f"Predicting for model: {model}")
             pred_object = self.pred_object_factory(model=model)
