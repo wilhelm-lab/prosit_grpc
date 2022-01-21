@@ -101,8 +101,8 @@ class PROSITpredictor:
                 return PredObject.IrtTMT(stub=self.stub,
                                          model_name=model,
                                          input=self.input)
-            elif model_type == "irt":
-                PredObject.Irt(stub=self.stub,
+            else:
+                return PredObject.Irt(stub=self.stub,
                                model_name=model,
                                input=self.input)
         elif model_type == "proteotypicity":
