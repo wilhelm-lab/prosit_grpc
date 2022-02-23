@@ -10,6 +10,7 @@ class PROSITinput:
         self.charges = PROSITcharges(charges)
         self.collision_energies = PROSITcollisionenergies(collision_energies)
         self.fragmentation = PROSITfragmentation(fragmentation)
+        self.tmt = ''
 
     def prepare_input(self, flag_disable_progress_bar):
         if self.sequences is not None:
@@ -18,6 +19,7 @@ class PROSITinput:
             self.charges.prepare_charges()
         if self.collision_energies is not None:
             self.collision_energies.prepare_collisionenergies()
+        self.tmt = self.sequences.tmt
 
     def expand_matrices(self, param):
         """
@@ -91,6 +93,7 @@ class PROSITsequences:
         self.numeric = None
         self.array = None
         self.lengths = None
+        self.tmt = ''
 
         seq_type = PROSITsequences.determine_type(sequences)
         if seq_type == "character":
@@ -110,7 +113,20 @@ class PROSITsequences:
             return "numeric"
 
     def character_to_array(self, flag_disable_progress_bar, filter=False):
-        self.array = np.zeros((len(self.character),C.SEQ_LEN), dtype=np.uint8)
+        self.array = np.zeros((len(self.character), C.SEQ_LEN), dtype=np.uint8)
+        if '2016' in self.character[0]:
+            self.tmt = 'tmtpro'
+            self.character = [x[13:] for x in self.character]
+        elif '737' in self.character[0]:
+            self.tmt = 'tmt'
+            self.character = [x[12:] for x in self.character]
+        elif '730' in self.character[0]:
+            self.tmt = 'itraq8'
+            self.character = [x[12:] for x in self.character]
+        elif '214' in self.character[0]:
+            self.tmt = 'itraq4'
+            self.character = [x[12:] for x in self.character]
+
         generator_sequence_numeric = U.parse_modstrings(self.character, alphabet=C.ALPHABET, translate=True, filter=filter)
         enum_gen_seq_num = enumerate(generator_sequence_numeric)
 

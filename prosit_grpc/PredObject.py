@@ -271,7 +271,7 @@ class Intensity_tmt(Intensity):
         super().prepare_output()
         n_seq = len(self.predictions)
         self.output['fragmentmz'] = np.array([U.compute_ion_masses(self.input.sequences.array[i],
-                                                         self.input.charges.array[i],'tmt')
+                                                         self.input.charges.array[i],self.input.tmt)
                                                          for i in range(n_seq)],
                                    dtype=np.float32)
         self.mask = self.create_masking(charges_array=self.input.charges.array,

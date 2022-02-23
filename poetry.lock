@@ -135,8 +135,8 @@ statsmodels = "^0.12.2"
 [package.source]
 type = "git"
 url = "git@gitlab.lrz.de:compmass/prosit/tools/fundamentals.git"
-reference = "hackathon_cleanup"
-resolved_reference = "c2414df3f32627a421ec0042edfea8ef6686dbde"
+reference = "develop"
+resolved_reference = "483a3ce878d932cf9dc9d4128a4d0cb8578c51ec"
 
 [[package]]
 name = "gast"
