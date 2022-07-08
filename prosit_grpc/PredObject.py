@@ -363,9 +363,9 @@ class Proteotypicity(Base):
 class Charge(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
-        request.inputs['peptides_in_1:0'].CopyFrom(
+        request.inputs['peptides_in_1'].CopyFrom(
             tf.make_tensor_proto(inputs_batch["seq_array"],
-                                              shape=[batchsize, C.SEQ_LEN],
+                                              shape=[batchsize, C.SEQ_LEN+2],
                                               dtype=np.float32))
         return request
 
@@ -374,7 +374,7 @@ class Charge(Base):
         """
         :return prediction formatted as numpy array
         """
-        outputs_tensor_proto = response.outputs["softmax/Softmax:0"]
+        outputs_tensor_proto = response.outputs["softmax"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
         return np.array(outputs_tensor_proto.float_val, dtype=np.float32).reshape(shape.as_list())
 
