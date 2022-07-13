@@ -153,7 +153,7 @@ class PROSITpredictor:
             pred_object.prepare_output()
             predictions[model] = pred_object.output
 
-        return predictions, self.input.sequences
+        return predictions
 
     def predict_to_hdf5(self,
                         path_hdf5: str,
