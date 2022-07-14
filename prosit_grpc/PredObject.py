@@ -363,9 +363,12 @@ class Proteotypicity(Base):
 class Charge(Base):
     def create_request(self, model_name, inputs_batch, batchsize):
         request = self.create_request_scaffold(model_name=model_name)
+        
+        tmp = np.concatenate([inputs_batch["seq_array"],np.zeros(2*batchsize).reshape((batchsize,2))],axis=1)
+
         request.inputs['peptides_in_1'].CopyFrom(
-            tf.make_tensor_proto(inputs_batch["seq_array"],
-                                              shape=[batchsize, C.SEQ_LEN+2],
+            tf.make_tensor_proto(tmp,
+                                              shape=[batchsize, 32],
                                               dtype=np.float32))
         return request
 

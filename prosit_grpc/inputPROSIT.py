@@ -133,9 +133,6 @@ class PROSITsequences:
         for i, sequence_numeric in tqdm(enum_gen_seq_num,
                                      disable=flag_disable_progress_bar,
                                      total=len(self.character)):
-            # remove N and C-term markers since the current models do not support these yet
-            if sequence_numeric[0] == C.TERMINAL_ALPHABET["[]-"] and sequence_numeric[-1] == C.TERMINAL_ALPHABET["-[]"]:
-                sequence_numeric = sequence_numeric[1:-1]
             
             if len(sequence_numeric) > C.SEQ_LEN:
                 if filter:
