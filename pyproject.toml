@@ -9,8 +9,8 @@ python = ">=3.8, <3.11"
 numpy = "^1.23.2"
 tqdm = "^4.64.0"
 grpcio = "^1.48.0"
-fundamentals = {git = "https://gitlab.lrz.de/compmass/prosit/tools/fundamentals", rev = "develop_upgrade_dependencies"}
 tensorflow-serving-api = "^2.9.1"
+fundamentals = {git = "https://gitlab.lrz.de/compmass/prosit/tools/fundamentals.git", rev = "develop_upgrade_dependencies"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.3.4"
