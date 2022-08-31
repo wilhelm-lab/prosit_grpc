@@ -367,7 +367,7 @@ class Charge(Base):
         tmp = np.concatenate([inputs_batch["seq_array"],np.zeros(2*batchsize).reshape((batchsize,2))],axis=1)
 
         request.inputs['peptides_in_1'].CopyFrom(
-            tf.make_tensor_proto(tmp,
+            tf.make_tensor_proto(inputs_batch["seq_array"],
                                               shape=[batchsize, 32],
                                               dtype=np.float32))
         return request

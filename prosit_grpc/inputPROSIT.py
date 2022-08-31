@@ -105,15 +105,18 @@ class PROSITsequences:
 
     @staticmethod
     def determine_type(sequences):
-        if type(sequences) == np.ndarray:
-            return "array"
-        elif type(sequences[0]) is str:
-            return "character"
-        else:
-            return "numeric"
+        try:
+            if type(sequences) == np.ndarray:
+                return "array"
+            elif type(sequences[0]) is str:
+                return "character"
+            else:
+                return "numeric"
+        except:
+            print(sequences)
 
     def character_to_array(self, flag_disable_progress_bar, filter=False):
-        self.array = np.zeros((len(self.character), C.SEQ_LEN), dtype=np.uint8)
+        self.array = np.zeros((len(self.character), C.SEQ_LEN+2), dtype=np.uint8)
         if '2016' in self.character[0]:
             self.tmt = 'tmtpro'
             self.character = [x[13:] for x in self.character]
@@ -134,7 +137,7 @@ class PROSITsequences:
                                      disable=flag_disable_progress_bar,
                                      total=len(self.character)):
             
-            if len(sequence_numeric) > C.SEQ_LEN:
+            if len(sequence_numeric) > C.SEQ_LEN+2:
                 if filter:
                     pass # don't overwrite 0 in the array that is how we can differentiate
                 else:
