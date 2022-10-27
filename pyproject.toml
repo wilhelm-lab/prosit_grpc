@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "prosit_grpc"
-version = "0.1.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
-description = "Public repo for prosit_grpc"
-authors = ["Victor Giurcoiu <victor.giurcoiu@tum.de>"]
+version = "1.2.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
+description = "A Client to access Prosit via GRPC"
+authors = ["Daniela Andrade Salazar <danial.andrade@tum.de>"]
 license = "MIT"
 readme = "README.rst"
 homepage = "https://github.com/wilhelm-lab/prosit_grpc"
@@ -20,10 +20,15 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.7.0"
+python = ">=3.8, <3.11"
 click = ">=8.0.0"
 rich = ">=10.3.0"
 PyYAML = ">=5.4.1"
+numpy = "^1.23.2"
+tqdm = "^4.64.0"
+grpcio = "^1.48.0"
+tensorflow-serving-api = "^2.9.1"
+fundamentals = {path = "../fundamentals"}
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.3"
@@ -53,6 +58,7 @@ sphinx-rtd-dark-mode = ">=1.2.3"
 Jinja2 = ">=3.0.1"
 mypy = ">=0.910"
 pyupgrade = ">=2.31.0"
+pytest-cov = "^2.8.1"
 
 [tool.poetry.scripts]
 prosit_grpc = "prosit_grpc.__main__:main"
@@ -86,5 +92,10 @@ source = ["prosit_grpc"]
 show_missing = true
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = [
+	"poetry-core>=1.0.0",
+	"setuptools!=50",
+	"wheel"
+]
+
 build-backend = "poetry.core.masonry.api"
