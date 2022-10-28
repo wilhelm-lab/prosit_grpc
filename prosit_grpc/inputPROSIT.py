@@ -1,18 +1,23 @@
 import numpy as np
 from tqdm import tqdm
-from . import __constants__ as C
-from . import __utils__ as U  # Utility/Static functions
+
+from . import __constants__ as c
+from . import __utils__ as u  # Utility/Static functions
 
 
 class PROSITinput:
+    """PROSITinput is a class that creates the input."""
+
     def __init__(self, sequences=None, charges=None, collision_energies=None, fragmentation=None):
+        """Initialize PROSIT input."""
         self.sequences = PROSITsequences(sequences)
         self.charges = PROSITcharges(charges)
         self.collision_energies = PROSITcollisionenergies(collision_energies)
         self.fragmentation = PROSITfragmentation(fragmentation)
-        self.tmt = ''
+        self.tmt = ""
 
     def prepare_input(self, flag_disable_progress_bar):
+        """Prepare input."""
         if self.sequences is not None:
             self.sequences.prepare_sequences(flag_disable_progress_bar)
         if self.charges is not None:
@@ -23,18 +28,19 @@ class PROSITinput:
 
     def expand_matrices(self, param):
         """
-        Expects a list with dictionaries with 3 input parameters each
-        {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}
-        The first one is the number that should be replaced
-        The second one is the number that should be used to replace
-        The third one is the number of changes that are performed at the same time
-        """
+        Expects a list with dictionaries with 3 input parameters each.
 
-        self.sequences.array, num_copies_created = U.generate_newMatrix_v2(npMatrix=self.sequences.array,
-                                                                           iFromReplaceValue=C.ALPHABET[
-                                                                               param['AA_to_permutate']],
-                                                                           iToReplaceValue=C.ALPHABET[param['into']],
-                                                                           numberAtTheSameTime=param['max_in_parallel'])
+        Inputs are: {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}.
+        The first one is the number that should be replaced.
+        The second one is the number that should be used to replace.
+        The third one is the number of changes that are performed at the same time.
+        """
+        self.sequences.array, num_copies_created = u.generate_new_matrix_v2(
+            npMatrix=self.sequences.array,
+            iFromReplaceValue=c.ALPHABET[param["AA_to_permutate"]],
+            iToReplaceValue=c.ALPHABET[param["into"]],
+            numberAtTheSameTime=param["max_in_parallel"],
+        )
 
         charges_array = np.repeat(self.charges.array, num_copies_created, 0)
         collision_energies_array = np.repeat(self.collision_energies.array, num_copies_created, 0)
@@ -44,7 +50,10 @@ class PROSITinput:
 
 
 class PROSITcharges:
+    """PROSITcharges is a class that creates the charges."""
+
     def __init__(self, charges):
+        """Initialize PROSIT charges."""
         self.numeric = None
         self.onehot = None
         self.array = None
@@ -59,7 +68,7 @@ class PROSITcharges:
 
     @staticmethod
     def determine_type(charges):
-
+        """Determine type of charges (array, one-hot or numeric)."""
         if charges is None:
             return None
         else:
@@ -71,13 +80,15 @@ class PROSITcharges:
                 return "numeric"
 
     def numeric_to_onehot(self):
-        self.onehot = [U.indices_to_one_hot(
-            x, C.MAX_CHARGE) for x in self.numeric]
+        """Convert numeric to onehot encoding."""
+        self.onehot = [u.indices_to_one_hot(x, c.MAX_CHARGE) for x in self.numeric]
 
     def onehot_to_array(self):
+        """Convert onehot encoding to array."""
         self.array = np.array(self.onehot, dtype=np.float32)
 
     def prepare_charges(self):
+        """Prepare charges (as onehot encoding or array)."""
         if self.array is None:
             if self.onehot is None:
                 if self.numeric is None:
@@ -87,13 +98,15 @@ class PROSITcharges:
 
 
 class PROSITsequences:
-    def __init__(self, sequences):
+    """PROSITsequences is a class that creates the sequences."""
 
+    def __init__(self, sequences):
+        """Initialize PROSIT sequences."""
         self.character = None
         self.numeric = None
         self.array = None
         self.lengths = None
-        self.tmt = ''
+        self.tmt = ""
 
         seq_type = PROSITsequences.determine_type(sequences)
         if seq_type == "character":
@@ -105,6 +118,7 @@ class PROSITsequences:
 
     @staticmethod
     def determine_type(sequences):
+        """Determine type of sequences (array, character or numeric)."""
         if type(sequences) == np.ndarray:
             return "array"
         elif type(sequences[0]) is str:
@@ -113,51 +127,54 @@ class PROSITsequences:
             return "numeric"
 
     def character_to_array(self, flag_disable_progress_bar, filter=False):
-        self.array = np.zeros((len(self.character), C.SEQ_LEN), dtype=np.uint8)
-        if '2016' in self.character[0]:
-            self.tmt = 'tmtpro'
+        """Convert character to array."""
+        self.array = np.zeros((len(self.character), c.SEQ_LEN), dtype=np.uint8)
+        if "2016" in self.character[0]:
+            self.tmt = "tmtpro"
             self.character = [x[13:] for x in self.character]
-        elif '737' in self.character[0]:
-            self.tmt = 'tmt'
+        elif "737" in self.character[0]:
+            self.tmt = "tmt"
             self.character = [x[12:] for x in self.character]
-        elif '730' in self.character[0]:
-            self.tmt = 'itraq8'
+        elif "730" in self.character[0]:
+            self.tmt = "itraq8"
             self.character = [x[12:] for x in self.character]
-        elif '214' in self.character[0]:
-            self.tmt = 'itraq4'
+        elif "214" in self.character[0]:
+            self.tmt = "itraq4"
             self.character = [x[12:] for x in self.character]
 
-        generator_sequence_numeric = U.parse_modstrings(self.character, alphabet=C.ALPHABET, translate=True, filter=filter)
+        generator_sequence_numeric = u.parse_modstrings(
+            self.character, alphabet=c.ALPHABET, translate=True, filter=filter
+        )
         enum_gen_seq_num = enumerate(generator_sequence_numeric)
 
-        for i, sequence_numeric in tqdm(enum_gen_seq_num,
-                                     disable=flag_disable_progress_bar,
-                                     total=len(self.character)):
-            
-            if len(sequence_numeric) > C.SEQ_LEN:
+        for i, sequence_numeric in tqdm(enum_gen_seq_num, disable=flag_disable_progress_bar, total=len(self.character)):
+
+            if len(sequence_numeric) > c.SEQ_LEN:
                 if filter:
-                    pass # don't overwrite 0 in the array that is how we can differentiate
+                    pass  # don't overwrite 0 in the array that is how we can differentiate
                 else:
-                    raise Exception(f"The Sequence {sequence_numeric}, has {len(sequence_numeric)} Amino Acids."
-                                f"The maximum number of amino acids allowed is {C.SEQ_LEN}")
+                    raise Exception(
+                        f"The Sequence {sequence_numeric}, has {len(sequence_numeric)} Amino Acids."
+                        f"The maximum number of amino acids allowed is {c.SEQ_LEN}"
+                    )
             else:
-                self.array[i, 0:len(sequence_numeric)] = sequence_numeric
+                self.array[i, 0 : len(sequence_numeric)] = sequence_numeric
 
     def numeric_to_array(self):
+        """Convert numeric to array."""
         self.array = np.array(self.numeric, dtype=np.uint8)
 
     def calculate_lengths(self):
-        """Calculates the length of all sequences saved in an instance of PROSITsequences
+        """Calculates the length of all sequences saved in an instance of PROSITsequences.
 
         :requires PROSITsequences.array
-
         :sets PROSITsequences.lengths
         """
-        truth_array = np.in1d(
-            self.array, [0], invert=True).reshape(self.array.shape)
+        truth_array = np.in1d(self.array, [0], invert=True).reshape(self.array.shape)
         self.lengths = np.sum(truth_array, axis=1)
 
     def prepare_sequences(self, flag_disable_progress_bar=False, filter=False):
+        """Prepare sequences (as array)."""
         if self.array is None:
             if self.numeric is None:
                 if self.character is None:
@@ -169,7 +186,10 @@ class PROSITsequences:
 
 
 class PROSITcollisionenergies:
+    """PROSITcollisionenergies is a class that initializes the collision energies."""
+
     def __init__(self, collision_energies):
+        """Initialize PROSIT collision energies."""
         self.numeric = None
         self.procentual = None
         self.array = None
@@ -184,7 +204,7 @@ class PROSITcollisionenergies:
 
     @staticmethod
     def determine_type(collision_energies):
-
+        """Determine type of collision_energies (array, procentual or numeric)."""
         if collision_energies is None:
             return None
         else:
@@ -196,13 +216,16 @@ class PROSITcollisionenergies:
                 return "numeric"
 
     def numeric_to_procentual(self):
+        """Convert numeric to procentual value."""
         self.procentual = [i / 100 for i in self.numeric]
 
     def procentual_to_array(self):
+        """Convert procentual value to array."""
         self.array = np.array(self.procentual, dtype=np.float32)
         self.array = self.array.reshape(len(self.array), 1)
 
     def prepare_collisionenergies(self):
+        """Prepare collision energies."""
         if self.array is None:
             if self.procentual is None:
                 if self.numeric is None:
@@ -212,5 +235,8 @@ class PROSITcollisionenergies:
 
 
 class PROSITfragmentation:
+    """PROSITfragmentation is a class to initialize the fragmentation method."""
+
     def __init__(self, fragmentations):
-       self.array = fragmentations
+        """Initialize PROSIT fragmentations."""
+        self.array = fragmentations

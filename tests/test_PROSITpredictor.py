@@ -1,9 +1,10 @@
-import prosit_grpc.predictPROSIT as prpc
+import csv
+import os
 
 import h5py
-import csv
 import numpy as np
-import os
+
+import prosit_grpc.predictPROSIT as prpc
 
 # constants
 test_server = "131.159.152.7:8500"
@@ -16,12 +17,12 @@ test_irt_model = "Prosit_2019_irt"
 test_prot_model = "Prosit_2020_proteotypicity"
 test_charge_model = "Prosit_2020_charge"
 
-with h5py.File("tests/predict_to_hdf5.hdf5", 'r') as f:
+with h5py.File("tests/predict_to_hdf5.hdf5", "r") as f:
     irt = list(f["iRT"])
     irt = [i[0] for i in irt]
 
-with open("tests/input_test.csv", "r") as csvfile:
-    reader = csv.reader(csvfile, delimiter=',')
+with open("tests/input_test.csv") as csvfile:
+    reader = csv.reader(csvfile, delimiter=",")
     header = next(reader, None)
     sequences = []
     ce = []
@@ -31,27 +32,29 @@ with open("tests/input_test.csv", "r") as csvfile:
         ce.append(int(line[1]))
         charge.append(int(line[2]))
 
+
 def test_batching():
-    l = 100
+    """Test batching."""
+    length = 100
 
-    predictor = prpc.PROSITpredictor(server=test_server,
-                                     path_to_ca_certificate=ca_cert,
-                                     path_to_certificate=cert,
-                                     path_to_key_certificate=key
-                                     )
+    predictor = prpc.PROSITpredictor(
+        server=test_server, path_to_ca_certificate=ca_cert, path_to_certificate=cert, path_to_key_certificate=key
+    )
 
-    output_dict = predictor.predict(sequences=[x for x in sequences for _ in range(l)],
-                                    charges=[x for x in charge for _ in range(l)],
-                                    collision_energies=[x for x in ce for _ in range(l)],
-                                    models=[test_int_model, test_irt_model, test_prot_model, test_charge_model])
+    output_dict = predictor.predict(
+        sequences=[x for x in sequences for _ in range(length)],
+        charges=[x for x in charge for _ in range(length)],
+        collision_energies=[x for x in ce for _ in range(length)],
+        models=[test_int_model, test_irt_model, test_prot_model, test_charge_model],
+    )
 
-    assert len(output_dict[test_int_model]["intensity"]) == l*len(sequences)
-    assert len(output_dict[test_irt_model]) == l*len(sequences)
-    assert len(output_dict[test_prot_model]) == l*len(sequences)
-    assert len(output_dict[test_charge_model]) == l*len(sequences)
+    assert len(output_dict[test_int_model]["intensity"]) == length * len(sequences)
+    assert len(output_dict[test_irt_model]) == length * len(sequences)
+    assert len(output_dict[test_prot_model]) == length * len(sequences)
+    assert len(output_dict[test_charge_model]) == length * len(sequences)
 
     # ensure the predictions are not shuffeled
-    truth_irt = [x for x in irt for _ in range(l)]
+    truth_irt = [x for x in irt for _ in range(length)]
     pred_irt = output_dict[test_irt_model]
     assert len(truth_irt) == len(pred_irt)
     for x, y in zip(truth_irt, pred_irt):
@@ -59,68 +62,85 @@ def test_batching():
         # the prediction returns numpy float 64 while the hdf5 from the website has numpy float 32
         assert round(float(x), 3) == round(float(y), 3)
 
-def test_predict_to_hdf5():
 
+def test_predict_to_hdf5():
+    """Test predict_to_hdf5."""
     pred_hdf5 = "tests/pred.hdf5"
 
-    predictor = prpc.PROSITpredictor(server=test_server,
-                                     path_to_ca_certificate=ca_cert,
-                                     path_to_certificate=cert,
-                                     path_to_key_certificate=key,
-                                     )
-    predictor.predict_to_hdf5(sequences=sequences,
-                              charges=charge,
-                              collision_energies=ce,
-                              intensity_model=test_int_model,
-                              irt_model=test_irt_model,
-                              proteotypicicty_model=test_prot_model,
-                              path_hdf5=pred_hdf5)
+    predictor = prpc.PROSITpredictor(
+        server=test_server,
+        path_to_ca_certificate=ca_cert,
+        path_to_certificate=cert,
+        path_to_key_certificate=key,
+    )
+    predictor.predict_to_hdf5(
+        sequences=sequences,
+        charges=charge,
+        collision_energies=ce,
+        intensity_model=test_int_model,
+        irt_model=test_irt_model,
+        proteotypicicty_model=test_prot_model,
+        path_hdf5=pred_hdf5,
+    )
 
-    with h5py.File("tests/predict_to_hdf5.hdf5", 'r') as truth:
-        with h5py.File(pred_hdf5, 'r') as pred:
-            for i in ["intensities_pred", "iRT", "masses_pred", "collision_energy_aligned_normed", "precursor_charge_onehot", "sequence_integer", "proteotypicity"]:
+    with h5py.File("tests/predict_to_hdf5.hdf5", "r") as truth:
+        with h5py.File(pred_hdf5, "r") as pred:
+            for i in [
+                "intensities_pred",
+                "iRT",
+                "masses_pred",
+                "collision_energy_aligned_normed",
+                "precursor_charge_onehot",
+                "sequence_integer",
+                "proteotypicity",
+            ]:
                 assert np.array(truth[i]).shape == np.array(pred[i]).shape
     os.remove(pred_hdf5)
 
 
 def test_predict_with_matrix_expansion():
+    """Test predict function with matrix expansion."""
+    predictor = prpc.PROSITpredictor(
+        server=test_server,
+        path_to_ca_certificate=ca_cert,
+        path_to_certificate=cert,
+        path_to_key_certificate=key,
+    )
 
-    predictor = prpc.PROSITpredictor(server=test_server,
-                                     path_to_ca_certificate=ca_cert,
-                                     path_to_certificate=cert,
-                                     path_to_key_certificate=key,
-                                     )
-
-    pred_dict = predictor.predict(sequences=["AAAAMK", "AAAAMK"],
-                                  charges=[2, 3],
-                                  collision_energies=[20, 30],
-                                  models=[test_int_model, test_irt_model, test_prot_model],
-                                  matrix_expansion_param=[
-                                      {'AA_to_permutate': 'M', 'into': 'M[UNIMOD:35]', 'max_in_parallel': 2}]
-                                  )
+    pred_dict = predictor.predict(
+        sequences=["AAAAMK", "AAAAMK"],
+        charges=[2, 3],
+        collision_energies=[20, 30],
+        models=[test_int_model, test_irt_model, test_prot_model],
+        matrix_expansion_param=[{"AA_to_permutate": "M", "into": "M[UNIMOD:35]", "max_in_parallel": 2}],
+    )
 
     assert len(pred_dict[test_int_model]) == 3
 
 
 def test_predict_with_repeated_matrix_expansion():
+    """Test predict function with repeated matrix expansion."""
+    predictor = prpc.PROSITpredictor(
+        server=test_server,
+        path_to_ca_certificate=ca_cert,
+        path_to_certificate=cert,
+        path_to_key_certificate=key,
+    )
 
-    predictor = prpc.PROSITpredictor(server=test_server,
-                                     path_to_ca_certificate=ca_cert,
-                                     path_to_certificate=cert,
-                                     path_to_key_certificate=key,
-                                     )
+    mexp = [
+        {"AA_to_permutate": "C", "into": "M[UNIMOD:35]", "max_in_parallel": 1},
+        {"AA_to_permutate": "A", "into": "S", "max_in_parallel": 1},
+        {"AA_to_permutate": "D", "into": "V", "max_in_parallel": 1},
+        {"AA_to_permutate": "E", "into": "K", "max_in_parallel": 1},
+    ]
 
-    mexp = [{'AA_to_permutate': 'C', 'into': 'M[UNIMOD:35]', 'max_in_parallel': 1},
-            {'AA_to_permutate': 'A', 'into': 'S', 'max_in_parallel': 1},
-            {'AA_to_permutate': 'D', 'into': 'V', 'max_in_parallel': 1},
-            {'AA_to_permutate': 'E', 'into': 'K', 'max_in_parallel': 1}]
-
-    pred_dict = predictor.predict(sequences=["ACDEFGH"],
-                                  charges=[2],
-                                  collision_energies=[20],
-                                  models=[test_irt_model, test_prot_model, test_charge_model],
-                                  matrix_expansion_param=mexp
-                                  )
+    pred_dict = predictor.predict(
+        sequences=["ACDEFGH"],
+        charges=[2],
+        collision_energies=[20],
+        models=[test_irt_model, test_prot_model, test_charge_model],
+        matrix_expansion_param=mexp,
+    )
 
     for model_dict in pred_dict.values():
         assert len(model_dict) == 16

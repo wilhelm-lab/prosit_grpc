@@ -1,7 +1,4 @@
-import random
-
-aa_unmod = ["A", "C(U:4)", "D", "E", "F", "G", "H", "I", "K",
-            "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"]
+aa_unmod = ["A", "C(U:4)", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"]
 aa_mod = {"M(U:35)": "M"}  # the Prosit WEbsite only knows M(ox)
 # last value is not included
 ce_range = [i for i in range(10, 51) if i % 10 == 0]
@@ -27,7 +24,7 @@ for modification, unmod in aa_mod.items():
     sequences.append("".join(new_sequence))
 
 # write csv file
-with open("input_test.csv", "w")as file:
+with open("input_test.csv", "w") as file:
     file.write("modified_sequence,collision_energy,precursor_charge\n")
     for charge in charge_range:
         for ce in ce_range:
