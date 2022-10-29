@@ -28,5 +28,5 @@ with open("input_test.csv", "w") as file:
     file.write("modified_sequence,collision_energy,precursor_charge\n")
     for charge in charge_range:
         for ce in ce_range:
-            for sequence in sequences:
-                file.write(f"{sequence},{ce},{charge}\n")
+            for seq in sequences:
+                file.write(f"{seq},{ce},{charge}\n")

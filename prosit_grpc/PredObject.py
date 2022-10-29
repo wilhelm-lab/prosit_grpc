@@ -1,11 +1,11 @@
 from math import ceil
 
+import fundamentals.constants as c
 import numpy as np
 import tensorflow as tf
 from tensorflow_serving.apis import predict_pb2
 from tqdm import tqdm
 
-from . import __constants__ as c
 from . import __utils__ as u
 
 # surpresses tensorflow deprecation warning that would otherwise cause buggy behaviour of the tqdm progess bar
@@ -32,7 +32,7 @@ class Base:
         self.predictions = None  # overwritten in predict function
 
     @staticmethod
-    def create_request_scaffold(model_name, signature_name="serving_default"):
+    def create_request_scaffold(model_name: str, signature_name: str = "serving_default"):
         """
         Create request scaffold.
 
@@ -49,15 +49,14 @@ class Base:
         return request
 
     # PredObjectType specific
-    def create_request(self, model_name, inputs_batch, batchsize):
+    def create_request(self, model_name: str, inputs_batch, batchsize: int):
         """
         Function to create a single request of the PredObject that is implementing it.
 
-        :param model_name      specify the model that should be used to predict
-        :param inputs_batch    inputs necessar for request
-        :param batchsize       size of the created request
-
-        :return                request ready to be sent to the server
+        :param model_name: specify the model that should be used to predict
+        :param inputs_batch: inputs necessar for request
+        :param batchsize: size of the created request
+        :return: request ready to be sent to the server
         """
         pass
 
@@ -78,13 +77,13 @@ class Base:
         num_seq = len(next(iter(inputs.values())))  # select the length of the first input parameter
         while batch_start < num_seq:
             batch_end: int = batch_start + c.BATCH_SIZE
-            batch_end: int = min(num_seq, batch_end)
-            batchsize: int = batch_end - batch_start
+            batch_end_final: int = min(num_seq, batch_end)
+            batchsize: int = batch_end_final - batch_start
 
             inputs_batch = {}
             for key, value in inputs.items():
-                inputs_batch[key] = value[batch_start:batch_end]
-            batch_start: int = batch_end
+                inputs_batch[key] = value[batch_start:batch_end_final]
+            batch_start = batch_end
 
             yield self.create_request(model_name, inputs_batch, batchsize)
 
@@ -97,7 +96,7 @@ class Base:
         """
         return None
 
-    def send_request(self, request, timeout):
+    def send_request(self, request, timeout: int):
         """Send a request."""
         response = self.stub.Predict.future(request, timeout).result()
         return self.unpack_response(response)
@@ -113,14 +112,14 @@ class Base:
             prediction = self.send_request(request=request, timeout=timeout)
             predictions.append(prediction)
 
-        predictions = np.vstack(predictions)
-        return predictions
+        predictions_final = np.vstack(predictions)
+        return predictions_final
 
     def prepare_input(self):
         """Prepare input."""
         pass
 
-    def predict(self, disable_progress_bar):
+    def predict(self, disable_progress_bar: bool):
         """Create and send requests."""
         input_dict = self.prepare_input()
         requests = self.create_requests(model_name=self.model_name, inputs=input_dict)
@@ -135,8 +134,15 @@ class Base:
 class Intensity(Base):
     """Class for intensity prediction object."""
 
-    def create_request(self, model_name, inputs_batch, batchsize):
-        """Create a request."""
+    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+        """
+        Function to create a single request of the Intensity PredObject.
+
+        :param model_name: specify the model that should be used to predict
+        :param inputs_batch: inputs necessar for request
+        :param batchsize: size of the created request
+        :return: request ready to be sent to the server
+        """
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs["peptides_in:0"].CopyFrom(
             tf.make_tensor_proto(inputs_batch["seq_array"], shape=[batchsize, c.SEQ_LEN], dtype=np.int32)
@@ -159,11 +165,11 @@ class Intensity(Base):
         return request
 
     @staticmethod
-    def unpack_response(response):
+    def unpack_response(response) -> np.ndarray:
         """
         Unpack response.
 
-        :return prediction formatted as numpy array
+        :return: prediction formatted as numpy array
         """
         outputs_tensor_proto = response.outputs["out/Reshape:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
@@ -275,15 +281,22 @@ class Intensity(Base):
 class IntensityTMT(Intensity):
     """Class for intensity TMT prediction object."""
 
-    def create_request(self, model_name, inputs_batch, batchsize):
-        """Create a request."""
+    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+        """
+        Function to create a single request of the intensity TMT PredObject.
+
+        :param model_name: specify the model that should be used to predict
+        :param inputs_batch: inputs necessar for request
+        :param batchsize: size of the created request
+        :return: request ready to be sent to the server
+        """
         request = super().create_request(model_name, inputs_batch, batchsize)
         request.inputs["fragmentation_type_in:0"].CopyFrom(
             tf.make_tensor_proto(inputs_batch["fragmentation_array"], shape=[batchsize, 1], dtype=np.float32)
         )
         return request
 
-    def prepare_input(self):
+    def prepare_input(self) -> dict:
         """Prepare input."""
         in_dic = {
             "seq_array": self.input.sequences.array,
@@ -313,8 +326,15 @@ class IntensityTMT(Intensity):
 class Irt(Base):
     """Class for irt prediction object."""
 
-    def create_request(self, model_name, inputs_batch, batchsize):
-        """Create request."""
+    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+        """
+        Function to create a single request of the irt PredObject.
+
+        :param model_name: specify the model that should be used to predict
+        :param inputs_batch: inputs necessar for request
+        :param batchsize: size of the created request
+        :return: request ready to be sent to the server
+        """
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs["sequence_integer"].CopyFrom(
             tf.make_tensor_proto(inputs_batch["seq_array"], shape=[batchsize, c.SEQ_LEN], dtype=np.int32)
@@ -322,7 +342,7 @@ class Irt(Base):
         return request
 
     @staticmethod
-    def unpack_response(response):
+    def unpack_response(response) -> np.ndarray:
         """
         Unpack response.
 
@@ -345,8 +365,15 @@ class Irt(Base):
 class IrtTMT(Base):
     """Class for irt TMT prediction object."""
 
-    def create_request(self, model_name, inputs_batch, batchsize):
-        """Create a request."""
+    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+        """
+        Function to create a single request of the irt TMT PredObject.
+
+        :param model_name: specify the model that should be used to predict
+        :param inputs_batch: inputs necessar for request
+        :param batchsize: size of the created request
+        :return: request ready to be sent to the server
+        """
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs["peptides_in:0"].CopyFrom(
             tf.make_tensor_proto(inputs_batch["seq_array"], shape=[batchsize, c.SEQ_LEN], dtype=np.int32)
@@ -354,7 +381,7 @@ class IrtTMT(Base):
         return request
 
     @staticmethod
-    def unpack_response(response):
+    def unpack_response(response) -> np.ndarray:
         """
         Unpack response.
 
@@ -364,7 +391,7 @@ class IrtTMT(Base):
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
         return np.array(outputs_tensor_proto.float_val, np.float32).reshape(shape.as_list())
 
-    def prepare_input(self):
+    def prepare_input(self) -> dict:
         """Prepare input."""
         in_dic = {"seq_array": self.input.sequences.array}
         return in_dic
@@ -377,8 +404,15 @@ class IrtTMT(Base):
 class Proteotypicity(Base):
     """Class for proteotypicity prediction object."""
 
-    def create_request(self, model_name, inputs_batch, batchsize):
-        """Create a request."""
+    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+        """
+        Function to create a single request of the Proteotypicity PredObject.
+
+        :param model_name: specify the model that should be used to predict
+        :param inputs_batch: inputs necessar for request
+        :param batchsize: size of the created request
+        :return: request ready to be sent to the server
+        """
         request = self.create_request_scaffold(model_name=model_name)
         request.inputs["peptides_in_1:0"].CopyFrom(
             tf.make_tensor_proto(inputs_batch["seq_array"], shape=[batchsize, c.SEQ_LEN], dtype=np.float32)
@@ -386,7 +420,7 @@ class Proteotypicity(Base):
         return request
 
     @staticmethod
-    def unpack_response(response):
+    def unpack_response(response) -> np.ndarray:
         """
         Unpack response.
 
@@ -396,7 +430,7 @@ class Proteotypicity(Base):
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
         return np.array(outputs_tensor_proto.float_val, dtype=np.float32).reshape(shape.as_list())
 
-    def prepare_input(self):
+    def prepare_input(self) -> dict:
         """Prepare input."""
         in_dic = {"seq_array": self.input.sequences.array.copy()}
         return in_dic
@@ -409,8 +443,15 @@ class Proteotypicity(Base):
 class Charge(Base):
     """Class for charge prediction object."""
 
-    def create_request(self, model_name, inputs_batch, batchsize):
-        """Create a request."""
+    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+        """
+        Function to create a single request of the charge PredObject.
+
+        :param model_name: specify the model that should be used to predict
+        :param inputs_batch: inputs necessar for request
+        :param batchsize: size of the created request
+        :return: request ready to be sent to the server
+        """
         request = self.create_request_scaffold(model_name=model_name)
 
         tmp = np.concatenate([inputs_batch["seq_array"], np.zeros(2 * batchsize).reshape((batchsize, 2))], axis=1)
@@ -419,7 +460,7 @@ class Charge(Base):
         return request
 
     @staticmethod
-    def unpack_response(response):
+    def unpack_response(response) -> np.ndarray:
         """
         Unpack response.
 
@@ -429,7 +470,7 @@ class Charge(Base):
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
         return np.array(outputs_tensor_proto.float_val, dtype=np.float32).reshape(shape.as_list())
 
-    def prepare_input(self):
+    def prepare_input(self) -> dict:
         """Prepare input."""
         in_dic = {"seq_array": self.input.sequences.array}
         return in_dic

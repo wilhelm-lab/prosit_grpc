@@ -1,22 +1,38 @@
+from typing import Optional, Union
+
+import fundamentals.constants as c
 import numpy as np
+from fundamentals.mod_string import parse_modstrings
 from tqdm import tqdm
 
-from . import __constants__ as c
 from . import __utils__ as u  # Utility/Static functions
 
 
 class PROSITinput:
     """PROSITinput is a class that creates the input."""
 
-    def __init__(self, sequences=None, charges=None, collision_energies=None, fragmentation=None):
-        """Initialize PROSIT input."""
+    def __init__(
+        self,
+        sequences: Optional[Union[np.ndarray, list]],
+        charges: Optional[Union[np.ndarray, list]],
+        collision_energies: Optional[Union[np.ndarray, list]],
+        fragmentation: Optional[Union[np.ndarray, list]],
+    ):
+        """
+        Initialize PROSIT input.
+
+        :param sequences: list of sequences
+        :param charges: list of charges
+        :param collision_energies: list of collision energies
+        :param fragmentation: list of fragmentations
+        """
         self.sequences = PROSITsequences(sequences)
         self.charges = PROSITcharges(charges)
         self.collision_energies = PROSITcollisionenergies(collision_energies)
         self.fragmentation = PROSITfragmentation(fragmentation)
         self.tmt = ""
 
-    def prepare_input(self, flag_disable_progress_bar):
+    def prepare_input(self, flag_disable_progress_bar: bool):
         """Prepare input."""
         if self.sequences is not None:
             self.sequences.prepare_sequences(flag_disable_progress_bar)
@@ -65,19 +81,22 @@ class PROSITcharges:
             self.onehot = charges
         elif charge_type == "array":
             self.array = charges
+        else:
+            self.array = None
 
     @staticmethod
-    def determine_type(charges):
+    def determine_type(charges: Optional[Union[np.ndarray, list]]) -> Optional[str]:
         """Determine type of charges (array, one-hot or numeric)."""
         if charges is None:
             return None
+        elif type(charges) == np.ndarray:
+            return "array"
+        elif type(charges[0]) is list:
+            return "one-hot"
+        elif type(charges[0]) is int or type(charges[0]) is float:
+            return "numeric"
         else:
-            if type(charges) == np.ndarray:
-                return "array"
-            elif type(charges[0]) is list:
-                return "one-hot"
-            elif type(charges[0]) is int or type(charges[0]) is float:
-                return "numeric"
+            return None
 
     def numeric_to_onehot(self):
         """Convert numeric to onehot encoding."""
@@ -117,7 +136,7 @@ class PROSITsequences:
             self.array = sequences
 
     @staticmethod
-    def determine_type(sequences):
+    def determine_type(sequences) -> str:
         """Determine type of sequences (array, character or numeric)."""
         if type(sequences) == np.ndarray:
             return "array"
@@ -126,7 +145,7 @@ class PROSITsequences:
         else:
             return "numeric"
 
-    def character_to_array(self, flag_disable_progress_bar, filter=False):
+    def character_to_array(self, flag_disable_progress_bar: bool, filter: bool = False):
         """Convert character to array."""
         self.array = np.zeros((len(self.character), c.SEQ_LEN), dtype=np.uint8)
         if "2016" in self.character[0]:
@@ -142,7 +161,7 @@ class PROSITsequences:
             self.tmt = "itraq4"
             self.character = [x[12:] for x in self.character]
 
-        generator_sequence_numeric = u.parse_modstrings(
+        generator_sequence_numeric = parse_modstrings(
             self.character, alphabet=c.ALPHABET, translate=True, filter=filter
         )
         enum_gen_seq_num = enumerate(generator_sequence_numeric)
@@ -173,7 +192,7 @@ class PROSITsequences:
         truth_array = np.in1d(self.array, [0], invert=True).reshape(self.array.shape)
         self.lengths = np.sum(truth_array, axis=1)
 
-    def prepare_sequences(self, flag_disable_progress_bar=False, filter=False):
+    def prepare_sequences(self, flag_disable_progress_bar: bool = False, filter: bool = False):
         """Prepare sequences (as array)."""
         if self.array is None:
             if self.numeric is None:
@@ -188,8 +207,8 @@ class PROSITsequences:
 class PROSITcollisionenergies:
     """PROSITcollisionenergies is a class that initializes the collision energies."""
 
-    def __init__(self, collision_energies):
-        """Initialize PROSIT collision energies."""
+    def __init__(self, collision_energies: Optional[Union[np.ndarray, list]]):
+        """Initialize PROSIT collision energies and get type of collision_energies."""
         self.numeric = None
         self.procentual = None
         self.array = None
@@ -201,10 +220,16 @@ class PROSITcollisionenergies:
             self.procentual = collision_energies
         elif ce_type == "array":
             self.array = collision_energies
+        else:
+            self.array = None
 
     @staticmethod
-    def determine_type(collision_energies):
-        """Determine type of collision_energies (array, procentual or numeric)."""
+    def determine_type(collision_energies: Optional[Union[np.ndarray, list]]) -> Optional[str]:
+        """
+        Determine type of collision_energies (array, procentual or numeric).
+
+        :param collision_energies: list or np.ndarray of collision energies
+        """
         if collision_energies is None:
             return None
         else:
@@ -235,8 +260,12 @@ class PROSITcollisionenergies:
 
 
 class PROSITfragmentation:
-    """PROSITfragmentation is a class to initialize the fragmentation method."""
+    """PROSITfragmentation is a class to initialize the fragmentation methods."""
 
-    def __init__(self, fragmentations):
-        """Initialize PROSIT fragmentations."""
+    def __init__(self, fragmentations: Optional[Union[np.ndarray, list]]):
+        """
+        Initialize PROSIT fragmentations.
+
+        :param fragmentations: list of fragmentations
+        """
         self.array = fragmentations

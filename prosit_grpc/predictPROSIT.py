@@ -22,23 +22,23 @@ class PROSITpredictor:
 
     def __init__(
         self,
+        path_to_ca_certificate: str,
+        path_to_certificate: str,
+        path_to_key_certificate: str,
+        keepalive_timeout_ms: int = 10000,
         server: str = "proteomicsdb.org:8500",
-        path_to_ca_certificate: str = None,
-        path_to_certificate: str = None,
-        path_to_key_certificate: str = None,
-        keepalive_timeout_ms=10000,
     ):
         """
         The class PROSITpredictor contains all features to generate predictions with a Prosit server.
 
         -- Non optional Parameters --
-        :param server
+        :param server: proteomicsdb server as string
 
         -- optional parameters --
-        :param path_to_certificate
-        :param path_to_key_certificate
-        :param path_to_ca_certificate
-        :param
+        :param path_to_certificate: path to the certificate as string
+        :param path_to_key_certificate: path to the key certificate as string
+        :param path_to_ca_certificate: path to ca certificate as string
+        :param keepalive_timeout_ms: keepalive timeout in ms as int
         """
         self.server = server
         self.create_channel(
@@ -50,7 +50,7 @@ class PROSITpredictor:
         self.stub = prediction_service_pb2_grpc.PredictionServiceStub(self.channel)
 
     @staticmethod
-    def check_model_availability(channel, model):
+    def check_model_availability(channel, model: str):
         """Checks model availability."""
         try:
             stub = model_service_pb2_grpc.ModelServiceStub(channel)
@@ -66,9 +66,20 @@ class PROSITpredictor:
                 raise e
 
     def create_channel(
-        self, path_to_certificate, path_to_key_certificate, path_to_ca_certificate, keepalive_timeout_ms
+        self,
+        path_to_certificate: str,
+        path_to_key_certificate: str,
+        path_to_ca_certificate: str,
+        keepalive_timeout_ms: int,
     ):
-        """Creates a channel."""
+        """
+        Creates a channel.
+
+        :param path_to_certificate: path to the certificate as string
+        :param path_to_key_certificate: path to the key certificate as string
+        :param path_to_ca_certificate: path to ca certificate as string
+        :param keepalive_timeout_ms: keepalive timeout in ms as int
+        """
         try:
             # read certificates and create credentials
             with open(path_to_certificate, "rb") as f:
@@ -88,8 +99,12 @@ class PROSITpredictor:
                 self.server, options=[("grpc.keepalive_timeout_ms", keepalive_timeout_ms)]
             )
 
-    def pred_object_factory(self, model):
-        """Predicts object factory."""
+    def pred_object_factory(self, model: str):
+        """
+        Predicts object factory.
+
+        :param model: model as string
+        """
         model_type = model.split("_")[2]
         if "intensity" in model:
             if "TMT" in model:
@@ -115,14 +130,23 @@ class PROSITpredictor:
     def predict(
         self,
         models: list,
-        sequences=None,
-        charges=None,
-        fragmentation=None,
-        collision_energies=None,
+        sequences: list = None,
+        charges: list = None,
+        fragmentation: list = None,
+        collision_energies: list = None,
         matrix_expansion_param: list = None,
-        disable_progress_bar=False,
-    ):
-        """Predicts based on models."""
+        disable_progress_bar: bool = False,
+    ) -> dict:
+        """
+        Predicts based on models.
+
+        :param models: list of models
+        :param sequences: list of sequences
+        :param charges: list of charges
+        :param collision_energies: list of collision energies
+        :param matrix_expansion_param: list of matrix expansion parameters
+        :param disable_progress_bar: whether to disable progress bar
+        """
         models_not_available = [not self.check_model_availability(self.channel, model=mo) for mo in models]
         models_not_available = [model for model, not_available in zip(models, models_not_available) if not_available]
         if len(models_not_available) > 0:
@@ -133,9 +157,10 @@ class PROSITpredictor:
         )
 
         self.input.prepare_input(disable_progress_bar)
-        for paramset in matrix_expansion_param:
-            self.input.expand_matrices(param=paramset)
-        self.input.sequences.calculate_lengths()
+        if matrix_expansion_param is not None:
+            for paramset in matrix_expansion_param:
+                self.input.expand_matrices(param=paramset)
+            self.input.sequences.calculate_lengths()
         # print(self.input.sequences)
 
         predictions = {}
@@ -159,9 +184,20 @@ class PROSITpredictor:
         sequences: list = None,
         charges: list = None,
         collision_energies: list = None,
-        disable_progress_bar=False,
+        disable_progress_bar: bool = False,
     ):
-        """Predict and save prediction as hdf5."""
+        """
+        Predict and save prediction as hdf5.
+
+        :param path_hdf5: path to the hdf5 file
+        :param irt_model: irt model
+        :param proteotypicicty_model: proteotypicicty model
+        :param fragmentation: list of fragmentation types
+        :param sequences: list of sequences
+        :param charges: list of charges
+        :param collision_energies: list of collision energies
+        :param disable_progress_bar: whether to disable progress bar
+        """
         out_dict = self.predict(
             sequences=sequences,
             charges=charges,

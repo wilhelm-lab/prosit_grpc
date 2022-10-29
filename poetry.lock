@@ -324,8 +324,10 @@ scikit-learn = "^1.0"
 statsmodels = "^0.13.2"
 
 [package.source]
-type = "directory"
-url = "../fundamentals"
+type = "git"
+url = "git@gitlab.lrz.de:compmass/prosit/tools/fundamentals.git"
+reference = "develop"
+resolved_reference = "5e707d29b02645a18234a540cc56746e2846d10d"
 
 [[package]]
 name = "gast"
