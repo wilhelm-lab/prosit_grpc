@@ -1,6 +1,6 @@
 from math import ceil
 
-import fundamentals.constants as c
+import spec_fundamentals.constants as c
 import numpy as np
 import tensorflow as tf
 from tensorflow_serving.apis import predict_pb2
