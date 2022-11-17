@@ -1,8 +1,8 @@
 from typing import Optional, Union
 
-import fundamentals.constants as c
+import spec_fundamentals.constants as c
 import numpy as np
-from fundamentals.mod_string import parse_modstrings
+from spec_fundamentals.mod_string import parse_modstrings
 from tqdm import tqdm
 
 from . import __utils__ as u  # Utility/Static functions

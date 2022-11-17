@@ -3,9 +3,9 @@ import itertools
 import numpy as np
 import scipy
 
-from fundamentals.fragments import compute_ion_masses
-from fundamentals.mod_string import parse_modstrings
-from fundamentals.charge import indices_to_one_hot
+from spec_fundamentals.fragments import compute_ion_masses
+from spec_fundamentals.mod_string import parse_modstrings
+from spec_fundamentals.charge import indices_to_one_hot
 
 
 def normalize_intensities(x: np.ndarray) -> np.ndarray:
