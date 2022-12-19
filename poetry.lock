@@ -308,28 +308,6 @@ optional = false
 python-versions = "*"
 
 [[package]]
-name = "fundamentals"
-version = "0.1.0"
-description = ""
-category = "main"
-optional = false
-python-versions = "^3.8"
-develop = false
-
-[package.dependencies]
-joblib = "^1.0.1"
-numpy = "^1.18.1"
-pandas = "^1.3.0"
-scikit-learn = "^1.0"
-statsmodels = "^0.13.2"
-
-[package.source]
-type = "git"
-url = "git@gitlab.lrz.de:compmass/prosit/tools/fundamentals.git"
-reference = "develop"
-resolved_reference = "5e707d29b02645a18234a540cc56746e2846d10d"
-
-[[package]]
 name = "gast"
 version = "0.4.0"
 description = "Python AST that abstracts the underlying Python version"
@@ -672,8 +650,8 @@ python-versions = ">=3.8"
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
     {version = ">=1.20.3", markers = "python_version < \"3.10\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
 ]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
@@ -1116,6 +1094,31 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "spec-fundamentals"
+version = "0.1.0"
+description = "Fundamentals public repo"
+category = "main"
+optional = false
+python-versions = "^3.8.0"
+develop = false
+
+[package.dependencies]
+click = ">=8.0.0"
+joblib = "^1.0.1"
+numpy = "^1.18.1"
+pandas = "^1.3.0"
+PyYAML = ">=5.4.1"
+rich = ">=10.3.0"
+scikit-learn = "^1.0"
+statsmodels = "^0.13.2"
+
+[package.source]
+type = "git"
+url = "git@github.com:wilhelm-lab/spec_fundamentals.git"
+reference = "main"
+resolved_reference = "83204c854c5620a86894b0130b4c09ff6b3b20cb"
+
+[[package]]
 name = "sphinx"
 version = "5.3.0"
 description = "Python documentation generator"
@@ -1189,18 +1192,18 @@ sphinx-rtd-theme = "*"
 
 [[package]]
 name = "sphinx-rtd-theme"
-version = "1.0.0"
+version = "1.1.1"
 description = "Read the Docs theme for Sphinx"
 category = "dev"
 optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 
 [package.dependencies]
 docutils = "<0.18"
-sphinx = ">=1.6"
+sphinx = ">=1.6,<6"
 
 [package.extras]
-dev = ["bump2version", "sphinxcontrib-httpdomain", "transifex-client"]
+dev = ["bump2version", "sphinxcontrib-httpdomain", "transifex-client", "wheel"]
 
 [[package]]
 name = "sphinxcontrib-applehelp"
@@ -1636,7 +1639,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8, <3.11"
-content-hash = "8b5a096efe8e2b090ca0b24e892bbd8a0776e52fe2509146ade47b9aa7005593"
+content-hash = "f0e3e73a2f2f94f0d88b2aa345835ae127e4affdd4507873c797ea4cc10588cf"
 
 [metadata.files]
 absl-py = [
@@ -1814,7 +1817,6 @@ flatbuffers = [
     {file = "flatbuffers-22.10.26-py2.py3-none-any.whl", hash = "sha256:e36d5ba7a5e9483ff0ec1d238fdc3011c866aab7f8ce77d5e9d445ac12071d84"},
     {file = "flatbuffers-22.10.26.tar.gz", hash = "sha256:8698aaa635ca8cf805c7d8414d4a4a8ecbffadca0325fa60551cb3ca78612356"},
 ]
-fundamentals = []
 gast = [
     {file = "gast-0.4.0-py3-none-any.whl", hash = "sha256:b7adcdd5adbebf1adf17378da5ba3f543684dbec47b1cda1f3997e573cd542c4"},
     {file = "gast-0.4.0.tar.gz", hash = "sha256:40feb7b8b8434785585ab224d1568b857edb18297e5a3047f1ba012bc83b42c1"},
@@ -2295,6 +2297,7 @@ ruamel-yaml-clib = [
     {file = "ruamel.yaml.clib-0.2.7-cp310-cp310-win_amd64.whl", hash = "sha256:d000f258cf42fec2b1bbf2863c61d7b8918d31ffee905da62dede869254d3b8a"},
     {file = "ruamel.yaml.clib-0.2.7-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:045e0626baf1c52e5527bd5db361bc83180faaba2ff586e763d3d5982a876a9e"},
     {file = "ruamel.yaml.clib-0.2.7-cp311-cp311-macosx_12_6_arm64.whl", hash = "sha256:721bc4ba4525f53f6a611ec0967bdcee61b31df5a56801281027a3a6d1c2daf5"},
+    {file = "ruamel.yaml.clib-0.2.7-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:41d0f1fa4c6830176eef5b276af04c89320ea616655d01327d5ce65e50575c94"},
     {file = "ruamel.yaml.clib-0.2.7-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:4b3a93bb9bc662fc1f99c5c3ea8e623d8b23ad22f861eb6fce9377ac07ad6072"},
     {file = "ruamel.yaml.clib-0.2.7-cp36-cp36m-macosx_12_0_arm64.whl", hash = "sha256:a234a20ae07e8469da311e182e70ef6b199d0fbeb6c6cc2901204dd87fb867e8"},
     {file = "ruamel.yaml.clib-0.2.7-cp36-cp36m-manylinux2014_aarch64.whl", hash = "sha256:15910ef4f3e537eea7fe45f8a5d19997479940d9196f357152a09031c5be59f3"},
@@ -2387,6 +2390,7 @@ snowballstemmer = [
     {file = "snowballstemmer-2.2.0-py2.py3-none-any.whl", hash = "sha256:c8e1716e83cc398ae16824e5572ae04e0d9fc2c6b985fb0f900f5f0c96ecba1a"},
     {file = "snowballstemmer-2.2.0.tar.gz", hash = "sha256:09b16deb8547d3412ad7b590689584cd0fe25ec8db3be37788be3810cbf19cb1"},
 ]
+spec-fundamentals = []
 sphinx = [
     {file = "Sphinx-5.3.0.tar.gz", hash = "sha256:51026de0a9ff9fc13c05d74913ad66047e104f56a129ff73e174eb5c3ee794b5"},
     {file = "sphinx-5.3.0-py3-none-any.whl", hash = "sha256:060ca5c9f7ba57a08a1219e547b269fadf125ae25b06b9fa7f66768efb652d6d"},
@@ -2404,8 +2408,8 @@ sphinx-rtd-dark-mode = [
     {file = "sphinx_rtd_dark_mode-1.2.4.tar.gz", hash = "sha256:935bc1f3e62fc76eadd7d2760ac7f48bab907a97e44beda749a48a2706aeed63"},
 ]
 sphinx-rtd-theme = [
-    {file = "sphinx_rtd_theme-1.0.0-py2.py3-none-any.whl", hash = "sha256:4d35a56f4508cfee4c4fb604373ede6feae2a306731d533f409ef5c3496fdbd8"},
-    {file = "sphinx_rtd_theme-1.0.0.tar.gz", hash = "sha256:eec6d497e4c2195fa0e8b2016b337532b8a699a68bcb22a512870e16925c6a5c"},
+    {file = "sphinx_rtd_theme-1.1.1-py2.py3-none-any.whl", hash = "sha256:31faa07d3e97c8955637fc3f1423a5ab2c44b74b8cc558a51498c202ce5cbda7"},
+    {file = "sphinx_rtd_theme-1.1.1.tar.gz", hash = "sha256:6146c845f1e1947b3c3dd4432c28998a1693ccc742b4f9ad7c63129f0757c103"},
 ]
 sphinxcontrib-applehelp = [
     {file = "sphinxcontrib-applehelp-1.0.2.tar.gz", hash = "sha256:a072735ec80e7675e3f432fcae8610ecf509c5f1869d17e2eecff44389cdbc58"},
