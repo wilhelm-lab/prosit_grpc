@@ -1,8 +1,8 @@
 from typing import Optional, Union
 
-import spec_fundamentals.constants as c
+import spectrum_fundamentals.constants as c
 import numpy as np
-from spec_fundamentals.mod_string import parse_modstrings
+from spectrum_fundamentals.mod_string import parse_modstrings
 from tqdm import tqdm
 
 from . import __utils__ as u  # Utility/Static functions
