@@ -114,5 +114,5 @@ Tyrosine|Y
 Specify the "**SSH** clone link" of the `prosit_grpc` repository in your `pyproject.toml`.
 
 ```
-prosit_grpc = {git = "git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git"}
+prosit_grpc = {git = "git@github.com:wilhelm-lab/prosit_grpc.git", rev = "main"}
 ```

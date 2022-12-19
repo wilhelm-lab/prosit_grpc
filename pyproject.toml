@@ -28,7 +28,7 @@ numpy = "^1.23.2"
 tqdm = "^4.64.0"
 grpcio = "^1.48.0"
 tensorflow-serving-api = "^2.9.1"
-spec-fundamentals = {git = "git@github.com:wilhelm-lab/spec_fundamentals.git", rev = "search_engines"}
+spec-fundamentals = {git = "git@github.com:wilhelm-lab/spec_fundamentals.git", rev = "main"}
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.3"
