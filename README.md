@@ -26,9 +26,9 @@ pip install -e git+https://gitlab.lrz.de/proteomics/prosit_tools/prosit_grpc.git
 pip install -e git+git@gitlab.lrz.de:proteomics/prosit_tools/prosit_grpc.git@v1.2.0#egg=prosit_grpc
 ```
 
-## 2. Ask Ludwig for certificates
+## 2. Ask us for certificates
 
-You are using a special access to our GPUs and are therefore required to identify against our server. Ludwig Lautenbacher will provide you with certificates that are valid for a limited time but can be renewed. Do not share those certificates with people outside of our group.
+You are using a special access to our GPUs and are therefore required to identify against our server. We will provide you with certificates that are valid for a limited time but can be renewed. Do not share those certificates with people outside of our group.
 
 ## 3. How to use the gRPC Client using Python?
 
