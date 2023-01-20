@@ -1,4 +1,4 @@
-# from fundamentals.constants import *
+# from spectrum_fundamentals.constants import *
 
 ##################################################################
 # FOR WHEN MANUAL SPECIFICATION OF MODIFICATIONS BECOMES TEDIOUS #

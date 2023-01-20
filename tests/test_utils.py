@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
+import spectrum_fundamentals.constants as c
 
-from prosit_grpc import __constants__ as c
 from prosit_grpc import __utils__ as u
 
 

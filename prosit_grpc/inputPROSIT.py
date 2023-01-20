@@ -1,7 +1,7 @@
 from typing import Optional, Union
 
-import spectrum_fundamentals.constants as c
 import numpy as np
+import spectrum_fundamentals.constants as c
 from spectrum_fundamentals.mod_string import parse_modstrings
 from tqdm import tqdm
 
@@ -16,7 +16,7 @@ class PROSITinput:
         sequences: Optional[Union[np.ndarray, list]],
         charges: Optional[Union[np.ndarray, list]],
         collision_energies: Optional[Union[np.ndarray, list]],
-        fragmentation: Optional[Union[np.ndarray, list]],
+        fragmentation: Optional[Union[np.ndarray, list]] = None,
     ):
         """
         Initialize PROSIT input.
@@ -42,20 +42,20 @@ class PROSITinput:
             self.collision_energies.prepare_collisionenergies()
         self.tmt = self.sequences.tmt
 
-    def expand_matrices(self, param):
+    def expand_matrices(self, param: dict):
         """
         Expects a list with dictionaries with 3 input parameters each.
 
-        Inputs are: {'AA_to_permutate': 'M', 'into': 'M(ox)', 'max_in_parallel': 2}.
-        The first one is the number that should be replaced.
-        The second one is the number that should be used to replace.
-        The third one is the number of changes that are performed at the same time.
+        :param param: a dictionary containing the following keys:
+             - 'AA_to_permutate': the amino acid to permutate
+             - 'into': the amino acid to replace with
+             - 'max_in_parallel': the number of changes that are performed at the same time
         """
         self.sequences.array, num_copies_created = u.generate_new_matrix_v2(
-            npMatrix=self.sequences.array,
-            iFromReplaceValue=c.ALPHABET[param["AA_to_permutate"]],
-            iToReplaceValue=c.ALPHABET[param["into"]],
-            numberAtTheSameTime=param["max_in_parallel"],
+            np_matrix=self.sequences.array,
+            i_from_replace_value=c.ALPHABET[param["AA_to_permutate"]],
+            i_to_replace_value=c.ALPHABET[param["into"]],
+            number_at_the_same_time=param["max_in_parallel"],
         )
 
         charges_array = np.repeat(self.charges.array, num_copies_created, 0)
@@ -167,7 +167,6 @@ class PROSITsequences:
         enum_gen_seq_num = enumerate(generator_sequence_numeric)
 
         for i, sequence_numeric in tqdm(enum_gen_seq_num, disable=flag_disable_progress_bar, total=len(self.character)):
-
             if len(sequence_numeric) > c.SEQ_LEN:
                 if filter:
                     pass  # don't overwrite 0 in the array that is how we can differentiate
@@ -229,6 +228,7 @@ class PROSITcollisionenergies:
         Determine type of collision_energies (array, procentual or numeric).
 
         :param collision_energies: list or np.ndarray of collision energies
+        :return: array, procentual, numeric, or None
         """
         if collision_energies is None:
             return None

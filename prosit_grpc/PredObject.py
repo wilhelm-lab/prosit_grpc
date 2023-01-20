@@ -1,7 +1,7 @@
 from math import ceil
 
-import spectrum_fundamentals.constants as c
 import numpy as np
+import spectrum_fundamentals.constants as c
 import tensorflow as tf
 from tensorflow_serving.apis import predict_pb2
 from tqdm import tqdm
@@ -32,7 +32,7 @@ class Base:
         self.predictions = None  # overwritten in predict function
 
     @staticmethod
-    def create_request_scaffold(model_name: str, signature_name: str = "serving_default"):
+    def create_request_scaffold(model_name: str, signature_name: str = "serving_default") -> predict_pb2.PredictRequest:
         """
         Create request scaffold.
 
@@ -56,17 +56,17 @@ class Base:
         :param model_name: specify the model that should be used to predict
         :param inputs_batch: inputs necessar for request
         :param batchsize: size of the created request
-        :return: request ready to be sent to the server
         """
         pass
 
-    def create_requests(self, model_name: str, inputs: dict):
+    def create_requests(self, model_name: str, inputs: dict) -> predict_pb2.PredictRequest:
         """
         Generator to create all requests for a specific PredObject.
 
         -- Non optional Parameters --
         :param model_name: str equal to a valid Prosit model_name
         :param inputs: dict of all inputs necessary for the chosen PredObject
+        :yield: protobuf object requestpredict_pb2.PredictRequest
         """
         # ensures that all inputs have the same number of rows
         for i in inputs.values():
@@ -92,7 +92,8 @@ class Base:
         """
         Unpack response.
 
-        :return prediction formatted as numpy array
+        :param response: response
+        :return: prediction formatted as numpy array
         """
         return None
 
@@ -169,6 +170,7 @@ class Intensity(Base):
         """
         Unpack response.
 
+        :param response: response
         :return: prediction formatted as numpy array
         """
         outputs_tensor_proto = response.outputs["out/Reshape:0"]
@@ -185,7 +187,7 @@ class Intensity(Base):
         return in_dic
 
     @staticmethod
-    def create_masking(charges_array, sequences_lengths):
+    def create_masking(charges_array: np.ndarray, sequences_lengths: np.ndarray) -> np.ndarray:
         """
         Assume reshaped output of prosit, shape sould be (num_seq, 174).
 
@@ -194,7 +196,11 @@ class Intensity(Base):
         y1+1     y1+2 y1+3     b1+1     b1+2 b1+3     y2+1     y2+2 y2+3     b2+1     b2+2 b2+3
         if charge >= 3: all allowed
         if charge == 2: all +3 invalid
-        if charge == 1: all +2 & +3 invalid.
+        if charge == 1: all +2 & +3 invalid
+
+        :param charges_array: array with charges
+        :param sequences_lengths: array with sequences lengths
+        :return: masked array
         """
         assert len(charges_array) == len(sequences_lengths)
 
@@ -281,7 +287,7 @@ class Intensity(Base):
 class IntensityTMT(Intensity):
     """Class for intensity TMT prediction object."""
 
-    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+    def create_request(self, model_name: str, inputs_batch, batchsize: int) -> predict_pb2.PredictRequest:
         """
         Function to create a single request of the intensity TMT PredObject.
 
@@ -326,7 +332,7 @@ class IntensityTMT(Intensity):
 class Irt(Base):
     """Class for irt prediction object."""
 
-    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+    def create_request(self, model_name: str, inputs_batch, batchsize: int) -> predict_pb2.PredictRequest:
         """
         Function to create a single request of the irt PredObject.
 
@@ -346,7 +352,8 @@ class Irt(Base):
         """
         Unpack response.
 
-        :return prediction formatted as numpy array
+        :param response: response
+        :return: prediction formatted as numpy array
         """
         outputs_tensor_proto = response.outputs["prediction/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
@@ -365,7 +372,7 @@ class Irt(Base):
 class IrtTMT(Base):
     """Class for irt TMT prediction object."""
 
-    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+    def create_request(self, model_name: str, inputs_batch, batchsize: int) -> predict_pb2.PredictRequest:
         """
         Function to create a single request of the irt TMT PredObject.
 
@@ -385,7 +392,8 @@ class IrtTMT(Base):
         """
         Unpack response.
 
-        :return prediction formatted as numpy array
+        :param response: response
+        :return: prediction formatted as numpy array
         """
         outputs_tensor_proto = response.outputs["prediction/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
@@ -424,7 +432,8 @@ class Proteotypicity(Base):
         """
         Unpack response.
 
-        :return prediction formatted as numpy array
+        :param response: response
+        :return: prediction formatted as numpy array
         """
         outputs_tensor_proto = response.outputs["pep_dense4/BiasAdd:0"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
@@ -443,7 +452,7 @@ class Proteotypicity(Base):
 class Charge(Base):
     """Class for charge prediction object."""
 
-    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+    def create_request(self, model_name: str, inputs_batch, batchsize: int) -> predict_pb2.PredictRequest:
         """
         Function to create a single request of the charge PredObject.
 
@@ -464,7 +473,8 @@ class Charge(Base):
         """
         Unpack response.
 
-        :return prediction formatted as numpy array
+        :param response: response
+        :return: prediction formatted as numpy array
         """
         outputs_tensor_proto = response.outputs["softmax"]
         shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)

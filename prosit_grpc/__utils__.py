@@ -3,9 +3,10 @@ import itertools
 import numpy as np
 import scipy
 
+# used in inputPROSIT
+from spectrum_fundamentals.charge import indices_to_one_hot
 from spectrum_fundamentals.fragments import compute_ion_masses
 from spectrum_fundamentals.mod_string import parse_modstrings
-from spectrum_fundamentals.charge import indices_to_one_hot
 
 
 def normalize_intensities(x: np.ndarray) -> np.ndarray:
