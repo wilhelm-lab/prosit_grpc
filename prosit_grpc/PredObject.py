@@ -223,7 +223,7 @@ class Intensity(Base):
                 m[invalid_indexes] = -1
 
             if len_seq < c.SEQ_LEN:
-                invalid_indexes = range((len_seq - 1) * 6, c.VEC_LENGTH)
+                invalid_indexes = list(range((len_seq - 1) * 6, c.VEC_LENGTH))
                 m[invalid_indexes] = -1
 
         return mask

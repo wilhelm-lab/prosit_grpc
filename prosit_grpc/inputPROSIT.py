@@ -59,8 +59,8 @@ class PROSITinput:
         )
 
         charges_array = np.repeat(self.charges.array, num_copies_created, 0)
-        collision_energies_array = np.repeat(self.collision_energies.array, num_copies_created, 0)
-
+        collision_energies_array = np.repeat(np.array(self.collision_energies), num_copies_created, 0)
+        self.collision_energies.array = np.array(self.collision_energies.array)
         self.charges.array = np.vstack([self.charges.array, charges_array])
         self.collision_energies.array = np.vstack([self.collision_energies.array, collision_energies_array])
 

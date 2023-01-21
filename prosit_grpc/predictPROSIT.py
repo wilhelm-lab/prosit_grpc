@@ -7,7 +7,7 @@ __email__ = "Ludwig.Lautenbacher@tum.de"
 
 import json
 import re
-from typing import Optional
+from typing import Optional, Union
 
 import grpc
 import h5py
@@ -68,9 +68,9 @@ class PROSITpredictor:
 
     def create_channel(
         self,
-        path_to_certificate: str,
-        path_to_key_certificate: str,
-        path_to_ca_certificate: str,
+        path_to_certificate: Optional[str],
+        path_to_key_certificate: Optional[str],
+        path_to_ca_certificate: Optional[str],
         keepalive_timeout_ms: int,
     ):
         """
@@ -80,7 +80,10 @@ class PROSITpredictor:
         :param path_to_key_certificate: path to the key certificate as string
         :param path_to_ca_certificate: path to ca certificate as string
         :param keepalive_timeout_ms: keepalive timeout in ms as int
+        :raises ValueError: if path_to_certificate, path_to_key_certificate, or path_to_ca_certificate is None
         """
+        if path_to_certificate is None or path_to_key_certificate is None or path_to_ca_certificate is None:
+            raise ValueError("A path to certificate is missing")
         try:
             # read certificates and create credentials
             with open(path_to_certificate, "rb") as f:
@@ -100,7 +103,16 @@ class PROSITpredictor:
                 self.server, options=[("grpc.keepalive_timeout_ms", keepalive_timeout_ms)]
             )
 
-    def pred_object_factory(self, model: str) -> PredObject.IntensityTMT:
+    def pred_object_factory(
+        self, model: str
+    ) -> Union[
+        PredObject.IntensityTMT,
+        PredObject.Intensity,
+        PredObject.IrtTMT,
+        PredObject.Proteotypicity,
+        PredObject.Charge,
+        PredObject.Irt,
+    ]:
         """
         Predicts object factory.
 
@@ -134,11 +146,11 @@ class PROSITpredictor:
     def predict(
         self,
         models: list,
-        sequences: list = None,
-        charges: list = None,
-        fragmentation: list = None,
-        collision_energies: list = None,
-        matrix_expansion_param: list = None,
+        sequences: Optional[list] = None,
+        charges: Optional[list] = None,
+        fragmentation: Optional[list] = None,
+        collision_energies: Optional[list] = None,
+        matrix_expansion_param: Optional[list] = None,
         disable_progress_bar: bool = False,
     ) -> dict:
         """
@@ -184,13 +196,13 @@ class PROSITpredictor:
     def predict_to_hdf5(
         self,
         path_hdf5: str,
-        irt_model: str = None,
-        intensity_model: str = None,
-        proteotypicicty_model: str = None,
-        fragmentation: list = None,
-        sequences: list = None,
-        charges: list = None,
-        collision_energies: list = None,
+        irt_model: Optional[str] = None,
+        intensity_model: Optional[str] = None,
+        proteotypicicty_model: Optional[str] = None,
+        fragmentation: Optional[list] = None,
+        sequences: Optional[list] = None,
+        charges: Optional[list] = None,
+        collision_energies: Optional[list] = None,
         disable_progress_bar: bool = False,
     ):
         """
