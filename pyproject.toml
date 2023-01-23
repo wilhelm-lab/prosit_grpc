@@ -28,7 +28,7 @@ numpy = "^1.23.2"
 tqdm = "^4.64.0"
 grpcio = "^1.48.0"
 tensorflow-serving-api = ">=2.10.1"
-spectrum-fundamentals = {git = "https://github.com/wilhelm-lab/spectrum_fundamentals", rev = "development"}
+spectrum-fundamentals = {git = "https://github.com/wilhelm-lab/spectrum_fundamentals.git", rev = "development"}
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.3"
