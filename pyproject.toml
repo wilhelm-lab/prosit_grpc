@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "prosit_grpc"
-version = "1.2.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
+version = "0.1.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
 description = "A Client to access Prosit via GRPC"
 authors = ["Daniela Andrade Salazar <danial.andrade@tum.de>"]
 license = "MIT"
