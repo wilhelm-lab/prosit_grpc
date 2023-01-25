@@ -58,7 +58,7 @@ sphinx-rtd-dark-mode = ">=1.2.3"
 Jinja2 = ">=3.0.1"
 mypy = ">=0.910"
 pyupgrade = ">=2.31.0"
-pytest-cov = "^2.8.1"
+pytest-cov = "^4.0.0"
 
 [tool.poetry.scripts]
 prosit_grpc = "prosit_grpc.__main__:main"
