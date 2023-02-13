@@ -42,7 +42,7 @@ from prosit_grpc.predictPROSIT import PROSITpredictor
 
 ```python
 predictor = PROSITpredictor(server="proteomicsdb.org:8500",
-                            path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit.crt",
+                            path_to_ca_certificate= "path/to/certificate/Proteomicsdb-Prosit-v2.crt",
                             path_to_certificate= "path/to/certificate/individual_certificate_name.crt",
                             path_to_key_certificate= "path/to/certificate/individual_certificate_name.key",
                             )
