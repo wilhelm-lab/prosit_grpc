@@ -100,7 +100,7 @@ class PROSITcharges:
 
     def numeric_to_onehot(self):
         """Convert numeric to onehot encoding."""
-        self.onehot = [u.indices_to_one_hot(x, c.MAX_CHARGE) for x in self.numeric]
+        self.onehot = u.indices_to_one_hot(self.numeric, c.MAX_CHARGE).tolist()
 
     def onehot_to_array(self):
         """Convert onehot encoding to array."""
