@@ -115,6 +115,9 @@ class PROSITpredictor:
                 return PredObject.IntensityTMT(stub=self.stub, model_name=model, input=self.input)
             elif "PTM" in model:
                 return PredObject.Intensity(stub=self.stub, model_name=model, input=self.input)
+            elif 'tims' in model:
+                return PredObject.IntensityTims(stub=self.stub, model_name=model, input=self.input)
+
             else:
                 return PredObject.Intensity(stub=self.stub, model_name=model, input=self.input)
         elif "irt" in model:

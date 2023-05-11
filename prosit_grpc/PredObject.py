@@ -284,6 +284,45 @@ class Intensity(Base):
         self.output = self.data
 
 
+class IntensityTims(Intensity):
+    def create_request(self, model_name: str, inputs_batch, batchsize: int):
+        """
+        Function to create a single request of the Intensity PredObject.
+
+        :param model_name: specify the model that should be used to predict
+        :param inputs_batch: inputs necessar for request
+        :param batchsize: size of the created request
+        :return: request ready to be sent to the server
+        """
+        request = self.create_request_scaffold(model_name=model_name)
+        request.inputs["peptides_in"].CopyFrom(
+            tf.make_tensor_proto(inputs_batch["seq_array"], shape=[batchsize, c.SEQ_LEN], dtype=np.int32)
+        )
+
+        request.inputs["collision_energy_in"].CopyFrom(
+                tf.make_tensor_proto(inputs_batch["ce_array"], shape=[batchsize, 1], dtype=np.float32)
+        )
+
+        request.inputs["precursor_charge_in"].CopyFrom(
+            tf.make_tensor_proto(
+                inputs_batch["charges_array"], shape=[batchsize, c.NUM_CHARGES_ONEHOT], dtype=np.float32
+            )
+        )
+        return request
+
+    @staticmethod
+    def unpack_response(response) -> np.ndarray:
+        """
+        Unpack response.
+
+        :param response: response
+        :return: prediction formatted as numpy array
+        """
+        outputs_tensor_proto = response.outputs["out"]
+        shape = tf.TensorShape(outputs_tensor_proto.tensor_shape)
+        return np.array(outputs_tensor_proto.float_val, dtype=np.float32).reshape(shape.as_list())
+
+
 class IntensityTMT(Intensity):
     """Class for intensity TMT prediction object."""
 
